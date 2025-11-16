@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Prompt Engineering Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #f5f5f5, #dcdcdc);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+    }
+
+    .page {
+      max-width: 960px;
+      width: 100%;
+      padding: 32px 16px;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: #4b5563;
+      max-width: 700px;
+    }
+
+    .meta {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(15, 23, 42, 0.04);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    thead {
+      background: #f3f4f6;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #374151;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+      transition: background 160ms ease-out;
+    }
+
+    .example-name {
+      font-weight: 600;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      font-size: 0.75rem;
+      color: #374151;
+      margin-right: 4px;
+      margin-bottom: 2px;
+    }
+
+    .tag-primary {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .tag-secondary {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      background: #111827;
+      color: #f9fafb;
+      font-size: 0.85rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.35);
+    }
+
+    .link-button:hover {
+      transform: translateY(-1px);
+      background: #020617;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.45);
+    }
+
+    .link-button span {
+      margin-left: 4px;
+    }
+
+    footer {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 20px 12px;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody tr {
+        margin-bottom: 12px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+      }
+
+      td {
+        padding: 8px 12px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        margin-bottom: 2px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>AI Prompt Engineering Playground</h1>
+      <p class="subtitle">
+        A collection of small, focused experiments generated and refined with AI. Each example
+        is meant to be readable, minimal, and useful as a reference for prompt engineering
+        rather than “vibe coding”.
+      </p>
+      <p class="meta">
+        Repository: <a href="https://github.com/raven2cz/ai" target="_blank" rel="noopener noreferrer">raven2cz/ai</a> ·
+        Deployed via GitHub Pages
+      </p>
+    </header>
+
+    <section class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Example</th>
+            <th>Description</th>
+            <th>Tech & Tags</th>
+            <th>Demo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Analog Clock example row -->
+          <tr>
+            <td data-label="Example">
+              <span class="example-name">Analog Clock</span>
+            </td>
+            <td data-label="Description">
+              Smooth animated analog clock with a black frame, classic black hands and a red
+              second hand. Shows continuous movement using <code>requestAnimationFrame</code>.
+            </td>
+            <td data-label="Tech & Tags">
+              <span class="tag tag-primary">HTML</span>
+              <span class="tag tag-primary">CSS</span>
+              <span class="tag tag-primary">JavaScript</span>
+              <span class="tag tag-secondary">Prompt-engineered</span>
+            </td>
+            <td data-label="Demo">
+              <a class="link-button" href="examples/analog-clock/" target="_blank" rel="noopener noreferrer">
+                View demo<span>↗</span>
+              </a>
+            </td>
+          </tr>
+
+          <!-- Add more examples here in the future:
+          <tr>
+            <td data-label="Example">
+              <span class="example-name">Some Other Example</span>
+            </td>
+            <td data-label="Description">
+              Short description of what this example demonstrates.
+            </td>
+            <td data-label="Tech & Tags">
+              <span class="tag tag-primary">HTML</span>
+              <span class="tag tag-primary">JS</span>
+            </td>
+            <td data-label="Demo">
+              <a class="link-button" href="examples/some-other-example/" target="_blank" rel="noopener noreferrer">
+                View demo<span>↗</span>
+              </a>
+            </td>
+          </tr>
+          -->
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      Generated and maintained with the help of large language models.  
+      Focus: clean examples, clear prompts, readable code.
+    </footer>
+  </main>
+</body>
+</html>

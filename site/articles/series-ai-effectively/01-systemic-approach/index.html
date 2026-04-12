@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Effectively — The Systemic Approach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #fdf6e3;
+  --bg1: #f4f0d9;
+  --bg2: #efebd4;
+  --bg3: #e6e2cc;
+  --fg: #5c6a72;
+  --fg-dim: #829181;
+  --red: #f85552;
+  --orange: #f57d26;
+  --yellow: #dfa000;
+  --green: #8da101;
+  --aqua: #35a77c;
+  --blue: #3a94c5;
+  --purple: #df69ba;
+  --grey0: #a6b0a0;
+  --grey1: #939f91;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--bg3);
+}
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; }
+h1 .accent { color: var(--green); }
+.subtitle { font-family: 'Inter', sans-serif; font-size: 1.05rem; color: var(--grey1); margin-top: 0.3rem; font-weight: 400; }
+
+section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
+  letter-spacing: -0.01em;
+}
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h2[id], h3[id] { scroll-margin-top: 1.5rem; }
+p { margin-bottom: 1rem; }
+strong { font-weight: 600; }
+em { font-family: 'Source Serif 4', 'Georgia', serif; }
+
+/* ── Schema container ── */
+.schema-wrap {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 12px;
+  padding: 1.2rem 1rem;
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  position: relative;
+}
+.schema-wrap svg { width: 100%; height: auto; display: block; }
+.schema-wrap .hint {
+  position: absolute; bottom: 8px; right: 14px;
+  font-size: 0.75rem; color: var(--grey0);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.schema-wrap.active .hint { opacity: 0; }
+
+/* ── Component hover styles ── */
+.comp { cursor: pointer; transition: filter 0.35s ease, opacity 0.35s ease; }
+.schema-wrap.has-focus .comp { opacity: 0.45; }
+.schema-wrap.has-focus .comp.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--comp-glow, rgba(90,140,180,0.5)));
+}
+/* Pulse animation on active component */
+@keyframes compPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--comp-glow, rgba(90,140,180,0.35))); }
+  50% { filter: drop-shadow(0 0 14px var(--comp-glow, rgba(90,140,180,0.65))); }
+}
+.schema-wrap.has-focus .comp.active {
+  animation: compPulse 2.2s ease-in-out infinite;
+}
+/* Hover zone invisible overlay */
+.hover-zone { fill: transparent; cursor: pointer; }
+
+/* ── Floating tooltip ── */
+.schema-tip {
+  position: fixed;
+  z-index: 1000;
+  width: 272px;
+  background: rgba(253,246,227,0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--bg3);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem 0.6rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(7px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  will-change: opacity, transform;
+}
+.schema-tip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.schema-tip .tip-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.01em;
+}
+.schema-tip .tip-desc {
+  color: var(--fg);
+  margin-bottom: 0.25rem;
+}
+.schema-tip .tip-detail {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 0.79rem;
+  color: var(--fg-dim);
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--bg3);
+}
+.schema-tip .tip-detail em {
+  font-style: italic;
+}
+
+/* ── Concept cards ── */
+.concepts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem; margin: 1.2rem 0;
+}
+.card {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-left: 4px solid var(--grey0);
+}
+.card h4 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+.card p { font-size: 0.84rem; line-height: 1.6; margin: 0; color: var(--fg-dim); }
+.card.c-blue   { border-left-color: var(--blue); }
+.card.c-green  { border-left-color: var(--green); }
+.card.c-purple { border-left-color: var(--purple); }
+.card.c-orange { border-left-color: var(--orange); }
+.card.c-red    { border-left-color: var(--red); }
+.card.c-yellow { border-left-color: var(--yellow); }
+.card.c-aqua   { border-left-color: var(--aqua); }
+
+/* ── Formulas ── */
+.formula-box {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0;
+}
+.formula {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.08rem; font-style: italic; margin: 0.4rem 0;
+}
+.formula .m { font-weight: 700; font-style: normal; }
+
+/* ── Mapping table ── */
+.mapping { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.mapping th, .mapping td {
+  padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--bg3);
+}
+.mapping th {
+  background: var(--bg2); font-weight: 600; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: 0.03em;
+}
+.mapping td:first-child { font-weight: 600; }
+.mapping tr:last-child td { border-bottom: none; }
+.mapping tbody tr:hover { background: var(--bg1); }
+
+/* ── Article metadata ── */
+.meta {
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+}
+.meta span {
+  white-space: nowrap;
+  background: var(--bg1);
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid var(--bg3);
+}
+
+/* ── Table of contents ── */
+.toc {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem 1rem;
+  margin-bottom: 2.5rem;
+}
+.toc h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--bg3);
+  color: var(--fg);
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+  padding: 0;
+  margin: 0;
+}
+.toc > ol > li {
+  counter-increment: toc;
+  margin-bottom: 0.15rem;
+}
+.toc > ol > li > a::before {
+  content: counter(toc) ". ";
+  font-weight: 700;
+  color: var(--green);
+}
+.toc a {
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.88rem;
+  line-height: 1.85;
+  transition: color 0.2s;
+}
+.toc a:hover {
+  color: var(--blue);
+}
+.toc .toc-sub {
+  list-style: none;
+  padding-left: 1.4rem;
+  margin: 0;
+}
+.toc .toc-sub li a {
+  font-size: 0.82rem;
+  color: var(--fg-dim);
+}
+.toc .toc-sub li a::before {
+  content: "— ";
+  color: var(--bg3);
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem; }
+  h1 { font-size: 1.7rem; }
+  .concepts { grid-template-columns: 1fr; }
+}
+</style>
+
+<style id="series-switcher-style">
+.series-switcher {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.7rem 1.25rem;
+  background: var(--bg1, #f4f0d9);
+  border-bottom: 1px solid var(--bg3, #e6e2cc);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--fg, #5c6a72);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  background-color: color-mix(in srgb, var(--bg1, #f4f0d9) 88%, transparent);
+}
+.series-switcher a { color: inherit; text-decoration: none; opacity: 0.75; transition: opacity 0.2s; }
+.series-switcher a:hover { opacity: 1; }
+.series-switcher .series-title { font-weight: 600; opacity: 0.9; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.series-switcher .series-sep { opacity: 0.4; }
+.series-switcher .parts { display: flex; gap: 0.4rem; }
+.series-switcher .chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--bg3, #e6e2cc);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.series-switcher .chip:hover { background: var(--bg2, #efebd4); }
+.series-switcher .chip.active {
+  background: var(--green, #8da101);
+  color: var(--bg0, #fdf6e3);
+  border-color: transparent;
+}
+@media (max-width: 640px) {
+  .series-switcher { font-size: 0.78rem; padding: 0.55rem 0.9rem; gap: 0.75rem; }
+  .series-switcher .series-title { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="series-switcher" role="navigation" aria-label="Series navigation">  <a href="../../../index.html">← AI Playground</a>  <span class="series-sep">·</span>  <span class="series-title">AI Effectively: A Systems Approach</span>  <div class="parts"><span class="chip active" aria-current="page">Part 1</span><a class="chip" href="../02-from-stone-to-sculpture/index.html">Part 2</a></div></div>
+
+<div class="page">
+
+<header>
+  <h1><span class="accent">AI Effectively</span> — The Systemic Approach</h1>
+  <p class="subtitle">A cybernetic perspective on interacting with artificial intelligence</p>
+  <div class="meta">
+    <span>Version 1.1</span>
+    <span>Updated: 27 Feb 2026</span>
+    <span>Author: <strong>raven2cz</strong> in collaboration with <strong>Claude</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>Article Contents</h3>
+  <ol>
+    <li><a href="#cybernetics">The Cybernetic Regulation Loop</a>
+      <ul class="toc-sub">
+        <li><a href="#schema-classic">Classic regulation loop diagram</a></li>
+        <li><a href="#key-concepts">Key concepts</a></li>
+        <li><a href="#math">Mathematical description</a></li>
+      </ul>
+    </li>
+    <li><a href="#ai-system">AI as a Regulation System</a>
+      <ul class="toc-sub">
+        <li><a href="#schema-ai">AI regulation loop diagram</a></li>
+        <li><a href="#mapping">Concept mapping</a></li>
+      </ul>
+    </li>
+    <li><a href="#feedback">Feedback — The Key to Effective AI Regulation</a>
+      <ul class="toc-sub">
+        <li><a href="#open-closed-loop">Open vs. closed loop</a></li>
+        <li><a href="#feedback-types">Types of feedback in AI systems</a></li>
+        <li><a href="#feedback-optimization">How to optimize feedback</a></li>
+      </ul>
+    </li>
+    <li><a href="#memory">Internal State and Memory — "50 Times and Still the First Time"</a></li>
+    <li><a href="#agent-eyes">The Agent's Eyes — It Sees Differently Than You</a></li>
+    <li><a href="#role">Your New Role — Coordinator, Not Executor</a>
+      <ul class="toc-sub">
+        <li><a href="#prompt-craft">The Art of the Prompt</a></li>
+      </ul>
+    </li>
+    <li><a href="#trust-verify">Trust, but Verify</a>
+      <ul class="toc-sub">
+        <li><a href="#testing">Testing as the System's Eyes</a></li>
+      </ul>
+    </li>
+    <li><a href="#process-discipline">Process Discipline</a>
+      <ul class="toc-sub">
+        <li><a href="#review">Iterative review — asymptotic convergence</a></li>
+      </ul>
+    </li>
+  </ol>
+</nav>
+
+<section>
+  <h2 id="cybernetics">The Cybernetic Regulation Loop</h2>
+  <p>Cybernetics — the science of control and communication — gives us an elegant framework
+    for understanding how to work with AI effectively. The fundamental building block
+    is the <strong>regulation loop</strong>: a universal diagram describing how a system
+    responds to demands and how feedback helps it reach its goal.</p>
+  <p>Let's start with the general diagram and its key components.
+    <em>Hover over individual elements with your mouse.</em></p>
+</section>
+
+<!-- ═══════════════ SCHEMA 1 — Classic ═══════════════ -->
+<section>
+  <h3 id="schema-classic">Classic Regulation Loop Diagram</h3>
+  <div class="schema-wrap" id="schema1">
+    <svg viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glowB" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feFlood flood-color="#3a94c5" flood-opacity="0.6" result="c"/>
+          <feComposite in="c" in2="b" operator="in" result="d"/>
+          <feMerge><feMergeNode in="d"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glowA" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feFlood flood-color="#35a77c" flood-opacity="0.6" result="c"/>
+          <feComposite in="c" in2="b" operator="in" result="d"/>
+          <feMerge><feMergeNode in="d"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- ── Hidden paths for particle animation ── -->
+      <path id="s1-fwd" d="M 20,160 L 920,160" fill="none" stroke="none"/>
+      <path id="s1-fb" d="M 840,160 L 840,295 Q 840,312 823,312 L 127,312 Q 110,312 110,295 L 110,181" fill="none" stroke="none"/>
+
+      <!-- ── ARROWS (static, always visible) ── -->
+      <line x1="20" y1="160" x2="89" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="90,160 81,155 81,165" fill="#5c6a72"/>
+      <line x1="131" y1="160" x2="209" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="210,160 201,155 201,165" fill="#5c6a72"/>
+      <line x1="361" y1="160" x2="459" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="460,160 451,155 451,165" fill="#5c6a72"/>
+      <line x1="701" y1="160" x2="918" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="920,160 911,155 911,165" fill="#5c6a72"/>
+      <path d="M 840,162 L 840,295 Q 840,312 823,312 L 127,312 Q 110,312 110,295 L 110,182"
+            stroke="#35a77c" stroke-width="1.8" fill="none"/>
+      <polygon points="110,181 105,191 115,191" fill="#35a77c"/>
+
+      <!-- ── COMPONENTS ── -->
+      <!-- Summing junction -->
+      <g class="comp" data-comp="summing" style="--comp-glow:rgba(92,106,114,0.5)">
+        <circle cx="110" cy="160" r="20" fill="#fdf6e3" stroke="#5c6a72" stroke-width="2"/>
+        <text x="110" y="166" text-anchor="middle" font-size="16" font-weight="700" fill="#5c6a72">Σ</text>
+        <text x="78" y="152" font-size="14" fill="#8da101" font-weight="700">+</text>
+        <text x="119" y="190" font-size="15" fill="#f85552" font-weight="700">−</text>
+      </g>
+      <!-- Regulator -->
+      <g class="comp" data-comp="regulator" style="--comp-glow:rgba(58,148,197,0.55)">
+        <rect x="210" y="122" width="150" height="76" rx="8"
+              fill="rgba(58,148,197,0.09)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="285" y="156" text-anchor="middle" font-size="13" font-weight="700"
+              fill="#3a94c5" letter-spacing="0.08em">REGULATOR</text>
+        <text x="285" y="174" text-anchor="middle" font-size="10" fill="#829181">(controller)</text>
+      </g>
+      <!-- System -->
+      <g class="comp" data-comp="system" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="460" y="96" width="240" height="128" rx="8"
+              fill="rgba(141,161,1,0.07)" stroke="#8da101" stroke-width="2"/>
+        <text x="580" y="118" text-anchor="middle" font-size="13" font-weight="700"
+              fill="#8da101" letter-spacing="0.08em">SYSTEM</text>
+        <text x="580" y="133" text-anchor="middle" font-size="10" fill="#829181">(controlled plant)</text>
+      </g>
+      <!-- Inner state -->
+      <g class="comp" data-comp="state" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="485" y="145" width="190" height="50" rx="6"
+              fill="rgba(223,105,186,0.07)" stroke="#df69ba" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="580" y="175" text-anchor="middle" font-size="12" fill="#df69ba" font-style="italic">internal state x(t)</text>
+      </g>
+      <!-- Feedback label -->
+      <g class="comp" data-comp="feedback" style="--comp-glow:rgba(53,167,124,0.5)">
+        <text x="470" y="298" text-anchor="middle" font-size="12" font-weight="600"
+              fill="#35a77c" letter-spacing="0.06em">FEEDBACK</text>
+      </g>
+      <!-- Input label -->
+      <g class="comp" data-comp="input" style="--comp-glow:rgba(245,125,38,0.5)">
+        <text x="42" y="148" font-size="14" font-weight="600" fill="#f57d26" font-style="italic">w(t)</text>
+        <text x="15" y="178" font-size="9" fill="#829181">setpoint</text>
+      </g>
+      <!-- Error label -->
+      <g class="comp" data-comp="error" style="--comp-glow:rgba(223,160,0,0.5)">
+        <text x="155" y="149" font-size="14" font-weight="600" fill="#dfa000" font-style="italic">e(t)</text>
+        <text x="145" y="178" font-size="9" fill="#829181">error</text>
+      </g>
+      <!-- Control label -->
+      <g class="comp" data-comp="control" style="--comp-glow:rgba(58,148,197,0.5)">
+        <text x="398" y="148" font-size="14" font-weight="600" fill="#3a94c5" font-style="italic">u(t)</text>
+        <text x="378" y="178" font-size="9" fill="#829181">control signal</text>
+      </g>
+      <!-- Output label -->
+      <g class="comp" data-comp="output" style="--comp-glow:rgba(141,161,1,0.5)">
+        <text x="779" y="150" font-size="14" font-weight="600" fill="#8da101" font-style="italic">y(t)</text>
+        <text x="746" y="175" font-size="9" fill="#829181">process variable</text>
+      </g>
+
+      <!-- ── HOVER ZONES (invisible, above everything) ── -->
+      <rect class="hover-zone" data-comp="input"     x="5"   y="130" width="80"  height="60"/>
+      <rect class="hover-zone" data-comp="summing"   x="85"  y="130" width="50"  height="65"/>
+      <rect class="hover-zone" data-comp="error"     x="135" y="130" width="80"  height="60"/>
+      <rect class="hover-zone" data-comp="regulator" x="205" y="115" width="162" height="90"/>
+      <rect class="hover-zone" data-comp="control"   x="367" y="130" width="90"  height="60"/>
+      <rect class="hover-zone" data-comp="system"    x="455" y="88"  width="252" height="145"/>
+      <rect class="hover-zone" data-comp="state"     x="480" y="140" width="200" height="62"/>
+      <rect class="hover-zone" data-comp="output"    x="705" y="130" width="230" height="60"/>
+      <rect class="hover-zone" data-comp="feedback"  x="105" y="270" width="740" height="55"/>
+
+      <!-- ── Particle layer (JS fills this) ── -->
+      <g class="particles" style="pointer-events:none"></g>
+    </svg>
+    <span class="hint">Hover over the components</span>
+  </div>
+</section>
+
+<!-- ═══════════════ CONCEPTS ═══════════════ -->
+<section>
+  <h3 id="key-concepts">Key Concepts</h3>
+  <div class="concepts">
+    <div class="card c-blue">
+      <h4>Regulator (controller)</h4>
+      <p>The decision-making component. Based on the control error e(t), it generates
+        a control signal u(t). Its goal is to minimize the difference between the setpoint and the actual value.</p>
+    </div>
+    <div class="card c-green">
+      <h4>System (controlled plant)</h4>
+      <p>A process with its own dynamics that responds to the controller's control signal
+        and produces the output variable y(t).</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Internal state x(t)</h4>
+      <p>The set of information about the system needed to predict its future behavior.
+        Fully characterizes the system's current "memory."</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Setpoint w(t)</h4>
+      <p>The reference input — what we want the system to achieve. It represents the regulation target.</p>
+    </div>
+    <div class="card c-yellow">
+      <h4>Control error e(t)</h4>
+      <p>The difference between the setpoint and the actual value: e(t) = w(t) − y(t).
+        It tells us "how far we are from the goal."</p>
+    </div>
+    <div class="card c-red">
+      <h4>Process variable y(t)</h4>
+      <p>The actual output of the system — measured and compared against the setpoint.</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Feedback</h4>
+      <p>The mechanism that feeds output information back to the controller's input,
+        thereby closing the regulation loop and enabling correction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FORMULAS ═══════════════ -->
+<section>
+  <h3 id="math">Mathematical Description</h3>
+  <div class="formula-box">
+    <p style="font-size:0.9rem; color:var(--fg-dim); margin-bottom:0.8rem;">State-space representation:</p>
+    <div class="formula">ẋ(t) = <span class="m">A</span>x(t) + <span class="m">B</span>u(t)</div>
+    <div class="formula">y(t) = <span class="m">C</span>x(t) + <span class="m">D</span>u(t)</div>
+    <hr style="border:none; border-top:1px solid var(--bg3); margin:0.8rem 0;">
+    <p style="font-size:0.9rem; color:var(--fg-dim); margin-bottom:0.5rem;">Control error:</p>
+    <div class="formula">e(t) = w(t) − y(t)</div>
+  </div>
+</section>
+
+<section>
+  <h2 id="ai-system">AI as a Regulation System</h2>
+  <p>Surprisingly — or perhaps not — this cybernetic model precisely describes interaction with AI.
+    Whether you're issuing a simple prompt or orchestrating a complex AI agent,
+    <strong>you are always operating within a regulation loop</strong>. You just need to name what is what.</p>
+</section>
+
+<!-- ═══════════════ SCHEMA 2 — AI ═══════════════ -->
+<section>
+  <h3 id="schema-ai">AI Regulation Loop Diagram</h3>
+  <div class="schema-wrap" id="schema2">
+    <svg viewBox="0 0 940 340" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glowB2" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feFlood flood-color="#3a94c5" flood-opacity="0.6" result="c"/>
+          <feComposite in="c" in2="b" operator="in" result="d"/>
+          <feMerge><feMergeNode in="d"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glowA2" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feFlood flood-color="#35a77c" flood-opacity="0.6" result="c"/>
+          <feComposite in="c" in2="b" operator="in" result="d"/>
+          <feMerge><feMergeNode in="d"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <path id="s2-fwd" d="M 0,160 L 920,160" fill="none" stroke="none"/>
+      <path id="s2-fb" d="M 840,160 L 840,295 Q 840,312 823,312 L 127,312 Q 110,312 110,295 L 110,181" fill="none" stroke="none"/>
+
+      <!-- Arrows -->
+      <line x1="0" y1="160" x2="89" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="90,160 81,155 81,165" fill="#5c6a72"/>
+      <line x1="131" y1="160" x2="209" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="210,160 201,155 201,165" fill="#5c6a72"/>
+      <line x1="361" y1="160" x2="459" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="460,160 451,155 451,165" fill="#5c6a72"/>
+      <line x1="701" y1="160" x2="918" y2="160" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="920,160 911,155 911,165" fill="#5c6a72"/>
+      <path d="M 840,162 L 840,295 Q 840,312 823,312 L 127,312 Q 110,312 110,295 L 110,182"
+            stroke="#35a77c" stroke-width="1.8" fill="none"/>
+      <polygon points="110,181 105,191 115,191" fill="#35a77c"/>
+
+      <!-- Environment wrapper (visual only, behind components) -->
+      <rect x="434" y="72" width="288" height="176" rx="14"
+            fill="rgba(166,176,160,0.04)" stroke="#a6b0a0" stroke-width="1.2" stroke-dasharray="8,5"/>
+      <text x="580" y="88" text-anchor="middle" font-size="9.5" fill="#a6b0a0"
+            letter-spacing="0.06em" font-weight="600">ENVIRONMENT (IDE · terminal · API · filesystem)</text>
+
+      <!-- Components -->
+      <g class="comp" data-comp="summing" style="--comp-glow:rgba(92,106,114,0.5)">
+        <circle cx="110" cy="160" r="20" fill="#fdf6e3" stroke="#5c6a72" stroke-width="2"/>
+        <text x="110" y="166" text-anchor="middle" font-size="16" font-weight="700" fill="#5c6a72">Δ</text>
+        <text x="79" y="148" font-size="14" fill="#8da101" font-weight="700">+</text>
+        <text x="117" y="191" font-size="15" fill="#f85552" font-weight="700">−</text>
+      </g>
+      <g class="comp" data-comp="regulator" style="--comp-glow:rgba(58,148,197,0.55)">
+        <rect x="210" y="116" width="150" height="88" rx="8"
+              fill="rgba(58,148,197,0.09)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="285" y="148" text-anchor="middle" font-size="13" font-weight="700"
+              fill="#3a94c5" letter-spacing="0.06em">AI AGENT</text>
+        <text x="285" y="166" text-anchor="middle" font-size="12" font-weight="600" fill="#3a94c5">(LLM)</text>
+        <text x="285" y="186" text-anchor="middle" font-size="9" fill="#829181">planning, reasoning</text>
+      </g>
+      <g class="comp" data-comp="system" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="460" y="96" width="240" height="128" rx="8"
+              fill="rgba(141,161,1,0.07)" stroke="#8da101" stroke-width="2"/>
+        <text x="580" y="117" text-anchor="middle" font-size="12" font-weight="700"
+              fill="#8da101" letter-spacing="0.06em">SYSTEM</text>
+        <text x="580" y="133" text-anchor="middle" font-size="10" fill="#829181">(artifact under construction)</text>
+      </g>
+      <g class="comp" data-comp="state" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="485" y="145" width="190" height="50" rx="6"
+              fill="rgba(223,105,186,0.07)" stroke="#df69ba" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="580" y="165" text-anchor="middle" font-size="11" fill="#df69ba" font-weight="600">context window</text>
+        <text x="580" y="180" text-anchor="middle" font-size="10" fill="#df69ba" font-style="italic">memory, conversation state</text>
+      </g>
+      <g class="comp" data-comp="feedback" style="--comp-glow:rgba(53,167,124,0.5)">
+        <text x="470" y="292" text-anchor="middle" font-size="11" font-weight="600"
+              fill="#35a77c" letter-spacing="0.04em">EVALUACE &amp; REFLEXE</text>
+        <text x="470" y="306" text-anchor="middle" font-size="9" fill="#829181">tool results · self-reflection · user</text>
+      </g>
+      <g class="comp" data-comp="input" style="--comp-glow:rgba(245,125,38,0.5)">
+        <text x="1" y="150" font-size="12" font-weight="700" fill="#f57d26">User Goal</text>
+        <text x="6" y="175" font-size="9" fill="#829181">prompt / intent</text>
+      </g>
+      <g class="comp" data-comp="error" style="--comp-glow:rgba(223,160,0,0.5)">
+        <text x="140" y="149" font-size="12" font-weight="600" fill="#dfa000">what remains</text>
+        <text x="151" y="176" font-size="9" fill="#829181">to do</text>
+      </g>
+      <g class="comp" data-comp="control" style="--comp-glow:rgba(58,148,197,0.5)">
+        <text x="368" y="150" font-size="11" font-weight="600" fill="#3a94c5">action / text</text>
+        <text x="367" y="176" font-size="9" fill="#829181">tool calls</text>
+      </g>
+      <g class="comp" data-comp="output" style="--comp-glow:rgba(141,161,1,0.5)">
+        <text x="777" y="151" font-size="12" font-weight="700" fill="#8da101">Result</text>
+        <text x="774" y="174" font-size="9" fill="#829181">artifact state</text>
+      </g>
+
+      <!-- Hover zones -->
+      <rect class="hover-zone" data-comp="input"     x="5"   y="122" width="80"  height="72"/>
+      <rect class="hover-zone" data-comp="summing"   x="85"  y="130" width="50"  height="65"/>
+      <rect class="hover-zone" data-comp="error"     x="135" y="122" width="76"  height="72"/>
+      <rect class="hover-zone" data-comp="regulator" x="205" y="108" width="162" height="102"/>
+      <rect class="hover-zone" data-comp="control"   x="367" y="122" width="90"  height="72"/>
+      <rect class="hover-zone" data-comp="system"    x="455" y="88"  width="252" height="145"/>
+      <rect class="hover-zone" data-comp="state"     x="480" y="140" width="200" height="62"/>
+      <rect class="hover-zone" data-comp="output"    x="705" y="122" width="232" height="72"/>
+      <rect class="hover-zone" data-comp="feedback"  x="105" y="270" width="740" height="55"/>
+
+      <g class="particles" style="pointer-events:none"></g>
+    </svg>
+    <span class="hint">Hover over the components</span>
+  </div>
+</section>
+
+<!-- ═══════════════ MAPPING TABLE ═══════════════ -->
+<section>
+  <h3 id="mapping">Concept Mapping</h3>
+  <table class="mapping">
+    <thead><tr><th>Cybernetics</th><th>AI / LLM equivalent</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#3a94c5">Regulator</td><td>AI Agent / LLM</td><td>Claude, GPT — decides, plans, generates</td></tr>
+      <tr><td style="color:#8da101">System</td><td>Artifact under construction / application</td><td>Code, document, project — what we are regulating</td></tr>
+      <tr><td style="color:#df69ba">Internal state x(t)</td><td>Context window / memory</td><td>Conversation, system prompt, RAG context, project state</td></tr>
+      <tr><td style="color:#f57d26">Setpoint w(t)</td><td>User goal</td><td>"Write me a REST API for user management"</td></tr>
+      <tr><td style="color:#dfa000">Error e(t)</td><td>What remains to be done</td><td>The gap between current state and goal</td></tr>
+      <tr><td style="color:#3a94c5">Control signal u(t)</td><td>Generated text / action</td><td>Code, tool calls, response</td></tr>
+      <tr><td style="color:#8da101">Process variable y(t)</td><td>Result</td><td>Produced artifact, response, project state</td></tr>
+      <tr><td style="color:#35a77c">Feedback</td><td>Evaluation &amp; reflection</td><td>Test results, error messages, user feedback, self-reflection</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:1.5rem;">The key insight: <strong>the quality of regulation depends on the quality of feedback</strong>.
+    The more precise and timely the information the system receives about its output, the better the regulator
+    can correct its actions. In the AI context this means — the more clearly you define the goal,
+    the more structured your prompt, and the more specific the feedback you provide,
+    the more effectively AI "regulates" its output toward your goal.</p>
+</section>
+
+<!-- ═══════════════ FEEDBACK DEEP DIVE ═══════════════ -->
+<section>
+  <h2 id="feedback">Feedback — The Key to Effective AI Regulation</h2>
+  <p>Cybernetics has a governing law: <strong>the quality of regulation is directly proportional to the quality of feedback</strong>.
+    Without feedback the regulator "flies blind" — it generates actions but has no idea whether they work.
+    The same holds for working with AI, and this is precisely where most users leave enormous potential on the table.</p>
+
+  <h3 id="open-closed-loop">Open vs. Closed Loop</h3>
+  <div class="formula-box">
+    <p><strong style="color:var(--red)">Open loop (no feedback):</strong>
+      Single prompt → response → done. No correction, no iteration.
+      Like driving a car with your eyes closed. <em>Surprisingly, most AI users work exactly this way.</em></p>
+    <hr style="border:none; border-top:1px solid var(--bg3); margin:0.6rem 0;">
+    <p><strong style="color:var(--green)">Closed loop (with feedback):</strong>
+      Prompt → output → evaluation → correction → better output → … Iterative refinement,
+      where each cycle reduces the error e(t).</p>
+  </div>
+
+  <h3 id="feedback-types">Types of Feedback in AI Systems</h3>
+  <div class="concepts">
+    <div class="card c-aqua">
+      <h4>Explicit user feedback</h4>
+      <p>"This is wrong, fix X." "Good, but add Y." The most direct and most effective form.
+        The user is the ultimate quality "sensor."</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Tool results</h4>
+      <p>Compiler errors, test results, API responses, terminal output —
+        automatic, immediate feedback from the environment. The foundation of the agentic approach.</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Self-reflection</h4>
+      <p>The model evaluates its own output in chain-of-thought reasoning:
+        "Does this fulfill the task? Is the code correct? What have I missed?"</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Automated evaluation</h4>
+      <p>Linters, type checkers, CI/CD pipelines, unit tests — structured,
+        measurable feedback. The equivalent of industrial sensors.</p>
+    </div>
+  </div>
+
+  <h3 id="feedback-optimization">How to Optimize Feedback</h3>
+  <div class="formula-box">
+    <p><strong>1. Speed</strong> — Short iteration cycles → faster convergence.
+      Every lost cycle is a lost correction.</p>
+    <p><strong>2. Specificity</strong> — "There is a type error on line 42" is incomparably better
+      than "something is wrong." A precise signal → a precise correction.</p>
+    <p><strong>3. Measurability</strong> — Tests, metrics, acceptance criteria —
+      quantify the error e(t). What cannot be measured cannot be regulated.</p>
+    <p><strong>4. Close the loop</strong> — Don't give up after the first prompt.
+      Iterate. Each cycle reduces the deviation from the goal.</p>
+    <p><strong>5. Multiplex channels</strong> — Combine user feedback + tool results
+      + self-reflection. Multi-channel feedback is more robust.</p>
+  </div>
+
+  <p>This is precisely why <strong>agentic AI</strong> (with tool use and self-correction) dramatically outperforms
+    simple chat — it has a built-in feedback loop. The agent runs code, gets an error,
+    fixes it, runs tests, iterates. Each cycle is one "turn of the regulation loop."</p>
+  <p>And this is why <strong>a structured prompt with clear success criteria</strong>
+    is more effective than a vague request — it allows AI to measure the deviation from the goal more precisely
+    and correct its actions more purposefully. You are effectively defining the <em>setpoint w(t)</em>
+    and simultaneously the <em>feedback metric</em>.</p>
+</section>
+
+<!-- ═══════════════ CONTEXT WINDOW ═══════════════ -->
+<section>
+  <h2 id="memory">Internal State and Memory — "50 Times and Still the First Time"</h2>
+  <p>In cybernetics, internal state x(t) is critical — without it the system has no memory and cannot
+    learn from previous steps. For AI agents the internal state is the <strong>context window</strong>,
+    and it is here that they run into a fundamental limitation: context is finite, and in longer sessions
+    <strong>compaction</strong> kicks in — a lossy summarization of the prior conversation that often
+    drops key details, skips the project configuration, and loses important context.</p>
+
+  <div class="formula-box">
+    <p>The situation is reminiscent of the film <strong>"50 First Dates"</strong> — the protagonist
+      wakes up every day with no memory of the day before. The solution from the film is exactly what you need
+      for working with AI: <strong>careful written notes</strong> that substitute for lost
+      memory. The researcher in the film had to keep a diary for every day — you need to write
+      structured plans for every step of the project.</p>
+  </div>
+
+  <p>In practice this means creating and continuously updating <strong>high-quality plans</strong>
+    that serve as the "external memory" of the regulation system:</p>
+
+  <div class="concepts">
+    <div class="card c-purple">
+      <h4>Plan as a living document</h4>
+      <p>A merger of the specification with the current implementation state.
+        Clear markers for what is done, what remains, what has changed.
+        The plan is updated after every cycle of the regulation loop.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Links and references</h4>
+      <p>Links to documentation, specifications, and reference projects.
+        The agent can load them when needed — they don't permanently occupy
+        the context window, but are available on demand.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Project configuration</h4>
+      <p>claude.md, .cursorrules, and other configuration files.
+        They define agent behavior for the specific project.
+        Compaction often skips them — they must be concise, precise, and essential.</p>
+    </div>
+  </div>
+
+  <p>Plans are not a luxury but an <strong>absolute necessity</strong>. Without them every longer
+    session degrades into a situation where the agent "forgets" key context
+    and repeats already-solved mistakes. Neglecting plan maintenance pays a steep price
+    over time.</p>
+</section>
+
+<!-- ═══════════════ AI EYES ═══════════════ -->
+<section>
+  <h2 id="agent-eyes">The Agent's Eyes — It Sees Differently Than You</h2>
+  <p>A fundamental insight: an AI agent <strong>does not have your eyes</strong>. It cannot see the screen the way
+    you can, it has no feel for UX, and it does not intuitively grasp visual context. For it to "see" a given problem
+    or bug, you must <strong>creatively design the feedback loop</strong>
+    so that the agent can properly understand the error — so it can literally "see" it.</p>
+
+  <div class="concepts">
+    <div class="card c-blue">
+      <h4>Debug modes and logging</h4>
+      <p>Console output, verbose logs, structured stack traces —
+        a textual form the agent can process.
+        The more structured the output, the more precise the correction.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Screenshots and visual feedback</h4>
+      <p>Multimodal models can process images. A screenshot of an error
+        is often more effective than a verbal description.
+        But the same rule applies here — always supplement with textual context.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Connection to the real system</h4>
+      <p>Input simulation, test APIs, sandboxed environments.
+        The agent must be able to "touch" the output of its own actions,
+        otherwise it regulates blind.</p>
+    </div>
+  </div>
+
+  <p>The user must therefore constantly invent ways to give the agent a
+    <strong>quality vantage point — the big picture</strong>. Coordinating the entire process
+    toward the goal is a task the agent cannot do on its own.
+    You are the one who sees the whole system from above — and that role is irreplaceable.</p>
+</section>
+
+<!-- ═══════════════ YOUR ROLE ═══════════════ -->
+<section>
+  <h2 id="role">Your New Role — Coordinator, Not Executor</h2>
+  <p>Look at the diagram again. A developer who starts working with AI typically struggles because
+    they <strong>don't understand their changed role</strong>. They describe problems
+    from a developer's perspective, without realizing they now occupy an entirely different position
+    in the regulation loop.</p>
+
+  <div class="formula-box">
+    <p>As the regulation diagram shows, the AI user is effectively an <strong>analyst</strong>,
+      a <strong>tester</strong>, and <strong>part of the control unit</strong> — not the executive
+      component of the system. The executive component is the agent. You define the goal w(t), evaluate the output y(t),
+      and provide feedback. You don't write code — <strong>you govern the process of its creation</strong>.</p>
+  </div>
+
+  <h3 id="prompt-craft">The Art of the Prompt</h3>
+  <p>Input prompts are model-dependent — each model has different strengths
+    and weaknesses, a different "language" it understands best. It is essential to learn
+    to work with the specific model and tool and to understand their peculiarities.</p>
+  <p>The key principle: you must write prompts so that the <strong>model understands the problem
+    through its own eyes, not yours</strong>. You must excel at precise, unambiguous
+    descriptions of the problem, the requirements, and the needs. Paradoxically — writers will have an edge
+    over programmers here, because they are accustomed to visualizing through words.</p>
+  <p><strong>A complete description of the problem, the request, the context, and the needs is an absolute
+    necessity.</strong> The system's capabilities, the visualization of the goal, the description of the environment — all of this
+    must be present in the prompt. Laziness in prompting never pays off.
+    It must be practiced like any other skill.</p>
+</section>
+
+<!-- ═══════════════ TRUST BUT VERIFY ═══════════════ -->
+<section>
+  <h2 id="trust-verify">Trust, but Verify</h2>
+  <p>The agent will mark work as done, tests included. But it's like working with developers —
+    <strong>it asserts something, but that doesn't make it true</strong>. It may not have even
+    run the tests. Occasional "lying" — hallucination — exists and is a property of the system,
+    not a bug. Every output needs independent verification.</p>
+
+  <h3 id="testing">Testing as the System's Eyes</h3>
+  <p>Unit tests alone are utterly <strong>insufficient</strong> as the sole source of feedback.
+    For genuine regulation you need a multi-layered testing strategy:</p>
+
+  <div class="concepts">
+    <div class="card c-red">
+      <h4>Unit tests</h4>
+      <p>The foundation — they verify individual components in isolation.
+        Necessary, but not sufficient on their own. The agent will happily write them
+        because they are straightforward.</p>
+    </div>
+    <div class="card c-red">
+      <h4>Integration tests</h4>
+      <p>They verify that components work together — this is exactly where
+        the most insidious bugs hide. The agent will often "forget" about them
+        unless you explicitly steer it.</p>
+    </div>
+    <div class="card c-red">
+      <h4>Smoke tests</h4>
+      <p>A quick check that the application as a whole works.
+        Critically important — without them the agent cannot see
+        that one of its changes broke something elsewhere.</p>
+    </div>
+    <div class="card c-red">
+      <h4>Conservation tests</h4>
+      <p>Tests that "freeze" verified behavior.
+        Every confirmed piece of functionality must be covered by a test
+        so it isn't lost in the next cycle of the regulation loop.</p>
+    </div>
+    <div class="card c-red">
+      <h4>E2E tests</h4>
+      <p>End-to-end tests are essential — the agent actually runs the application
+        and verifies on your behalf that the core use cases and workflows truly work.
+        They simulate user behavior from beginning to end.</p>
+    </div>
+  </div>
+
+  <p>Only <strong>taken together</strong> do these testing layers give the system "eyes"
+    that understand the application is not finished and the plan is not fulfilled.
+    Without them the agent is blind — and a blind regulator cannot converge.</p>
+
+  <div class="formula-box">
+    <p>You may be wondering right now: <em>"But our system can't be tested this deeply —
+      it requires dozens of components, services, and dependencies just to run."</em></p>
+    <hr style="border:none; border-top:1px solid var(--bg3); margin:0.6rem 0;">
+    <p>But you are forgetting one key thing: an agent can accomplish an
+      <strong>enormous amount of work</strong> in a short time — work that would never have occurred to you as a developer
+      because it would have been too costly. Setting up a sandbox, spinning up Kafka,
+      Kubernetes, connecting to dev systems, launching additional services and processes —
+      all of this can take minutes to hours, whereas you would have spent weeks writing it.</p>
+    <p>Designing the feedback loop for E2E tests is <strong>fundamental to the agentic
+      approach</strong>. You need to think in an entirely different way than before. The agent will also help
+      you design ways for it to "see" better — but you need to constantly hold the big picture,
+      demand these things, and actively manage them.
+      <strong>Otherwise it is lazy and will do nothing on its own.</strong></p>
+  </div>
+</section>
+
+<!-- ═══════════════ PROCESS DISCIPLINE ═══════════════ -->
+<section>
+  <h2 id="process-discipline">Process Discipline</h2>
+  <p>Effective work with AI demands <strong>order and system</strong> that go far
+    beyond the prompts themselves. Without process discipline even the best model
+    becomes an unpredictable tool.</p>
+
+  <div class="concepts">
+    <div class="card c-orange">
+      <h4>Small commits</h4>
+      <p>Work in small, atomic commits. This makes it possible to compare
+        commits with one another and revert to them. Each commit is
+        a "checkpoint" in the regulation loop.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Clean plans and project hygiene</h4>
+      <p>Absolutely essential: maintain clean plans, a bug list,
+        and system settings for the current project. Neglecting this point
+        pays a steep price, especially with long-term use.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Reference projects</h4>
+      <p>Use available projects that solve similar problems.
+        See solutions from multiple angles. The agent can learn from them
+        and adapt proven patterns to your context.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Invest in the best tools</h4>
+      <p>If the model is truly meant to save your time, you need to use
+        the best ones. Free tiers are months out of date or severely limited.
+        This is a fact that cannot be worked around.</p>
+    </div>
+  </div>
+
+  <h3 id="review">Iterative Review — Asymptotic Convergence</h3>
+  <p>After every piece of agent work, it needs to <strong>review its output several times</strong>,
+    fill in missing tests, and refine the code. This process follows an <strong>asymptotic curve</strong> —
+    each iteration yields a smaller quality increment and theoretically could continue
+    indefinitely.</p>
+
+  <div class="formula-box">
+    <p>You need to learn to find <strong>sensible stopping points</strong> — and that depends on how well
+      you understand the model. And how well it understands you. <strong>It goes both ways.</strong></p>
+    <hr style="border:none; border-top:1px solid var(--bg3); margin:0.6rem 0;">
+    <p>For review it is worth using not only your own inspection but also <strong>reviews
+      from additional agents</strong> who are specifically tasked with reviewing particular parts
+      of the code and architecture. The structure of reviews and their systematicity is one
+      of the most important components of the entire feedback system.</p>
+  </div>
+
+  <p>This entire article is itself a demonstration of the cybernetic principle in practice —
+    effective work with AI is not about one perfect prompt, but about
+    <strong>sustained governance of the regulation loop</strong>: a clear goal, precise feedback,
+    disciplined process, and the continuous refinement of your ability
+    to communicate with the system you are governing.</p>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var NS = 'http://www.w3.org/2000/svg';
+
+/* ───────── Which flows each component triggers ───────── */
+var COMP_FLOWS = {
+  input:     { fwd: true,  fb: false },
+  summing:   { fwd: true,  fb: true  },
+  error:     { fwd: true,  fb: false },
+  regulator: { fwd: true,  fb: false },
+  control:   { fwd: true,  fb: false },
+  system:    { fwd: true,  fb: false },
+  state:     { fwd: true,  fb: false },
+  output:    { fwd: true,  fb: true  },
+  feedback:  { fwd: false, fb: true  }
+};
+
+/* ───────── X-ranges on forward path where dots get "boosted" ───────── */
+var COMP_XRANGES = {
+  input:     [20, 90],
+  summing:   [90, 132],
+  error:     [132, 210],
+  regulator: [210, 362],
+  control:   [362, 460],
+  system:    [460, 702],
+  state:     [485, 675],
+  output:    [702, 920]
+};
+
+/* ───────── Tooltip data per schema ───────── */
+var TIPS_S1 = {
+  input:     { title: 'Setpoint w(t)', color: '#f57d26',
+               desc: 'The reference input defining the target state. The value that regulation tries to bring the actual output toward.',
+               detail: '▸ Example: desired temperature of 22 °C on a thermostat' },
+  summing:   { title: 'Summing junction Σ', color: '#5c6a72',
+               desc: 'Compares the setpoint w(t) with the feedback y(t) and computes the control error.',
+               detail: '<em>e(t) = w(t) − y(t)</em>' },
+  error:     { title: 'Control error e(t)', color: '#dfa000',
+               desc: 'The measure of distance from the goal. The smaller the error, the more precisely the system tracks the setpoint.',
+               detail: '▸ Regulation goal: lim e(t) → 0' },
+  regulator: { title: 'Regulator (controller)', color: '#3a94c5',
+               desc: 'The brain of the system — based on the error it decides on the control signal. Contains the control algorithm.',
+               detail: '<em>u = K<sub>p</sub>·e + K<sub>i</sub>·∫e dτ + K<sub>d</sub>·ė</em>' },
+  control:   { title: 'Control signal u(t)', color: '#3a94c5',
+               desc: 'The output of the controller — a concrete intervention affecting the controlled plant.',
+               detail: '▸ Example: voltage on a motor, valve flow rate' },
+  system:    { title: 'Controlled plant', color: '#8da101',
+               desc: 'A process with its own dynamics described by differential equations. Responds to the control signal and produces output.',
+               detail: '<em>ẋ(t) = Ax(t) + Bu(t)</em>' },
+  state:     { title: 'Internal state x(t)', color: '#df69ba',
+               desc: 'The system\'s "memory" — the minimal set of information fully describing the current state and enabling prediction.',
+               detail: '▸ Dimension of x(t) = system order' },
+  output:    { title: 'Process variable y(t)', color: '#8da101',
+               desc: 'The actual output of the system. It is measured, compared against the goal, and returned via feedback.',
+               detail: '▸ Goal: y(t) → w(t) with minimal overshoot' },
+  feedback:  { title: 'Feedback', color: '#35a77c',
+               desc: 'The key mechanism that closes the loop. Without it the regulator "cannot see" the result of its actions.',
+               detail: '▸ Negative feedback → stabilization · Positive feedback → oscillation' }
+};
+var TIPS_S2 = {
+  input:     { title: 'User goal', color: '#f57d26',
+               desc: 'A prompt, intent, or task. The more precisely the goal is defined, the more effective the AI\'s "regulation."',
+               detail: '▸ Structured prompt = precise setpoint' },
+  summing:   { title: 'State evaluation', color: '#5c6a72',
+               desc: 'AI compares the current state against the goal: "Have I completed the task? What still needs to be done?"',
+               detail: '▸ Automatic in chain-of-thought reasoning' },
+  error:     { title: 'What remains to be done', color: '#dfa000',
+               desc: 'The gap between the current result and the required goal. Drives the agent\'s next actions.',
+               detail: '▸ Agent iterates until: error → 0' },
+  regulator: { title: 'AI Agent (LLM)', color: '#3a94c5',
+               desc: 'The system\'s regulator — decides, plans, generates text, calls tools. Quality depends on both model and prompt.',
+               detail: '▸ Claude / GPT / Gemini = different "regulators"' },
+  control:   { title: 'Action / generated text', color: '#3a94c5',
+               desc: 'The concrete AI output — code, response, tool calls. The equivalent of a control signal.',
+               detail: '▸ tool_use · code generation · response' },
+  system:    { title: 'System (artifact under construction)', color: '#8da101',
+               desc: 'What we are regulating — a nascent application, code, document. System in cybernetics = controlled plant, not the environment.',
+               detail: '▸ Environment (IDE, terminal) is the surrounding infrastructure' },
+  state:     { title: 'Context window (internal state)', color: '#df69ba',
+               desc: 'The system\'s "memory" — conversation, system prompt, RAG context, project state. What is in context = what the AI "knows."',
+               detail: '▸ Bounded by window size (4K–200K tokens)' },
+  output:    { title: 'Result', color: '#8da101',
+               desc: 'The current form of the artifact — what the user evaluates and compares against their goal. The process variable.',
+               detail: '▸ Finished code, document, working application' },
+  feedback:  { title: 'Evaluation & reflection', color: '#35a77c',
+               desc: 'Feedback that closes the loop. Via the context window (LLM\'s working memory) output information is returned to the regulator.',
+               detail: '▸ No feedback = blind flight · With feedback = iterative convergence' }
+};
+
+/* ───────── Trail config ───────── */
+var TRAIL_LEN = 6;
+var TRAIL_GAP = 10; // px along path between trail circles
+var DOT_R = 5.5;
+
+/* ───────── SchemaEngine ───────── */
+function SchemaEngine(wrapId) {
+  this.wrap = document.getElementById(wrapId);
+  this.svg = this.wrap.querySelector('svg');
+  this.particleGroup = this.svg.querySelector('.particles');
+
+  // Paths
+  this.fwdPath = this.svg.querySelector('[id$="-fwd"]');
+  this.fbPath  = this.svg.querySelector('[id$="-fb"]');
+  this.fwdLen  = this.fwdPath.getTotalLength();
+  this.fbLen   = this.fbPath.getTotalLength();
+
+  // State
+  this.particles = [];
+  this.running = false;
+  this.activeComp = null;
+  this.targetOpacity = 0;
+  this.currentOpacity = 0;
+  this.rafId = null;
+  this.lastTime = 0;
+
+  // Filter IDs per schema
+  this.glowFwd = wrapId === 'schema1' ? 'glowB' : 'glowB2';
+  this.glowFb  = wrapId === 'schema1' ? 'glowA' : 'glowA2';
+
+  // Tooltip data
+  this.tipData = wrapId === 'schema1' ? TIPS_S1 : TIPS_S2;
+
+  this._bindEvents();
+}
+
+SchemaEngine.prototype._bindEvents = function() {
+  var self = this;
+  var zones = this.svg.querySelectorAll('.hover-zone');
+  zones.forEach(function(z) {
+    z.addEventListener('mouseenter', function() { self._onCompEnter(z.dataset.comp); });
+    z.addEventListener('mouseleave', function() { self._onCompLeave(); });
+  });
+  // Full SVG hover — start full loop on background hover
+  this.svg.addEventListener('mouseenter', function() {
+    if (!self.activeComp) {
+      self._startFlow(null);
+    }
+  });
+  this.svg.addEventListener('mouseleave', function() {
+    self._stopFlow();
+  });
+};
+
+SchemaEngine.prototype._onCompEnter = function(comp) {
+  this.activeComp = comp;
+  this.wrap.classList.add('has-focus');
+  // Highlight the right component groups
+  var comps = this.svg.querySelectorAll('.comp');
+  comps.forEach(function(c) {
+    c.classList.toggle('active', c.dataset.comp === comp);
+  });
+  this._startFlow(comp);
+  this._showTooltip(comp);
+};
+
+SchemaEngine.prototype._onCompLeave = function() {
+  this.activeComp = null;
+  this.wrap.classList.remove('has-focus');
+  this.svg.querySelectorAll('.comp').forEach(function(c) { c.classList.remove('active'); });
+  this._hideTooltip();
+};
+
+SchemaEngine.prototype._startFlow = function(comp) {
+  this.wrap.classList.add('active');
+  var flows = comp ? COMP_FLOWS[comp] : { fwd: true, fb: true };
+
+  // Ensure particles exist for needed flows
+  this._ensureParticles('fwd', flows.fwd ? 4 : 0);
+  this._ensureParticles('fb', flows.fb ? 3 : 0);
+
+  this.targetOpacity = 1;
+  if (!this.running) {
+    this.running = true;
+    this.lastTime = performance.now();
+    this._tick(this.lastTime);
+  }
+};
+
+SchemaEngine.prototype._stopFlow = function() {
+  this.wrap.classList.remove('active');
+  this.targetOpacity = 0;
+  this.activeComp = null;
+  this.wrap.classList.remove('has-focus');
+  this.svg.querySelectorAll('.comp').forEach(function(c) { c.classList.remove('active'); });
+  this._hideTooltip();
+};
+
+SchemaEngine.prototype._ensureParticles = function(type, count) {
+  var existing = this.particles.filter(function(p) { return p.type === type; });
+  var pathEl = type === 'fwd' ? this.fwdPath : this.fbPath;
+  var pathLen = type === 'fwd' ? this.fwdLen : this.fbLen;
+  var color = type === 'fwd' ? '#3a94c5' : '#35a77c';
+  var glowId = type === 'fwd' ? this.glowFwd : this.glowFb;
+  var speed = type === 'fwd' ? 185 : 210; // px/s
+
+  if (existing.length === count) return;
+
+  // Remove excess
+  while (existing.length > count) {
+    var rem = existing.pop();
+    this._removeParticle(rem);
+  }
+
+  // Add missing
+  while (existing.length < count) {
+    var idx = existing.length;
+    var offset = (idx / count) * pathLen;
+    var p = this._createParticle(type, pathEl, pathLen, offset, color, glowId, speed);
+    existing.push(p);
+    this.particles.push(p);
+  }
+};
+
+SchemaEngine.prototype._createParticle = function(type, pathEl, pathLen, offset, color, glowId, speed) {
+  var trail = [];
+  for (var t = 0; t < TRAIL_LEN; t++) {
+    var c = document.createElementNS(NS, 'circle');
+    var scale = 1 - t * 0.14;
+    c.setAttribute('r', (DOT_R * scale).toFixed(1));
+    c.setAttribute('fill', color);
+    c.setAttribute('opacity', '0');
+    if (t === 0) c.setAttribute('filter', 'url(#' + glowId + ')');
+    this.particleGroup.appendChild(c);
+    trail.push(c);
+  }
+  return {
+    type: type,
+    path: pathEl,
+    pathLen: pathLen,
+    offset: offset,
+    speed: speed,
+    color: color,
+    trail: trail,
+    alive: true
+  };
+};
+
+SchemaEngine.prototype._removeParticle = function(p) {
+  p.alive = false;
+  p.trail.forEach(function(c) { c.remove(); });
+  var idx = this.particles.indexOf(p);
+  if (idx !== -1) this.particles.splice(idx, 1);
+};
+
+SchemaEngine.prototype._tick = function(ts) {
+  var dt = Math.min((ts - this.lastTime) / 1000, 0.05); // cap at 50ms
+  this.lastTime = ts;
+  var self = this;
+
+  // Smooth opacity fade
+  var opStep = dt * 3.5; // fade speed
+  if (this.currentOpacity < this.targetOpacity) {
+    this.currentOpacity = Math.min(this.currentOpacity + opStep, this.targetOpacity);
+  } else if (this.currentOpacity > this.targetOpacity) {
+    this.currentOpacity = Math.max(this.currentOpacity - opStep, this.targetOpacity);
+  }
+
+  // If faded out completely, stop loop and clean up
+  if (this.currentOpacity <= 0.001 && this.targetOpacity === 0) {
+    this.running = false;
+    this.currentOpacity = 0;
+    // Remove all particles
+    while (this.particles.length) {
+      var rem = this.particles[0];
+      rem.trail.forEach(function(c) { c.remove(); });
+      this.particles.shift();
+    }
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.rafId = null;
+    return;
+  }
+
+  // Check which flows should be active
+  var flows = this.activeComp ? COMP_FLOWS[this.activeComp] : { fwd: true, fb: true };
+  this._ensureParticles('fwd', flows.fwd ? 4 : 0);
+  this._ensureParticles('fb', flows.fb ? 3 : 0);
+
+  // Update particles
+  var activeXRange = (this.activeComp && COMP_XRANGES[this.activeComp]) || null;
+
+  for (var i = 0; i < this.particles.length; i++) {
+    var p = this.particles[i];
+    if (!p.alive) continue;
+
+    // Move
+    p.offset = (p.offset + p.speed * dt) % p.pathLen;
+
+    // Update trail circles
+    for (var t = 0; t < p.trail.length; t++) {
+      var trailOffset = p.offset - t * TRAIL_GAP;
+      if (trailOffset < 0) trailOffset += p.pathLen;
+      var pt = p.path.getPointAtLength(trailOffset % p.pathLen);
+      var circle = p.trail[t];
+      circle.setAttribute('cx', pt.x.toFixed(1));
+      circle.setAttribute('cy', pt.y.toFixed(1));
+
+      // Opacity: base trail fade × global fade
+      var baseFade = 1 - t * 0.15;
+      var op = baseFade * self.currentOpacity;
+
+      // Boost effect: if this dot is within the active component's x-range
+      var boost = 1;
+      if (activeXRange && p.type === 'fwd' && t === 0) {
+        if (pt.x >= activeXRange[0] && pt.x <= activeXRange[1]) {
+          boost = 1.45;
+        }
+      }
+      // For feedback particles, boost when feedback is active comp
+      if (self.activeComp === 'feedback' && p.type === 'fb' && t === 0) {
+        boost = 1.3;
+      }
+
+      circle.setAttribute('opacity', Math.min(op * boost, 1).toFixed(2));
+
+      // Boost radius for lead dot
+      if (t === 0 && boost > 1) {
+        circle.setAttribute('r', (DOT_R * boost * 0.95).toFixed(1));
+      } else if (t === 0) {
+        circle.setAttribute('r', DOT_R.toFixed(1));
+      }
+    }
+  }
+
+  this.rafId = requestAnimationFrame(function(ts2) { self._tick(ts2); });
+};
+
+/* ───────── Tooltip show / hide ───────── */
+var tipEl = null; // created in DOMContentLoaded
+
+SchemaEngine.prototype._showTooltip = function(comp) {
+  var data = this.tipData[comp];
+  if (!data || !tipEl) return;
+
+  tipEl.querySelector('.tip-title').textContent = data.title;
+  tipEl.querySelector('.tip-title').style.color = data.color;
+  tipEl.querySelector('.tip-desc').textContent = data.desc;
+  tipEl.querySelector('.tip-detail').innerHTML = data.detail;
+  tipEl.style.borderLeftColor = data.color;
+
+  // Position near the component's hover zone
+  var zone = this.svg.querySelector('.hover-zone[data-comp="' + comp + '"]');
+  if (!zone) return;
+  var r = zone.getBoundingClientRect();
+  var tipW = 272;
+  var tipH = tipEl.offsetHeight || 130;
+  var pad = 14;
+  var left, top;
+
+  // Use center point of the zone for positioning decision
+  var cx = r.left + r.width / 2;
+  var cy = r.top + r.height / 2;
+  var isWide = r.width > 300; // wide zones like feedback
+
+  if (isWide) {
+    // Center tooltip above the zone
+    left = cx - tipW / 2;
+    top = r.top - tipH - pad;
+    // If no room above, go below
+    if (top < 12) top = r.bottom + pad;
+  } else if (cx < window.innerWidth / 2) {
+    // Narrow zone on left → tooltip on right
+    left = r.right + pad;
+    top = cy - tipH / 2;
+  } else {
+    // Narrow zone on right → tooltip on left
+    left = r.left - tipW - pad;
+    top = cy - tipH / 2;
+  }
+
+  // Clamp to viewport
+  left = Math.max(12, Math.min(left, window.innerWidth - tipW - 12));
+  top = Math.max(12, Math.min(top, window.innerHeight - tipH - 12));
+
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+
+  // Force reflow so position is applied before opacity transition
+  void tipEl.offsetWidth;
+  tipEl.classList.add('visible');
+};
+
+SchemaEngine.prototype._hideTooltip = function() {
+  if (tipEl) tipEl.classList.remove('visible');
+};
+
+/* ───────── Initialize both schemas ───────── */
+document.addEventListener('DOMContentLoaded', function() {
+  // Create global tooltip element
+  tipEl = document.createElement('div');
+  tipEl.className = 'schema-tip';
+  tipEl.innerHTML = '<div class="tip-title"></div><div class="tip-desc"></div><div class="tip-detail"></div>';
+  document.body.appendChild(tipEl);
+
+  new SchemaEngine('schema1');
+  new SchemaEngine('schema2');
+
+  /* ═══════ TOC smooth scroll (JS-based, preserves browser zoom) ═══════ */
+  document.querySelectorAll('.toc a[href^="#"]').forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('href').substring(1);
+      var target = document.getElementById(id);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        history.pushState(null, '', '#' + id);
+      }
+    });
+  });
+
+  /* ═══════ EDIT MODE — drag SVG elements, log positions ═══════ */
+  var editMode = false;
+
+  /* Edit mode buttons — hidden, uncomment appendChild lines to re-enable */
+  var editBtn = document.createElement('button');
+  editBtn.textContent = 'EDIT MODE: OFF';
+  editBtn.style.cssText = 'position:fixed;bottom:12px;left:12px;z-index:9999;padding:8px 18px;background:#3a94c5;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;letter-spacing:0.04em;';
+  // document.body.appendChild(editBtn);
+
+  var copyBtn = document.createElement('button');
+  copyBtn.textContent = 'COPY LOG';
+  copyBtn.style.cssText = 'position:fixed;bottom:12px;left:180px;z-index:9999;padding:8px 14px;background:#8da101;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;display:none;';
+  // document.body.appendChild(copyBtn);
+
+  var clearBtn = document.createElement('button');
+  clearBtn.textContent = 'CLEAR';
+  clearBtn.style.cssText = 'position:fixed;bottom:12px;left:280px;z-index:9999;padding:8px 14px;background:#f57d26;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;display:none;';
+  // document.body.appendChild(clearBtn);
+
+  var editLog = document.createElement('textarea');
+  editLog.style.cssText = 'position:fixed;bottom:50px;left:12px;z-index:9999;width:580px;height:220px;display:none;font-family:monospace;font-size:11px;background:rgba(253,246,227,0.97);border:2px solid #3a94c5;border-radius:8px;padding:10px;resize:both;';
+  editLog.placeholder = 'Drag elements on the diagrams. Positions will be logged here.\nCopy this text and paste it to Claude.';
+  // document.body.appendChild(editLog);
+
+  var coordLabel = document.createElement('div');
+  coordLabel.style.cssText = 'position:fixed;z-index:10000;padding:3px 8px;background:rgba(0,0,0,0.75);color:#fff;font-size:11px;font-family:monospace;border-radius:4px;pointer-events:none;display:none;';
+  // document.body.appendChild(coordLabel);
+
+  copyBtn.addEventListener('click', function() {
+    editLog.select();
+    document.execCommand('copy');
+    copyBtn.textContent = 'COPIED!';
+    setTimeout(function() { copyBtn.textContent = 'COPY LOG'; }, 1200);
+  });
+  clearBtn.addEventListener('click', function() { editLog.value = ''; });
+
+  function getLabel(el) {
+    if (el.tagName === 'text') {
+      var txt = el.textContent.trim();
+      if (txt.length > 30) txt = txt.substring(0, 27) + '...';
+      return 'text "' + txt + '"';
+    }
+    if (el.tagName === 'rect') {
+      var g = el.closest('.comp');
+      return 'rect[' + (g ? g.dataset.comp : 'env') + ']';
+    }
+    if (el.tagName === 'circle') {
+      var g = el.closest('.comp');
+      return 'circle[' + (g ? g.dataset.comp : '?') + ']';
+    }
+    return el.tagName;
+  }
+
+  function setupDrag(svg) {
+    var schemaId = svg.closest('.schema-wrap').id;
+    var dragging = null;
+    var ox = 0, oy = 0;
+
+    function toSVG(e) {
+      var pt = svg.createSVGPoint();
+      pt.x = e.clientX; pt.y = e.clientY;
+      return pt.matrixTransform(svg.getScreenCTM().inverse());
+    }
+
+    svg.addEventListener('mousedown', function(e) {
+      if (!editMode) return;
+      var el = e.target;
+      if (!el || el.classList.contains('hover-zone')) return;
+      if (el.tagName !== 'text' && el.tagName !== 'rect' && el.tagName !== 'circle') return;
+      e.preventDefault(); e.stopPropagation();
+      dragging = el;
+      var pt = toSVG(e);
+      if (el.tagName === 'circle') {
+        ox = pt.x - parseFloat(el.getAttribute('cx'));
+        oy = pt.y - parseFloat(el.getAttribute('cy'));
+      } else {
+        ox = pt.x - parseFloat(el.getAttribute('x'));
+        oy = pt.y - parseFloat(el.getAttribute('y'));
+      }
+    });
+
+    svg.addEventListener('mousemove', function(e) {
+      if (!editMode) return;
+      var pt = toSVG(e);
+      coordLabel.textContent = 'SVG: ' + Math.round(pt.x) + ', ' + Math.round(pt.y);
+      coordLabel.style.left = (e.clientX + 16) + 'px';
+      coordLabel.style.top = (e.clientY - 10) + 'px';
+      coordLabel.style.display = 'block';
+      if (!dragging) return;
+      e.preventDefault();
+      var nx = Math.round(pt.x - ox), ny = Math.round(pt.y - oy);
+      if (dragging.tagName === 'circle') {
+        dragging.setAttribute('cx', nx);
+        dragging.setAttribute('cy', ny);
+      } else {
+        dragging.setAttribute('x', nx);
+        dragging.setAttribute('y', ny);
+      }
+    });
+
+    function endDrag() {
+      if (!dragging) return;
+      var el = dragging;
+      dragging = null;
+      var lbl = getLabel(el);
+      var pos;
+      if (el.tagName === 'circle') {
+        pos = 'cx=' + el.getAttribute('cx') + ' cy=' + el.getAttribute('cy');
+      } else {
+        pos = 'x=' + el.getAttribute('x') + ' y=' + el.getAttribute('y');
+      }
+      if (el.tagName === 'rect') {
+        pos += ' w=' + el.getAttribute('width') + ' h=' + el.getAttribute('height');
+      }
+      editLog.value += schemaId + ' | ' + lbl + ' | ' + pos + '\n';
+      editLog.scrollTop = editLog.scrollHeight;
+    }
+
+    svg.addEventListener('mouseup', endDrag);
+    svg.addEventListener('mouseleave', function(e) {
+      coordLabel.style.display = 'none';
+      endDrag();
+    });
+  }
+
+  setupDrag(document.querySelector('#schema1 svg'));
+  setupDrag(document.querySelector('#schema2 svg'));
+
+  editBtn.addEventListener('click', function() {
+    editMode = !editMode;
+    editBtn.textContent = 'EDIT MODE: ' + (editMode ? 'ON' : 'OFF');
+    editBtn.style.background = editMode ? '#f85552' : '#3a94c5';
+    editLog.style.display = editMode ? 'block' : 'none';
+    copyBtn.style.display = editMode ? 'inline-block' : 'none';
+    clearBtn.style.display = editMode ? 'inline-block' : 'none';
+
+    // Disable hover zones in edit mode so we can click through to elements
+    document.querySelectorAll('.hover-zone').forEach(function(z) {
+      z.style.pointerEvents = editMode ? 'none' : '';
+      z.style.fill = editMode ? 'rgba(255,0,0,0.05)' : 'transparent';
+    });
+
+    // Make elements look draggable
+    document.querySelectorAll('.schema-wrap svg text, .schema-wrap svg rect:not(.hover-zone), .schema-wrap svg circle').forEach(function(el) {
+      el.style.cursor = editMode ? 'grab' : '';
+    });
+
+    if (editMode) {
+      editLog.value += '=== Edit mode ON — drag elements to reposition ===\n';
+    } else {
+      coordLabel.style.display = 'none';
+    }
+  });
+});
+
+})();
+</script>
+</body>
+</html>

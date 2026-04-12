@@ -1,0 +1,9 @@
+{
+  "slug": "series-ai-effectively",
+  "title": "AI Effectively: A Systems Approach",
+  "description": "An essay series on working with AI as a regulated system — from systemic thinking to AI-first craft.",
+  "order": [
+    "01-systemic-approach",
+    "02-from-stone-to-sculpture"
+  ]
+}

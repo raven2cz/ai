@@ -1,0 +1,43 @@
+name: Prompt Challenge Report
+description: Odešli kód/řešení, kde se ti nepodařilo AI donutit dělat, co potřebuješ. My to zkusíme spravit a vložíme srovnání jako edukační případ!
+title: "[Challenge]: "
+labels: ["prompt-challenge"]
+body:
+  - type: markdown
+    attributes:
+      value: "Ahoj! Pokusíme se vzít Tvoji špatnou session s AI a najít pro ni správný postup, abychom z toho udělali výukový případ. Děkujeme za sdílení."
+  
+  - type: textarea
+    id: problem-description
+    attributes:
+      label: "O co ses pokoušel(a)?"
+      description: "Krátce popiš, o jakou úpravu nebo vytvoření kódu ti šlo."
+      placeholder: "Např. Chtěl jsem vytvořit analogové hodiny s plynulou sekundovkou v čistém JS..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: "Co jsi očekával(a) za výsledek?"
+      description: "Jak měl vypadat správný kód nebo jak se to mělo chovat?"
+      placeholder: "Mělo to být plynulé, používat requestAnimationFrame a HTML plynule rotovat."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: failed-session
+    attributes:
+      label: "Odkaz nebo obsah nepovedené konverzace (Failed Session)"
+      description: "Ideálně vlož link ze sdíleného ChatGPT/Claude, nebo sem prekopíruj Markdown celé konverzace, ať vidíme, co jsi zkoušel a proč to selhalo."
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-output
+    attributes:
+      label: "Aktuální výstup (Kód nebo chyba)"
+      description: "Vlož sem přesně ten kód, který jsi od AI prozatím dostal, ale je špatně, nebo nefunguje. Třeba pomocí markdown bloku."
+      render: shell
+    validations:
+      required: false

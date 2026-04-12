@@ -2,272 +2,792 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Prompt Engineering Playground</title>
+  <title>AI Playground — Prompt Engineering, Essays & Experiments</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A collection of essays, prompt-engineering challenges and small front-end experiments built with AI. Focus on clean prompts and readable code." />
+  <meta name="theme-color" content="#0b1120" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    :root {
+      --obsidian: #0b1120;
+      --slate-950: #080d18;
+      --slate-900: #0f172a;
+      --slate-850: #172033;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+
+      --text-primary: #e2e8f0;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+
+      --accent-cyan: #38bdf8;
+      --accent-violet: #a78bfa;
+      --accent-blue: #60a5fa;
+      --accent-pink: #f472b6;
+
+      --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #a78bfa 60%, #f472b6 100%);
+      --accent-gradient-soft: linear-gradient(135deg, rgba(56,189,248,0.15) 0%, rgba(167,139,250,0.15) 100%);
+
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
+
+      --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -8px rgba(0,0,0,0.5);
+      --shadow-hover: 0 1px 2px rgba(0,0,0,0.4), 0 24px 40px -12px rgba(56,189,248,0.15), 0 8px 24px -8px rgba(167,139,250,0.2);
+
+      --max-width: 1200px;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
 
     body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--obsidian);
+      color: var(--text-primary);
+      font-feature-settings: "ss01", "cv02", "cv11";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       AURORA BACKDROP
+       ══════════════════════════════════════════════════════ */
+    .aurora {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .aurora::before,
+    .aurora::after {
+      content: "";
+      position: absolute;
+      width: 60vw;
+      height: 60vw;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.35;
+      animation: drift 22s ease-in-out infinite alternate;
+    }
+    .aurora::before {
+      top: -20vw;
+      left: -10vw;
+      background: radial-gradient(circle, rgba(56,189,248,0.55), transparent 70%);
+    }
+    .aurora::after {
+      bottom: -20vw;
+      right: -10vw;
+      background: radial-gradient(circle, rgba(167,139,250,0.45), transparent 70%);
+      animation-direction: alternate-reverse;
+      animation-duration: 28s;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0, 0) scale(1); }
+      50%  { transform: translate(6vw, 4vw) scale(1.1); }
+      100% { transform: translate(-4vw, 2vw) scale(0.95); }
+    }
+
+    /* subtle noise grain */
+    .grain {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.035;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ══════════════════════════════════════════════════════
+       LAYOUT
+       ══════════════════════════════════════════════════════ */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ══════════════════════════════════════════════════════
+       TOP BAR
+       ══════════════════════════════════════════════════════ */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(14px) saturate(150%);
+      -webkit-backdrop-filter: blur(14px) saturate(150%);
+      background: color-mix(in srgb, var(--obsidian) 70%, transparent);
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+    }
+    .topbar-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 14px 32px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, #f5f5f5, #dcdcdc);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #111827;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+      display: grid;
+      place-items: center;
+      color: #0b1120;
+      font-weight: 800;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 14px -2px rgba(56,189,248,0.4);
+    }
+    .topbar-nav {
+      display: flex;
+      gap: 6px;
+    }
+    .topbar-nav a {
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s, background 0.2s;
+    }
+    .topbar-nav a:hover {
+      color: var(--text-primary);
+      background: rgba(148,163,184,0.08);
+    }
+    .topbar-github {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--slate-700);
+      background: rgba(15,23,42,0.5);
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s, transform 0.2s;
+    }
+    .topbar-github:hover {
+      border-color: var(--accent-cyan);
+      color: var(--text-primary);
+      transform: translateY(-1px);
     }
 
-    .page {
-      max-width: 960px;
-      width: 100%;
-      padding: 32px 16px;
+    /* ══════════════════════════════════════════════════════
+       HERO
+       ══════════════════════════════════════════════════════ */
+    .hero {
+      padding: 96px 0 64px;
+      text-align: center;
+      position: relative;
     }
-
-    header {
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(56,189,248,0.25);
+      background: rgba(56,189,248,0.06);
+      color: var(--accent-cyan);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
       margin-bottom: 24px;
+      animation: fadeUp 0.7s 0.05s ease-out both;
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
     }
 
-    h1 {
-      font-size: 1.9rem;
+    .hero h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.05;
+      margin-bottom: 20px;
+      animation: fadeUp 0.7s 0.15s ease-out both;
+    }
+    .hero h1 .gradient {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    .hero-sub {
+      max-width: 640px;
+      margin: 0 auto 36px;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      animation: fadeUp 0.7s 0.25s ease-out both;
+    }
+    .hero-meta {
+      display: inline-flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      animation: fadeUp 0.7s 0.35s ease-out both;
+    }
+    .hero-meta .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: rgba(30,41,59,0.5);
+      border: 1px solid var(--slate-700);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .hero-meta .pill strong { color: var(--text-primary); font-weight: 600; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════════════════════════════
+       SECTIONS
+       ══════════════════════════════════════════════════════ */
+    .section {
+      padding: 48px 0 32px;
+    }
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .section-head-left { min-width: 0; }
+    .section-kicker {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
       margin-bottom: 8px;
     }
-
-    .subtitle {
+    .section-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    .section-sub {
+      color: var(--text-muted);
       font-size: 0.95rem;
-      color: #4b5563;
-      max-width: 700px;
+      max-width: 520px;
+      margin-top: 4px;
+    }
+    .section-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--slate-700);
+      white-space: nowrap;
     }
 
-    .meta {
-      margin-top: 8px;
-      font-size: 0.8rem;
-      color: #6b7280;
+    /* ══════════════════════════════════════════════════════
+       ARTICLE SERIES CARDS  (featured, hero-style)
+       ══════════════════════════════════════════════════════ */
+    .series-grid {
+      display: grid;
+      gap: 20px;
+    }
+    .series-card {
+      position: relative;
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      background: linear-gradient(180deg, var(--slate-850) 0%, var(--slate-900) 100%);
+      border: 1px solid var(--slate-700);
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+    .series-card:hover {
+      border-color: rgba(56,189,248,0.35);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+    .series-card-glow {
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: var(--accent-gradient);
+      opacity: 0;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .series-card:hover .series-card-glow { opacity: 0.6; }
+
+    .series-card-header { margin-bottom: 28px; max-width: 720px; }
+    .series-card-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 14px 0 10px;
+      color: var(--text-primary);
+    }
+    .series-card-desc {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.65;
     }
 
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow:
-        0 10px 25px rgba(0, 0, 0, 0.15),
-        0 0 0 1px rgba(15, 23, 42, 0.04);
+    .series-parts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .series-part {
+      display: block;
+      padding: 20px 22px;
+      border-radius: var(--radius-md);
+      background: rgba(11,17,32,0.5);
+      border: 1px solid var(--slate-700);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .series-part::after {
+      content: "→";
+      position: absolute;
+      right: 22px;
+      top: 20px;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      transition: transform 0.25s, color 0.25s;
+    }
+    .series-part:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(56,189,248,0.05);
+      transform: translateY(-1px);
+    }
+    .series-part:hover::after {
+      transform: translateX(4px);
+      color: var(--accent-cyan);
+    }
+    .series-part-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      margin-bottom: 8px;
+    }
+    .series-part-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .series-part-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
+    /* ══════════════════════════════════════════════════════
+       MINI CARDS (challenges + examples)
+       ══════════════════════════════════════════════════════ */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
     }
-
-    thead {
-      background: #f3f4f6;
+    .card-link { text-decoration: none; color: inherit; }
+    .mini-card {
+      position: relative;
+      padding: 24px 26px;
+      height: 100%;
+      border-radius: var(--radius-md);
+      background: var(--slate-850);
+      border: 1px solid var(--slate-700);
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s, background 0.25s;
+      overflow: hidden;
     }
-
-    th,
-    td {
-      padding: 10px 12px;
-      text-align: left;
-      vertical-align: middle;
+    .mini-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-gradient);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease-out;
     }
+    .mini-card:hover {
+      border-color: rgba(56,189,248,0.35);
+      background: linear-gradient(180deg, var(--slate-850) 0%, #131d30 100%);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card);
+    }
+    .mini-card:hover::before { transform: scaleX(1); }
 
-    th {
-      font-weight: 600;
+    .mini-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .mini-card-arrow {
+      color: var(--text-dim);
+      font-size: 1.15rem;
+      transition: transform 0.25s, color 0.25s;
+    }
+    .mini-card:hover .mini-card-arrow {
+      color: var(--accent-cyan);
+      transform: translateX(4px);
+    }
+    .mini-card-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .mini-card-desc {
+      color: var(--text-muted);
       font-size: 0.9rem;
-      color: #374151;
-      border-bottom: 1px solid #e5e7eb;
+      line-height: 1.6;
+    }
+    .mini-card-desc code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82em;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(148,163,184,0.12);
+      color: var(--text-secondary);
+    }
+    .mini-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
     }
 
-    tbody tr:nth-child(even) {
-      background: #f9fafb;
-    }
-
-    tbody tr:hover {
-      background: #eef2ff;
-      transition: background 160ms ease-out;
-    }
-
-    .example-name {
-      font-weight: 600;
-    }
-
+    /* tags */
     .tag {
       display: inline-flex;
       align-items: center;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 999px;
-      background: #e5e7eb;
-      font-size: 0.75rem;
-      color: #374151;
-      margin-right: 4px;
-      margin-bottom: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      background: rgba(148,163,184,0.1);
+      color: var(--text-secondary);
+      border: 1px solid rgba(148,163,184,0.12);
+    }
+    .tag-challenge {
+      background: rgba(56,189,248,0.1);
+      color: var(--accent-cyan);
+      border-color: rgba(56,189,248,0.25);
+    }
+    .tag-example {
+      background: rgba(244,114,182,0.1);
+      color: var(--accent-pink);
+      border-color: rgba(244,114,182,0.25);
+    }
+    .tag-series {
+      background: rgba(167,139,250,0.12);
+      color: var(--accent-violet);
+      border-color: rgba(167,139,250,0.3);
     }
 
-    .tag-primary {
-      background: #dbeafe;
-      color: #1d4ed8;
+    .empty-grid {
+      color: var(--text-dim);
+      font-style: italic;
+      padding: 32px;
+      text-align: center;
+      border: 1px dashed var(--slate-700);
+      border-radius: var(--radius-md);
+      grid-column: 1 / -1;
     }
 
-    .tag-secondary {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .link-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: none;
-      background: #111827;
-      color: #f9fafb;
-      font-size: 0.85rem;
-      text-decoration: none;
-      cursor: pointer;
-      transition: transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out;
-      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.35);
-    }
-
-    .link-button:hover {
-      transform: translateY(-1px);
-      background: #020617;
-      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.45);
-    }
-
-    .link-button span {
-      margin-left: 4px;
-    }
-
+    /* ══════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════ */
     footer {
-      margin-top: 16px;
-      font-size: 0.75rem;
-      color: #6b7280;
+      margin-top: 64px;
+      padding: 40px 0 48px;
+      border-top: 1px solid rgba(148,163,184,0.08);
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--accent-cyan); }
+
+    /* ══════════════════════════════════════════════════════
+       SCROLL REVEAL
+       ══════════════════════════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
 
-    @media (max-width: 640px) {
-      .page {
-        padding: 20px 12px;
-      }
+    /* ══════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════ */
+    @media (max-width: 720px) {
+      .container { padding: 0 20px; }
+      .topbar-inner { padding: 12px 20px; }
+      .topbar-nav { display: none; }
+      .hero { padding: 64px 0 48px; }
+      .series-card { padding: 26px 22px; }
+    }
 
-      table,
-      thead,
-      tbody,
-      th,
-      td,
-      tr {
-        display: block;
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
       }
+      .reveal { opacity: 1; transform: none; }
+    }
 
-      thead {
-        display: none;
-      }
-
-      tbody tr {
-        margin-bottom: 12px;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
-      }
-
-      td {
-        padding: 8px 12px;
-      }
-
-      td::before {
-        content: attr(data-label);
-        display: block;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #6b7280;
-        margin-bottom: 2px;
-      }
-
-      .card {
-        padding: 14px;
-      }
+    /* focus visible */
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 3px;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header>
-      <h1>AI Prompt Engineering Playground</h1>
-      <p class="subtitle">
-        A collection of small, focused experiments generated and refined with AI. Each example
-        is meant to be readable, minimal, and useful as a reference for prompt engineering
-        rather than “vibe coding”.
-      </p>
-      <p class="meta">
-        Repository: <a href="https://github.com/raven2cz/ai" target="_blank" rel="noopener noreferrer">raven2cz/ai</a> ·
-        Deployed via GitHub Pages
-      </p>
-    </header>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
 
-    <section class="card">
-      <table>
-        <thead>
-          <tr>
-            <th>Example</th>
-            <th>Description</th>
-            <th>Tech & Tags</th>
-            <th>Demo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Analog Clock example row -->
-          <tr>
-            <td data-label="Example">
-              <span class="example-name">Analog Clock</span>
-            </td>
-            <td data-label="Description">
-              Smooth animated analog clock with a black frame, classic black hands and a red
-              second hand. Shows continuous movement using <code>requestAnimationFrame</code>.
-            </td>
-            <td data-label="Tech & Tags">
-              <span class="tag tag-primary">HTML</span>
-              <span class="tag tag-primary">CSS</span>
-              <span class="tag tag-primary">JavaScript</span>
-              <span class="tag tag-secondary">Prompt-engineered</span>
-            </td>
-            <td data-label="Demo">
-              <a class="link-button" href="examples/analog-clock/" target="_blank" rel="noopener noreferrer">
-                View demo<span>↗</span>
-              </a>
-            </td>
-          </tr>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">
+        <span class="brand-mark">AI</span>
+        <span>Playground</span>
+      </a>
+      <nav class="topbar-nav" aria-label="Primary">
+        <a href="#articles">Articles</a>
+        <a href="#challenges">Challenges</a>
+        <a href="#examples">Examples</a>
+      </nav>
+      <a class="topbar-github" href="https://github.com/raven2cz/ai" target="_blank" rel="noopener noreferrer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        GitHub
+      </a>
+    </div>
+  </header>
 
-          <!-- Add more examples here in the future:
-          <tr>
-            <td data-label="Example">
-              <span class="example-name">Some Other Example</span>
-            </td>
-            <td data-label="Description">
-              Short description of what this example demonstrates.
-            </td>
-            <td data-label="Tech & Tags">
-              <span class="tag tag-primary">HTML</span>
-              <span class="tag tag-primary">JS</span>
-            </td>
-            <td data-label="Demo">
-              <a class="link-button" href="examples/some-other-example/" target="_blank" rel="noopener noreferrer">
-                View demo<span>↗</span>
-              </a>
-            </td>
-          </tr>
-          -->
-        </tbody>
-      </table>
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-eyebrow"><span class="dot"></span> Built and refined with AI</div>
+      <h1>Clear prompts.<br><span class="gradient">Readable code.</span></h1>
+      <p class="hero-sub">
+        A small playground of essays, prompt-engineering challenges, and focused front-end
+        experiments — shaped in dialogue with large language models. The goal: to talk to
+        AI with intent, not incantation.
+      </p>
+      <div class="hero-meta">
+        <span class="pill"><strong>Essays</strong> · systems thinking</span>
+        <span class="pill"><strong>Challenges</strong> · before &amp; after</span>
+        <span class="pill"><strong>Examples</strong> · working demos</span>
+      </div>
     </section>
 
-    <footer>
-      Generated and maintained with the help of large language models.  
-      Focus: clean examples, clear prompts, readable code.
-    </footer>
+    <section id="articles" class="section container reveal">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-kicker">01 — Essay Series</div>
+          <h2 class="section-title">Articles</h2>
+          <p class="section-sub">Long-form writing on how to work with AI systemically — from regulation loops to the sculptor's craft.</p>
+        </div>
+        <span class="section-count" id="articles-count"></span>
+      </div>
+      <div class="series-grid">
+          <!-- ARTICLES:START -->
+          <article class="series-card">
+            <div class="series-card-glow" aria-hidden="true"></div>
+            <div class="series-card-header">
+              <span class="tag tag-series">Essay Series</span>
+              <h3 class="series-card-title">AI Effectively: A Systems Approach</h3>
+              <p class="series-card-desc">An essay series on working with AI as a regulated system — from systemic thinking to AI-first craft.</p>
+            </div>
+            <div class="series-parts">
+            <a class="series-part" href="articles/series-ai-effectively/01-systemic-approach/index.html">
+              <div class="series-part-num">Part 1</div>
+              <div class="series-part-title">The Systemic Approach</div>
+              <div class="series-part-sub">AI as a cybernetic regulation loop</div>
+            </a>            <a class="series-part" href="articles/series-ai-effectively/02-from-stone-to-sculpture/index.html">
+              <div class="series-part-num">Part 2</div>
+              <div class="series-part-title">AI-First: From Stone to Sculpture</div>
+              <div class="series-part-sub">The sculptor's metaphor for AI-native development</div>
+            </a>
+            </div>
+          </article>
+          <!-- ARTICLES:END -->
+      </div>
+    </section>
+
+    <section id="challenges" class="section container reveal">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-kicker">02 — Before &amp; After</div>
+          <h2 class="section-title">Challenges</h2>
+          <p class="section-sub">Real prompts that went wrong, and how a better conversation fixed them.</p>
+        </div>
+        <span class="section-count" id="challenges-count"></span>
+      </div>
+      <div class="mini-grid">
+          <!-- CHALLENGES:START -->
+          <a class="card-link" href="challenges/01-center-a-div-issue/index.html">
+            <article class="mini-card">
+              <div class="mini-card-head">
+                <span class="tag tag-challenge">Challenge</span>
+                <span class="mini-card-arrow" aria-hidden="true">→</span>
+              </div>
+              <h3 class="mini-card-title">Center a Div</h3>
+              <p class="mini-card-desc">I tried to center a container in the middle of the screen, but it doesn't work properly.</p>
+            </article>
+          </a>
+          <a class="card-link" href="challenges/02-bash-rename-script/index.html">
+            <article class="mini-card">
+              <div class="mini-card-head">
+                <span class="tag tag-challenge">Challenge</span>
+                <span class="mini-card-arrow" aria-hidden="true">→</span>
+              </div>
+              <h3 class="mini-card-title">Bulk-rename Files in Bash</h3>
+              <p class="mini-card-desc">I want to rename all `.txt` files in a folder so that each one gets a `backup_` prefix.</p>
+            </article>
+          </a>
+          <!-- CHALLENGES:END -->
+      </div>
+    </section>
+
+    <section id="examples" class="section container reveal">
+      <div class="section-head">
+        <div class="section-head-left">
+          <div class="section-kicker">03 — Working Demos</div>
+          <h2 class="section-title">Examples</h2>
+          <p class="section-sub">Small, self-contained experiments — each one a tiny proof that prompts can yield clean code.</p>
+        </div>
+        <span class="section-count" id="examples-count"></span>
+      </div>
+      <div class="mini-grid">
+          <!-- EXAMPLES:START -->
+          <a class="card-link" href="examples/analog-clock/index.html">
+            <article class="mini-card">
+              <div class="mini-card-head">
+                <span class="tag tag-example">Example</span>
+                <span class="mini-card-arrow" aria-hidden="true">→</span>
+              </div>
+              <h3 class="mini-card-title">Analog Clock</h3>
+              <p class="mini-card-desc">Smooth animated analog clock with continuous movement via <code>requestAnimationFrame</code>.</p>
+              <div class="mini-card-tags"><span class="tag">HTML</span> <span class="tag">CSS</span> <span class="tag">JavaScript</span></div>
+            </article>
+          </a>
+          <!-- EXAMPLES:END -->
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="container">
+      <div>Generated and maintained with large language models · focus: clean examples, clear prompts, readable code.</div>
+      <div>
+        <a href="https://github.com/raven2cz/ai" target="_blank" rel="noopener noreferrer">raven2cz/ai</a>
+        &nbsp;·&nbsp;
+        <a href="https://raven2cz.github.io/ai/">GitHub Pages</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // Count badges
+    requestAnimationFrame(() => {
+      const artCount = document.querySelectorAll('#articles .series-card').length;
+      const chCount  = document.querySelectorAll('#challenges .mini-card').length;
+      const exCount  = document.querySelectorAll('#examples .mini-card').length;
+      const set = (id, n, label) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = n + ' ' + label;
+      };
+      set('articles-count',   artCount, artCount === 1 ? 'series' : 'series');
+      set('challenges-count', chCount,  chCount === 1 ? 'entry' : 'entries');
+      set('examples-count',   exCount,  exCount === 1 ? 'demo' : 'demos');
+    });
+  </script>
 </body>
 </html>

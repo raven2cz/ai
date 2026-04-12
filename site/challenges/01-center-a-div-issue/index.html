@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Center a Div — AI Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+  <style>
+    :root {
+      --obsidian: #0b1120;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --text-primary: #e2e8f0;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --accent-cyan: #38bdf8;
+      --accent-violet: #a78bfa;
+      --accent-blue: #60a5fa;
+      --user-bg: #1e3a8a;
+      --user-fg: #dbeafe;
+      --ai-bg: #334155;
+      --ai-fg: #f1f5f9;
+      --code-bg: #090e17;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--obsidian);
+      color: var(--text-primary);
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Navigation ───────────────────────────────────────── */
+    nav {
+      width: 264px;
+      background: var(--slate-900);
+      border-right: 1px solid var(--slate-700);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+    nav::-webkit-scrollbar { width: 6px; }
+    nav::-webkit-scrollbar-thumb { background: var(--slate-700); border-radius: 8px; }
+
+    .nav-header {
+      padding: 22px 22px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--slate-700);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.2s;
+    }
+    .nav-header:hover { color: var(--accent-cyan); }
+    .nav-header .arrow { transition: transform 0.2s; }
+    .nav-header:hover .arrow { transform: translateX(-3px); }
+
+    .nav-group-title {
+      padding: 22px 22px 8px;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .nav-item {
+      padding: 12px 22px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.18s, color 0.18s, border-color 0.18s;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      user-select: none;
+    }
+    .nav-item:hover { background: rgba(148,163,184,0.06); color: var(--text-primary); }
+    .nav-item.active {
+      border-left-color: var(--accent-cyan);
+      color: var(--text-primary);
+      background: linear-gradient(90deg, rgba(56,189,248,0.12), transparent);
+    }
+
+    /* ── Main content ─────────────────────────────────────── */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 48px 56px;
+    }
+    main::-webkit-scrollbar { width: 10px; }
+    main::-webkit-scrollbar-thumb { background: var(--slate-700); border-radius: 8px; }
+
+    .content-section {
+      display: none;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+      animation: fadeIn 0.35s ease-out;
+    }
+    .content-section.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--slate-800);
+      border: 1px solid var(--slate-700);
+      border-radius: var(--radius-lg);
+      padding: 36px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    /* ── Typography ───────────────────────────────────────── */
+    h1, h2, h3 {
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      color: var(--text-primary);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    h1 { font-size: 1.85rem; margin-bottom: 1.25rem; }
+    h2 {
+      font-size: 1.35rem; margin-top: 1.75rem; margin-bottom: 1rem;
+      border-bottom: 1px solid var(--slate-700);
+      padding-bottom: 0.5rem;
+    }
+    h3 { font-size: 1.08rem; margin-top: 1.2rem; margin-bottom: 0.6rem; color: var(--text-secondary); }
+
+    p { line-height: 1.75; color: var(--text-secondary); margin-bottom: 1em; }
+    p:last-child { margin-bottom: 0; }
+    a { color: var(--accent-cyan); }
+
+    .markdown-body p { line-height: 1.75; color: var(--text-secondary); margin-bottom: 1.1em; }
+    .markdown-body ul, .markdown-body ol { margin-bottom: 1.1em; padding-left: 26px; }
+    .markdown-body li { line-height: 1.75; color: var(--text-secondary); margin-bottom: 0.35em; }
+    .markdown-body blockquote {
+      border-left: 3px solid var(--accent-cyan);
+      padding: 0.4em 1em;
+      margin: 1em 0;
+      color: var(--text-muted);
+      background: rgba(56,189,248,0.04);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    }
+
+    /* ── Iframe result container ──────────────────────────── */
+    .iframe-container {
+      width: 100%;
+      height: 600px;
+      border: 1px solid var(--slate-700);
+      border-radius: var(--radius-md);
+      background: #0a0f1a;
+    }
+
+    /* ── Code blocks ──────────────────────────────────────── */
+    pre, .markdown-body pre {
+      margin: 14px 0;
+      padding: 18px 20px;
+      background: var(--code-bg);
+      border-radius: var(--radius-md);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.85rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      border: 1px solid var(--slate-700);
+    }
+    code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      background: rgba(148,163,184,0.12);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.86em;
+      color: var(--text-primary);
+    }
+    pre code { background: transparent; padding: 0; border-radius: 0; }
+
+    /* ── Chat bubbles ─────────────────────────────────────── */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .message { display: flex; flex-direction: column; gap: 6px; max-width: 86%; }
+    .message.user { align-self: flex-end; }
+    .message.assistant { align-self: flex-start; }
+
+    .msg-avatar {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .message.user .msg-avatar { justify-content: flex-end; color: var(--accent-blue); }
+    .message.assistant .msg-avatar { justify-content: flex-start; color: var(--accent-violet); }
+
+    .msg-bubble {
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+    .message.user .msg-bubble {
+      background: var(--user-bg);
+      color: var(--user-fg);
+      border-radius: 14px 14px 4px 14px;
+    }
+    .message.assistant .msg-bubble {
+      background: var(--ai-bg);
+      color: var(--ai-fg);
+      border-radius: 14px 14px 14px 4px;
+    }
+    .message.user .msg-bubble code { background: rgba(0,0,0,0.2); color: #dbeafe; }
+    .message.assistant .msg-bubble code { background: rgba(0,0,0,0.25); }
+    .msg-bubble p { margin-bottom: 0.7em; color: inherit; }
+    .msg-bubble p:last-child { margin-bottom: 0; }
+    .msg-bubble pre { margin: 0.6em 0; background: rgba(0,0,0,0.35); }
+
+    /* ── Empty state ──────────────────────────────────────── */
+    .empty {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem 0;
+      text-align: center;
+    }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 860px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      nav { width: 100%; border-right: none; border-bottom: 1px solid var(--slate-700); }
+      main { padding: 24px; }
+      .card { padding: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="../../index.html" class="nav-header">
+      <span class="arrow">←</span> AI Playground
+    </a>
+
+    <div class="nav-group-title">Challenge</div>
+    <div class="nav-item active" data-target="intro">Problem statement</div>
+
+    <div class="nav-group-title">User attempt</div>
+    <div class="nav-item" data-target="user-result">Failed output</div>
+    <div class="nav-item" data-target="user-session">Conversation log</div>
+
+    <div class="nav-group-title">Working solution</div>
+    <div class="nav-item" data-target="expert-result">Solution / Demo</div>
+    <div class="nav-item" data-target="expert-session">Expert conversation</div>
+  </nav>
+
+  <main>
+    <div id="intro" class="content-section active">
+      <div class="card markdown-body" id="problem-content"></div>
+    </div>
+
+    <div id="user-result" class="content-section">
+      <div class="card">
+        <h2>Original (broken) result</h2>
+        <iframe src="solution-user/index.html" class="iframe-container" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <div id="user-session" class="content-section">
+      <div class="card">
+        <h2>Failed conversation</h2>
+        <div class="chat-container" id="session-user-content"></div>
+      </div>
+    </div>
+
+    <div id="expert-result" class="content-section">
+      <div class="card">
+        <h2>Working result</h2>
+        <iframe src="solution-expert/index.html" class="iframe-container" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <div id="expert-session" class="content-section">
+      <div class="card">
+        <h2>Expert conversation</h2>
+        <div class="chat-container" id="session-expert-content"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const problemMd = `# Center a Div
+
+I tried to center a container in the middle of the screen, but it doesn't work properly.
+
+## Expected result
+A box is positioned exactly in the center of the window — horizontally and vertically — with a nice shadow and a responsive width. The inner text is center-aligned.
+`;
+    const userSessionMd = `**User:**
+Give me HTML and CSS for a container that sits in the middle of the monitor. It should contain the text "Hello world".
+
+**Assistant:**
+Sure, here's the code. We'll use the classic margin trick.
+\`\`\`html
+<div class="container">
+    Hello world
+</div>
+\`\`\`
+\`\`\`css
+.container {
+    margin: 50% auto;
+    width: 300px;
+    height: 100px;
+    background: white;
+    border: 1px solid black;
+}
+\`\`\`
+`;
+    const expertSessionMd = `**User:**
+Build me a centered div in the middle of the page with a nice shadow. Use CSS Grid, modern colors (dark look) and pleasant typography.
+
+**Assistant:**
+Sure! Grid is perfect for this. We'll set \`place-items: center\` on the body and give the container a slightly glassy feel.
+\`\`\`html
+<div class="card">
+    <h2>Hello world</h2>
+    <p>Precisely centered thanks to CSS Grid.</p>
+</div>
+\`\`\`
+`;
+
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang, ignoreIllegals: true }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: false,
+      gfm: true,
+    });
+
+    function renderChat(markdown) {
+      if (!markdown || !markdown.trim()) {
+        return '<div class="empty">No transcript provided yet.</div>';
+      }
+      const html = marked.parse(markdown);
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      let out = '';
+      let speaker = null;
+      let buf = '';
+
+      const flush = () => {
+        if (speaker) {
+          const label = speaker === 'user' ? '👤 Me' : '🤖 AI';
+          out += `<div class="message ${speaker}"><div class="msg-avatar">${label}</div><div class="msg-bubble">${buf}</div></div>`;
+        }
+        speaker = null;
+        buf = '';
+      };
+
+      Array.from(doc.body.childNodes).forEach(node => {
+        if (node.nodeType === 1 && node.tagName === 'P'
+            && (node.innerHTML.includes('<strong>User:</strong>') || node.innerHTML.includes('<strong>Assistant:</strong>'))) {
+          flush();
+          if (node.innerHTML.includes('<strong>User:</strong>')) {
+            speaker = 'user';
+            buf = node.innerHTML.replace('<strong>User:</strong>', '').trim();
+          } else {
+            speaker = 'assistant';
+            buf = node.innerHTML.replace('<strong>Assistant:</strong>', '').trim();
+          }
+        } else if (speaker) {
+          buf += node.outerHTML || node.textContent;
+        } else {
+          out += node.outerHTML || node.textContent || '';
+        }
+      });
+      flush();
+      return out || '<div class="empty">No transcript provided yet.</div>';
+    }
+
+    document.getElementById('problem-content').innerHTML = marked.parse(problemMd);
+    document.getElementById('session-user-content').innerHTML = renderChat(userSessionMd);
+    document.getElementById('session-expert-content').innerHTML = renderChat(expertSessionMd);
+
+    // Run syntax highlighting on all rendered code blocks
+    document.querySelectorAll('pre code').forEach(block => {
+      try { hljs.highlightElement(block); } catch (e) {}
+    });
+
+    // Navigation
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const target = item.dataset.target;
+        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.getElementById(target).classList.add('active');
+        item.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

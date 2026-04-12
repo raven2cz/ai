@@ -560,7 +560,12 @@
 
   document.getElementById("preset").addEventListener("change", (e) => {
     const v = e.target.value;
-    if (v) { loadPattern(v); e.target.value = ""; }
+    if (v) {
+      loadPattern(v);
+      setRunning(false);   // pause so the initial state is visible
+      lastStep = 0;        // reset tick so Play resumes cleanly
+      e.target.value = "";
+    }
   });
 
   // ── main loop ─────────────────────────────────────────────

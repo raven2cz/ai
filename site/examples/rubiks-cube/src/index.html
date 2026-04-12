@@ -283,7 +283,7 @@
   <div class="world" id="world">
     <div class="cube" id="cube"></div>
   </div>
-  <div class="hint">Drag to orbit · click face buttons to turn</div>
+  <div class="hint">Drag to orbit · wheel to zoom · Shift+button or Shift+key = inverse turn</div>
 </div>
 
 <script>
@@ -298,7 +298,18 @@
   //   R (right)         = x = +1      L (left)   = x = -1
   //   F (toward viewer) = z = +1      B (back)   = z = -1
 
-  const STEP = 66;           // cubelet size (64) + gap (2)
+  // STEP = cubelet size + inter-cubelet gap, derived from the CSS custom
+  // property --cubelet so it tracks the mobile breakpoint automatically.
+  let STEP = 66;
+  const GAP = 2;
+  function recomputeStep() {
+    const px = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue("--cubelet")
+    );
+    if (Number.isFinite(px) && px > 0) STEP = px + GAP;
+  }
+  recomputeStep();
+
   const TURN_MS = 260;       // face-turn animation duration
 
   const COLORS = {
@@ -371,11 +382,14 @@
     const el = document.createElement("div");
     el.className = "cubelet";
 
+    // In CSS Y-down, `.py` (the +Y face after rotateX(-90deg)) sits visually
+    // BELOW the cubelet, and `.ny` sits above. So y=+1 cubelets sticker .py
+    // (bottom / D), and y=-1 cubelets sticker .ny (top / U).
     const faces = [
       { cls: "px", visible: x ===  1, color: COLORS.R },
       { cls: "nx", visible: x === -1, color: COLORS.L },
-      { cls: "py", visible: y === -1, color: COLORS.U }, // CSS y=-1 is visual top
-      { cls: "ny", visible: y ===  1, color: COLORS.D },
+      { cls: "py", visible: y ===  1, color: COLORS.D },
+      { cls: "ny", visible: y === -1, color: COLORS.U },
       { cls: "pz", visible: z ===  1, color: COLORS.F },
       { cls: "nz", visible: z === -1, color: COLORS.B },
     ];
@@ -391,7 +405,8 @@
 
     const c = {
       el,
-      pos: [x, y, z],          // current grid position (integers)
+      pos: [x, y, z],           // current grid position (integers)
+      originalPos: [x, y, z],   // home position (for solved-state check)
       orient: identity(),       // current orientation (integer 3×3)
     };
     cubeEl.appendChild(el);
@@ -417,19 +432,11 @@
         cubelets.push(buildCubelet(x, y, z));
 
   // ── Move definitions ────────────────────────────────────────
-  // For each face move: which axis to rotate around, which layer coord
-  // selects the 9 cubelets, and the rotation direction.
-  //
-  // "Clockwise when viewed from outside the face" convention:
-  //   U  (looking at y=-1 from −y side, i.e. from above): angle = +90° around +Y
-  //   D  (looking at y=+1 from +y side, i.e. from below): angle = -90° around +Y
-  //   R  (looking at x=+1 from +x side):                  angle = -90° around +X
-  //   L  (looking at x=-1 from -x side):                  angle = +90° around +X
-  //   F  (looking at z=+1 from +z side, toward viewer):   angle = -90° around +Z
-  //   B  (looking at z=-1 from -z side):                  angle = +90° around +Z
-  //
-  // (Signs tuned for the CSS Y-down coord system — "U" physically rotates
-  //  the top layer CW when you look down at it from the viewer's eye.)
+  // Signs are chosen so that every move matches the standard Rubik's
+  // convention "clockwise viewed from outside the face". They were verified
+  // by tracing the orbit of a test corner under each move against the
+  // expected cycle (e.g. U: FUR → BUR → BUL → FUL → FUR).
+  // In CSS Y-down coordinates, opposite faces always have opposite signs.
   const MOVES = {
     U:  { axis: 1, layer: -1, sign: -1 },
     "U'": { axis: 1, layer: -1, sign: +1 },
@@ -452,9 +459,18 @@
   let moveCount = 0;
 
   function isSolved() {
+    // A cubelet is visually solved when it's at its home position AND every
+    // axis along which it has an outward sticker is still mapped to itself
+    // by its orientation. This correctly ignores invisible center rotations
+    // (centers only have one outward axis, so rotation around it is free)
+    // but still catches flipped edges and twisted corners.
     for (const c of cubelets) {
-      const o = c.orient;
-      if (o[0][0] !== 1 || o[1][1] !== 1 || o[2][2] !== 1) return false;
+      if (c.pos[0] !== c.originalPos[0] ||
+          c.pos[1] !== c.originalPos[1] ||
+          c.pos[2] !== c.originalPos[2]) return false;
+      for (let a = 0; a < 3; a++) {
+        if (c.originalPos[a] !== 0 && c.orient[a][a] !== 1) return false;
+      }
     }
     return true;
   }
@@ -535,11 +551,8 @@
 
   function reset() {
     if (busy) return;
-    for (const c of cubelets) {
-      // Recompute initial pos from DOM index: rebuild state by reading cubelet's
-      // original grid position from its creation index.
-    }
-    // Simpler: destroy and rebuild.
+    // Destroy and rebuild the 27 cubelets from scratch — cleaner than trying
+    // to roll back accumulated orientation/position state.
     for (const c of cubelets) c.el.remove();
     cubelets.length = 0;
     for (let x = -1; x <= 1; x++)
@@ -551,12 +564,22 @@
   }
 
   // ── Wire up buttons ────────────────────────────────────────
+  // Shift + click inverts the move (e.g. Shift+U -> U'). Primed buttons
+  // (U', R', …) inverted by Shift go back to the base move.
   document.querySelectorAll("button[data-move]").forEach((btn) => {
-    btn.addEventListener("click", () => runMove(btn.dataset.move));
+    btn.addEventListener("click", (e) => {
+      let move = btn.dataset.move;
+      if (e.shiftKey) {
+        move = move.endsWith("'") ? move.slice(0, -1) : move + "'";
+      }
+      runMove(move);
+    });
   });
-  document.getElementById("scramble").addEventListener("click", () => {
-    moveCount = 0; // don't count scramble toward user moves
-    scramble().then(() => { moveCount = 0; updateStatus(); });
+  document.getElementById("scramble").addEventListener("click", async () => {
+    if (busy) return; // don't touch counters mid-animation
+    await scramble();
+    moveCount = 0;    // zero out only after scramble actually finished
+    updateStatus();
   });
   document.getElementById("reset").addEventListener("click", reset);
 
@@ -578,8 +601,12 @@
   let rotX = -26, rotY = -32;
   let dragStart = null;
 
+  let zoom = 1;
+  const ZOOM_MIN = 0.45;
+  const ZOOM_MAX = 2.2;
+
   function applyWorld() {
-    world.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    world.style.transform = `scale3d(${zoom}, ${zoom}, ${zoom}) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
   }
 
   function onDown(cx, cy) {
@@ -607,8 +634,25 @@
   }, { passive: true });
   scene.addEventListener("touchend", onUp);
 
+  // Mouse-wheel zoom. Non-passive so we can preventDefault the page scroll.
+  scene.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    // Smooth exponential zoom — a constant wheel delta gives a constant ratio.
+    const factor = Math.exp(-e.deltaY * 0.0015);
+    zoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom * factor));
+    applyWorld();
+  }, { passive: false });
+
   applyWorld();
   updateStatus();
+
+  // Keep cubelet spacing in sync with the CSS --cubelet variable across
+  // responsive breakpoints.
+  window.addEventListener("resize", () => {
+    const prev = STEP;
+    recomputeStep();
+    if (STEP !== prev) cubelets.forEach(renderCubelet);
+  });
 })();
 </script>
 

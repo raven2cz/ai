@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Conway's Game of Life</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #0f172a;
+    --panel-2: #172033;
+    --border: #1e293b;
+    --border-soft: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #38bdf8;
+    --accent-2: #a78bfa;
+    --live: #38bdf8;
+    --live-glow: rgba(56, 189, 248, 0.6);
+    --grid: #1e293b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(ellipse at top, #0f172a 0%, var(--bg) 60%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header h1 .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--live-glow);
+    margin-right: 10px;
+    vertical-align: middle;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  header .stats {
+    margin-left: auto;
+    display: flex;
+    gap: 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  header .stats b {
+    color: var(--text);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .toolbar .group {
+    display: flex;
+    gap: 4px;
+    padding: 0 10px;
+    border-right: 1px solid var(--border);
+  }
+  .toolbar .group:last-child { border-right: 0; }
+
+  button, select {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  button:hover, select:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.06);
+  }
+  button.primary {
+    background: var(--accent);
+    color: #0b1120;
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  button.primary:hover {
+    background: #7dd3fc;
+    border-color: #7dd3fc;
+  }
+  button.danger:hover {
+    color: #fca5a5;
+    border-color: #fca5a5;
+    background: rgba(252, 165, 165, 0.06);
+  }
+
+  select {
+    padding-right: 28px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%2394a3b8' d='M0 0l5 6 5-6z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  .speed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .speed input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px;
+    height: 4px;
+    background: var(--border-soft);
+    border-radius: 2px;
+    outline: none;
+  }
+  .speed input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--live-glow);
+  }
+  .speed input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 0;
+  }
+  .speed b { color: var(--text); min-width: 46px; display: inline-block; }
+
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow: hidden;
+  }
+  canvas {
+    background: #060a13;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(56, 189, 248, 0.05);
+    cursor: crosshair;
+    image-rendering: pixelated;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .hint {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .hint.visible { opacity: 1; }
+
+  @media (max-width: 720px) {
+    header h1 span.t { display: none; }
+    header .stats { font-size: 0.7rem; gap: 10px; }
+    .toolbar { padding: 8px 10px; gap: 4px; }
+    .toolbar .group { padding: 0 6px; }
+    button, select { padding: 5px 9px; font-size: 0.74rem; }
+    .speed input[type="range"] { width: 70px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    header h1 .dot { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="dot"></span><span class="t">Conway's Game of Life</span></h1>
+  <div class="stats">
+    <span>GEN<b id="gen">0</b></span>
+    <span>POP<b id="pop">0</b></span>
+    <span>FPS<b id="fps">—</b></span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="group">
+    <button id="play" class="primary" title="Space">▶ Play</button>
+    <button id="step" title="N">Step</button>
+  </div>
+  <div class="group">
+    <button id="random">Random</button>
+    <button id="clear" class="danger">Clear</button>
+  </div>
+  <div class="group">
+    <select id="preset" title="Load a classic pattern">
+      <option value="">Load pattern…</option>
+      <option value="glider">Glider</option>
+      <option value="lwss">Lightweight Spaceship</option>
+      <option value="pulsar">Pulsar</option>
+      <option value="pentadecathlon">Pentadecathlon</option>
+      <option value="gun">Gosper Glider Gun</option>
+      <option value="r-pentomino">R-pentomino</option>
+      <option value="acorn">Acorn (methuselah)</option>
+    </select>
+  </div>
+  <div class="group speed">
+    <span>SPEED</span>
+    <input id="speed" type="range" min="1" max="60" value="20" />
+    <b id="speedLabel">20/s</b>
+  </div>
+</div>
+
+<div class="canvas-wrap">
+  <canvas id="grid" width="800" height="520"></canvas>
+  <div class="hint" id="hint">Click / drag to paint · Space = play/pause · N = step · C = clear</div>
+</div>
+
+<script>
+/* ═════════════════════════════════════════════════════════════
+   Conway's Game of Life
+   Rules (B3/S23):
+     - A live cell with 2 or 3 live neighbours survives.
+     - A dead cell with exactly 3 live neighbours becomes alive.
+     - All other cells die or stay dead.
+   ═════════════════════════════════════════════════════════════ */
+(() => {
+  "use strict";
+
+  const canvas = document.getElementById("grid");
+  const ctx = canvas.getContext("2d");
+  const genEl = document.getElementById("gen");
+  const popEl = document.getElementById("pop");
+  const fpsEl = document.getElementById("fps");
+  const hint = document.getElementById("hint");
+
+  const CELL = 8;           // cell size in px
+  let cols, rows;
+  let grid, next;
+  let generation = 0;
+  let running = false;
+  let stepsPerSecond = 20;
+  let lastStep = 0;
+  let lastFpsSample = 0;
+  let stepsThisSecond = 0;
+
+  // ── grid sizing (responsive) ──────────────────────────────
+  function resize() {
+    const wrap = canvas.parentElement;
+    const maxW = Math.min(wrap.clientWidth - 32, 1200);
+    const maxH = wrap.clientHeight - 32;
+    cols = Math.max(20, Math.floor(maxW / CELL));
+    rows = Math.max(20, Math.floor(maxH / CELL));
+    canvas.width = cols * CELL;
+    canvas.height = rows * CELL;
+
+    // preserve old state on resize if possible
+    const fresh = new Uint8Array(cols * rows);
+    if (grid) {
+      const oldCols = Math.sqrt(grid.length) | 0; // fallback
+      // Not truly reconstructible without stored dims — just start fresh.
+    }
+    grid = fresh;
+    next = new Uint8Array(cols * rows);
+    draw();
+  }
+
+  const idx = (x, y) => y * cols + x;
+
+  // ── simulation step (toroidal wrap) ───────────────────────
+  function step() {
+    for (let y = 0; y < rows; y++) {
+      const yN = (y - 1 + rows) % rows;
+      const yS = (y + 1) % rows;
+      for (let x = 0; x < cols; x++) {
+        const xW = (x - 1 + cols) % cols;
+        const xE = (x + 1) % cols;
+        const n =
+          grid[idx(xW, yN)] + grid[idx(x, yN)] + grid[idx(xE, yN)] +
+          grid[idx(xW, y )]                    + grid[idx(xE, y )] +
+          grid[idx(xW, yS)] + grid[idx(x, yS)] + grid[idx(xE, yS)];
+
+        const alive = grid[idx(x, y)];
+        next[idx(x, y)] = alive
+          ? (n === 2 || n === 3 ? 1 : 0)
+          : (n === 3 ? 1 : 0);
+      }
+    }
+    // swap buffers
+    const tmp = grid; grid = next; next = tmp;
+    generation++;
+    stepsThisSecond++;
+  }
+
+  // ── rendering ─────────────────────────────────────────────
+  function draw() {
+    ctx.fillStyle = "#060a13";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // faint grid lines (only if cells large enough to warrant them)
+    if (CELL >= 6) {
+      ctx.strokeStyle = "#0d1424";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x <= cols; x++) {
+        ctx.moveTo(x * CELL + 0.5, 0);
+        ctx.lineTo(x * CELL + 0.5, rows * CELL);
+      }
+      for (let y = 0; y <= rows; y++) {
+        ctx.moveTo(0, y * CELL + 0.5);
+        ctx.lineTo(cols * CELL, y * CELL + 0.5);
+      }
+      ctx.stroke();
+    }
+
+    // live cells
+    let population = 0;
+    ctx.fillStyle = "#38bdf8";
+    ctx.shadowBlur = 0; // shadows are expensive per-cell; skip
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (grid[idx(x, y)]) {
+          ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+          population++;
+        }
+      }
+    }
+
+    genEl.textContent = generation;
+    popEl.textContent = population;
+  }
+
+  // ── mouse painting ────────────────────────────────────────
+  let painting = false;
+  let paintValue = 1;
+
+  function cellAt(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = Math.floor(((evt.clientX - rect.left) * scaleX) / CELL);
+    const y = Math.floor(((evt.clientY - rect.top) * scaleY) / CELL);
+    if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
+    return { x, y };
+  }
+
+  canvas.addEventListener("mousedown", (e) => {
+    const c = cellAt(e);
+    if (!c) return;
+    painting = true;
+    // toggle based on first cell — drag then paints that value
+    paintValue = grid[idx(c.x, c.y)] ? 0 : 1;
+    grid[idx(c.x, c.y)] = paintValue;
+    draw();
+  });
+  canvas.addEventListener("mousemove", (e) => {
+    if (!painting) return;
+    const c = cellAt(e);
+    if (!c) return;
+    if (grid[idx(c.x, c.y)] !== paintValue) {
+      grid[idx(c.x, c.y)] = paintValue;
+      draw();
+    }
+  });
+  window.addEventListener("mouseup", () => { painting = false; });
+
+  // touch support
+  canvas.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const c = cellAt(t);
+    if (!c) return;
+    painting = true;
+    paintValue = grid[idx(c.x, c.y)] ? 0 : 1;
+    grid[idx(c.x, c.y)] = paintValue;
+    draw();
+  }, { passive: false });
+  canvas.addEventListener("touchmove", (e) => {
+    if (!painting) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const c = cellAt(t);
+    if (!c) return;
+    if (grid[idx(c.x, c.y)] !== paintValue) {
+      grid[idx(c.x, c.y)] = paintValue;
+      draw();
+    }
+  }, { passive: false });
+  canvas.addEventListener("touchend", () => { painting = false; });
+
+  // ── controls ──────────────────────────────────────────────
+  const playBtn = document.getElementById("play");
+  function setRunning(r) {
+    running = r;
+    playBtn.textContent = r ? "⏸ Pause" : "▶ Play";
+  }
+
+  playBtn.addEventListener("click", () => setRunning(!running));
+  document.getElementById("step").addEventListener("click", () => { step(); draw(); });
+  document.getElementById("clear").addEventListener("click", () => {
+    grid.fill(0);
+    generation = 0;
+    draw();
+  });
+  document.getElementById("random").addEventListener("click", () => {
+    for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.28 ? 1 : 0;
+    generation = 0;
+    draw();
+  });
+
+  const speedSlider = document.getElementById("speed");
+  const speedLabel = document.getElementById("speedLabel");
+  speedSlider.addEventListener("input", () => {
+    stepsPerSecond = parseInt(speedSlider.value, 10);
+    speedLabel.textContent = stepsPerSecond + "/s";
+  });
+
+  // keyboard shortcuts
+  window.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    if (e.key === " ") { e.preventDefault(); setRunning(!running); }
+    else if (e.key === "n" || e.key === "N") { step(); draw(); }
+    else if (e.key === "c" || e.key === "C") {
+      grid.fill(0); generation = 0; draw();
+    }
+    else if (e.key === "r" || e.key === "R") {
+      for (let i = 0; i < grid.length; i++) grid[i] = Math.random() < 0.28 ? 1 : 0;
+      generation = 0; draw();
+    }
+  });
+
+  // show the hint for a few seconds on load
+  hint.classList.add("visible");
+  setTimeout(() => hint.classList.remove("visible"), 4500);
+
+  // ── patterns ──────────────────────────────────────────────
+  // Each pattern is an array of [x, y] offsets from a top-left origin.
+  const PATTERNS = {
+    glider: [[1,0],[2,1],[0,2],[1,2],[2,2]],
+
+    lwss: [
+      [1,0],[4,0],
+      [0,1],
+      [0,2],[4,2],
+      [0,3],[1,3],[2,3],[3,3],
+    ],
+
+    pulsar: (() => {
+      // Classic 13x13 pulsar (period-3). Build one quadrant, mirror across (6,6).
+      const arms = [
+        [2,0],[3,0],[4,0],
+        [0,2],[0,3],[0,4],
+        [5,2],[5,3],[5,4],
+        [2,5],[3,5],[4,5],
+      ];
+      const full = new Set();
+      arms.forEach(([x, y]) => {
+        full.add(`${x},${y}`);
+        full.add(`${12 - x},${y}`);
+        full.add(`${x},${12 - y}`);
+        full.add(`${12 - x},${12 - y}`);
+      });
+      return [...full].map((s) => s.split(",").map(Number));
+    })(),
+
+    pentadecathlon: [
+      [1,0],[1,1],[0,2],[2,2],[1,3],[1,4],[1,5],[1,6],[0,7],[2,7],[1,8],[1,9],
+    ],
+
+    // Gosper Glider Gun (36x9)
+    gun: [
+      [24,0],
+      [22,1],[24,1],
+      [12,2],[13,2],[20,2],[21,2],[34,2],[35,2],
+      [11,3],[15,3],[20,3],[21,3],[34,3],[35,3],
+      [0,4],[1,4],[10,4],[16,4],[20,4],[21,4],
+      [0,5],[1,5],[10,5],[14,5],[16,5],[17,5],[22,5],[24,5],
+      [10,6],[16,6],[24,6],
+      [11,7],[15,7],
+      [12,8],[13,8],
+    ],
+
+    "r-pentomino": [[1,0],[2,0],[0,1],[1,1],[1,2]],
+
+    acorn: [[1,0],[3,1],[0,2],[1,2],[4,2],[5,2],[6,2]],
+  };
+
+  function loadPattern(name) {
+    const pts = PATTERNS[name];
+    if (!pts) return;
+    grid.fill(0);
+    // bounding box
+    let maxX = 0, maxY = 0;
+    pts.forEach(([x, y]) => { if (x > maxX) maxX = x; if (y > maxY) maxY = y; });
+    // center on grid
+    const ox = Math.floor((cols - maxX) / 2);
+    const oy = Math.floor((rows - maxY) / 2);
+    pts.forEach(([x, y]) => {
+      const xx = ox + x, yy = oy + y;
+      if (xx >= 0 && yy >= 0 && xx < cols && yy < rows) grid[idx(xx, yy)] = 1;
+    });
+    generation = 0;
+    draw();
+  }
+
+  document.getElementById("preset").addEventListener("change", (e) => {
+    const v = e.target.value;
+    if (v) { loadPattern(v); e.target.value = ""; }
+  });
+
+  // ── main loop ─────────────────────────────────────────────
+  function loop(t) {
+    if (running) {
+      const interval = 1000 / stepsPerSecond;
+      if (t - lastStep >= interval) {
+        step();
+        draw();
+        lastStep = t;
+      }
+    }
+    if (t - lastFpsSample >= 1000) {
+      fpsEl.textContent = stepsThisSecond;
+      stepsThisSecond = 0;
+      lastFpsSample = t;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // ── boot ──────────────────────────────────────────────────
+  window.addEventListener("resize", resize);
+  resize();
+  loadPattern("gun"); // start with something impressive
+  setRunning(true);
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</body>
+</html>

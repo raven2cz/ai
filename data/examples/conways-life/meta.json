@@ -1,0 +1,7 @@
+{
+  "slug": "conways-life",
+  "title": "Conway's Game of Life",
+  "description": "Interactive cellular automaton — emergent complexity from four simple rules. Click to paint cells, or load classic patterns like the Gosper glider gun and watch them evolve.",
+  "tags": ["HTML", "Canvas", "JavaScript", "Algorithm"],
+  "preview": true
+}

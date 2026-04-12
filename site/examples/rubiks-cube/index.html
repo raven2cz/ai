@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rubik's Cube 3D — AI Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="../../assets/workspace.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script defer src="../../assets/workspace.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0b1120;
+      color: #e2e8f0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 32px;
+      border-bottom: 1px solid #1e293b;
+      background: #0f172a;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar a.back {
+      color: #e2e8f0;
+      text-decoration: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .topbar a.back:hover { color: #38bdf8; }
+    .topbar .sep { color: #334155; }
+    .topbar .crumb-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .topbar .tag-row { margin-left: auto; display: flex; gap: 6px; }
+    .topbar .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(56,189,248,0.08);
+      border: 1px solid rgba(56,189,248,0.25);
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    main { padding: 32px; max-width: 1240px; margin: 0 auto; }
+    .example-header { margin-bottom: 24px; }
+    .example-header h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      margin-bottom: 8px;
+    }
+    .example-header p {
+      color: #94a3b8;
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 780px;
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: 14px 18px; flex-wrap: wrap; }
+      main { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../../index.html"><span>←</span> AI Playground</a>
+    <span class="sep">·</span>
+    <span class="crumb-title">Examples</span>
+    <span class="sep">·</span>
+    <span class="crumb-title" style="color:#e2e8f0;">Rubik's Cube 3D</span>
+    <div class="tag-row"><span class="tag">HTML</span><span class="tag">CSS 3D</span><span class="tag">JavaScript</span><span class="tag">Math</span></div>
+  </header>
+  <main>
+    <div class="example-header">
+      <h1>Rubik's Cube 3D</h1>
+      <p>Fully interactive 3×3 Rubik's Cube rendered with pure CSS 3D transforms — 27 cubelets, smooth face turns, mouse/touch-drag orbit, scramble, and solved-state detection. No WebGL, no libraries.</p>
+    </div>
+    <div class="workspace" data-manifest="src/tree.json"></div>
+  </main>
+</body>
+</html>

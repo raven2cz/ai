@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Rubik's Cube 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #0f172a;
+    --panel-2: #172033;
+    --border: #1e293b;
+    --border-soft: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #38bdf8;
+
+    /* Sticker palette (classic Rubik's) */
+    --col-U: #f8fafc;   /* white  — top    */
+    --col-D: #facc15;   /* yellow — bottom */
+    --col-F: #22c55e;   /* green  — front  */
+    --col-B: #3b82f6;   /* blue   — back   */
+    --col-R: #ef4444;   /* red    — right  */
+    --col-L: #f97316;   /* orange — left   */
+    --col-inside: #0b1120;
+
+    --cubelet: 64px;
+    --gap: 2px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(ellipse at top, #0f172a 0%, var(--bg) 60%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 22px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header h1 .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  header .stats {
+    margin-left: auto;
+    display: flex;
+    gap: 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  header .stats b {
+    color: var(--text);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  header .stats .solved {
+    color: #86efac;
+    font-weight: 600;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+  .toolbar .group {
+    display: flex;
+    gap: 4px;
+    padding: 0 10px;
+    border-right: 1px solid var(--border);
+  }
+  .toolbar .group:last-child { border-right: 0; }
+  .toolbar .group-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-right: 6px;
+    align-self: center;
+  }
+
+  button {
+    appearance: none;
+    background: transparent;
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    font: inherit;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 6px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 38px;
+  }
+  button:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.06);
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary {
+    background: var(--accent);
+    color: #0b1120;
+    border-color: var(--accent);
+  }
+  button.primary:hover:not(:disabled) {
+    background: #7dd3fc;
+    border-color: #7dd3fc;
+  }
+  button.danger:hover:not(:disabled) {
+    color: #fca5a5;
+    border-color: #fca5a5;
+    background: rgba(252, 165, 165, 0.06);
+  }
+
+  .scene {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+    touch-action: none;
+    user-select: none;
+    cursor: grab;
+  }
+  .scene.dragging { cursor: grabbing; }
+
+  .world {
+    transform-style: preserve-3d;
+    will-change: transform;
+    /* Initial orientation — slight tilt so three faces are visible */
+    transform: rotateX(-26deg) rotateY(-32deg);
+    transition: none;
+  }
+
+  .cube {
+    transform-style: preserve-3d;
+    position: relative;
+    width: 0;
+    height: 0;
+  }
+
+  .cubelet {
+    position: absolute;
+    width: var(--cubelet);
+    height: var(--cubelet);
+    left: calc(var(--cubelet) / -2);
+    top: calc(var(--cubelet) / -2);
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  .face {
+    position: absolute;
+    width: var(--cubelet);
+    height: var(--cubelet);
+    background: var(--col-inside);
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    backface-visibility: hidden;
+  }
+  .face::after {
+    content: "";
+    width: 78%;
+    height: 78%;
+    background: var(--sticker, transparent);
+    border-radius: 8px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.25),
+      0 1px 2px rgba(0, 0, 0, 0.35);
+  }
+  .face.sticker::after { --sticker: var(--sticker-color); }
+
+  /* positioning the six faces of a cubelet */
+  .face.px { transform: rotateY( 90deg) translateZ(calc(var(--cubelet) / 2)); }
+  .face.nx { transform: rotateY(-90deg) translateZ(calc(var(--cubelet) / 2)); }
+  .face.py { transform: rotateX(-90deg) translateZ(calc(var(--cubelet) / 2)); }
+  .face.ny { transform: rotateX( 90deg) translateZ(calc(var(--cubelet) / 2)); }
+  .face.pz { transform:                 translateZ(calc(var(--cubelet) / 2)); }
+  .face.nz { transform: rotateY(180deg) translateZ(calc(var(--cubelet) / 2)); }
+
+  .hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+
+  @media (max-width: 720px) {
+    :root { --cubelet: 52px; }
+    header h1 span.t { display: none; }
+    .toolbar { padding: 8px 10px; gap: 4px; }
+    .toolbar .group { padding: 0 6px; }
+    button { padding: 5px 8px; font-size: 0.72rem; min-width: 34px; }
+    .hint { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .world { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="dot"></span><span class="t">Rubik's Cube 3D</span></h1>
+  <div class="stats">
+    <span>MOVES<b id="moves">0</b></span>
+    <span id="status"></span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="group">
+    <span class="group-label">Face</span>
+    <button data-move="U">U</button>
+    <button data-move="U'">U'</button>
+    <button data-move="D">D</button>
+    <button data-move="D'">D'</button>
+    <button data-move="L">L</button>
+    <button data-move="L'">L'</button>
+    <button data-move="R">R</button>
+    <button data-move="R'">R'</button>
+    <button data-move="F">F</button>
+    <button data-move="F'">F'</button>
+    <button data-move="B">B</button>
+    <button data-move="B'">B'</button>
+  </div>
+  <div class="group">
+    <button id="scramble" class="primary">Scramble</button>
+    <button id="reset" class="danger">Reset</button>
+  </div>
+</div>
+
+<div class="scene" id="scene">
+  <div class="world" id="world">
+    <div class="cube" id="cube"></div>
+  </div>
+  <div class="hint">Drag to orbit · click face buttons to turn</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Rubik's Cube 3D — pure CSS 3D transforms + integer matrix math
+   ═══════════════════════════════════════════════════════════ */
+(() => {
+  "use strict";
+
+  // Coordinate convention (CSS left-handed): X right, Y down, Z toward viewer.
+  //   U (visual top)    = y = -1      D (bottom) = y = +1
+  //   R (right)         = x = +1      L (left)   = x = -1
+  //   F (toward viewer) = z = +1      B (back)   = z = -1
+
+  const STEP = 66;           // cubelet size (64) + gap (2)
+  const TURN_MS = 260;       // face-turn animation duration
+
+  const COLORS = {
+    U: "#f8fafc", D: "#facc15",
+    F: "#22c55e", B: "#3b82f6",
+    R: "#ef4444", L: "#f97316",
+  };
+
+  // ── 3×3 integer rotation matrices (right-hand rule around given axis) ──
+  // Axes are 0 = X, 1 = Y, 2 = Z. Sign = +1 (CCW) / -1 (CW) looking from +axis.
+  function rotMatrix(axis, sign) {
+    // 90° rotation
+    const c = 0, s = sign;            // cos(90)=0, sin(90)=±1
+    const M = [[1,0,0],[0,1,0],[0,0,1]];
+    if (axis === 0) { // X: y→-z, z→y (for +90°)
+      M[1] = [0, c, -s];
+      M[2] = [0, s,  c];
+    } else if (axis === 1) { // Y: x→z, z→-x (for +90°)
+      M[0] = [ c, 0, s];
+      M[2] = [-s, 0, c];
+    } else { // Z: x→-y, y→x (for +90°)
+      M[0] = [c, -s, 0];
+      M[1] = [s,  c, 0];
+    }
+    return M;
+  }
+
+  function matMul(A, B) {
+    const r = [[0,0,0],[0,0,0],[0,0,0]];
+    for (let i = 0; i < 3; i++)
+      for (let j = 0; j < 3; j++)
+        r[i][j] = A[i][0]*B[0][j] + A[i][1]*B[1][j] + A[i][2]*B[2][j];
+    return r;
+  }
+
+  function matVec(M, v) {
+    return [
+      M[0][0]*v[0] + M[0][1]*v[1] + M[0][2]*v[2],
+      M[1][0]*v[0] + M[1][1]*v[1] + M[1][2]*v[2],
+      M[2][0]*v[0] + M[2][1]*v[1] + M[2][2]*v[2],
+    ];
+  }
+
+  const identity = () => [[1,0,0],[0,1,0],[0,0,1]];
+
+  // ── CSS matrix helpers ──────────────────────────────────────
+  // Combine an orientation matrix M and a translation (tx,ty,tz)
+  // into a CSS matrix3d() string (column-major 4x4).
+  function cssMatrix3d(M, tx, ty, tz) {
+    return `matrix3d(` +
+      `${M[0][0]},${M[1][0]},${M[2][0]},0,` +
+      `${M[0][1]},${M[1][1]},${M[2][1]},0,` +
+      `${M[0][2]},${M[1][2]},${M[2][2]},0,` +
+      `${tx},${ty},${tz},1)`;
+  }
+
+  // Continuous-angle rotation matrix for animation (floats ok).
+  function rotAngleMatrix(axis, angleRad) {
+    const c = Math.cos(angleRad), s = Math.sin(angleRad);
+    if (axis === 0) return [[1,0,0],[0,c,-s],[0,s,c]];
+    if (axis === 1) return [[c,0,s],[0,1,0],[-s,0,c]];
+    return [[c,-s,0],[s,c,0],[0,0,1]];
+  }
+
+  // ── Build cubelets ──────────────────────────────────────────
+  const cubeEl = document.getElementById("cube");
+  const cubelets = [];
+
+  function buildCubelet(x, y, z) {
+    const el = document.createElement("div");
+    el.className = "cubelet";
+
+    const faces = [
+      { cls: "px", visible: x ===  1, color: COLORS.R },
+      { cls: "nx", visible: x === -1, color: COLORS.L },
+      { cls: "py", visible: y === -1, color: COLORS.U }, // CSS y=-1 is visual top
+      { cls: "ny", visible: y ===  1, color: COLORS.D },
+      { cls: "pz", visible: z ===  1, color: COLORS.F },
+      { cls: "nz", visible: z === -1, color: COLORS.B },
+    ];
+    for (const f of faces) {
+      const fel = document.createElement("div");
+      fel.className = "face " + f.cls;
+      if (f.visible) {
+        fel.classList.add("sticker");
+        fel.style.setProperty("--sticker-color", f.color);
+      }
+      el.appendChild(fel);
+    }
+
+    const c = {
+      el,
+      pos: [x, y, z],          // current grid position (integers)
+      orient: identity(),       // current orientation (integer 3×3)
+    };
+    cubeEl.appendChild(el);
+    renderCubelet(c);
+    return c;
+  }
+
+  function renderCubelet(c, extraMatrix = null) {
+    const [x, y, z] = c.pos;
+    let M = c.orient;
+    let tx = x * STEP, ty = y * STEP, tz = z * STEP;
+    if (extraMatrix) {
+      // Prepend an extra world-space rotation (for animation).
+      M = matMul(extraMatrix, M);
+      [tx, ty, tz] = matVec(extraMatrix, [tx, ty, tz]);
+    }
+    c.el.style.transform = cssMatrix3d(M, tx, ty, tz);
+  }
+
+  for (let x = -1; x <= 1; x++)
+    for (let y = -1; y <= 1; y++)
+      for (let z = -1; z <= 1; z++)
+        cubelets.push(buildCubelet(x, y, z));
+
+  // ── Move definitions ────────────────────────────────────────
+  // For each face move: which axis to rotate around, which layer coord
+  // selects the 9 cubelets, and the rotation direction.
+  //
+  // "Clockwise when viewed from outside the face" convention:
+  //   U  (looking at y=-1 from −y side, i.e. from above): angle = +90° around +Y
+  //   D  (looking at y=+1 from +y side, i.e. from below): angle = -90° around +Y
+  //   R  (looking at x=+1 from +x side):                  angle = -90° around +X
+  //   L  (looking at x=-1 from -x side):                  angle = +90° around +X
+  //   F  (looking at z=+1 from +z side, toward viewer):   angle = -90° around +Z
+  //   B  (looking at z=-1 from -z side):                  angle = +90° around +Z
+  //
+  // (Signs tuned for the CSS Y-down coord system — "U" physically rotates
+  //  the top layer CW when you look down at it from the viewer's eye.)
+  const MOVES = {
+    U:  { axis: 1, layer: -1, sign: -1 },
+    "U'": { axis: 1, layer: -1, sign: +1 },
+    D:  { axis: 1, layer: +1, sign: +1 },
+    "D'": { axis: 1, layer: +1, sign: -1 },
+    R:  { axis: 0, layer: +1, sign: +1 },
+    "R'": { axis: 0, layer: +1, sign: -1 },
+    L:  { axis: 0, layer: -1, sign: -1 },
+    "L'": { axis: 0, layer: -1, sign: +1 },
+    F:  { axis: 2, layer: +1, sign: +1 },
+    "F'": { axis: 2, layer: +1, sign: -1 },
+    B:  { axis: 2, layer: -1, sign: -1 },
+    "B'": { axis: 2, layer: -1, sign: +1 },
+  };
+
+  // ── Turn execution (with animation) ────────────────────────
+  let busy = false;
+  const movesEl = document.getElementById("moves");
+  const statusEl = document.getElementById("status");
+  let moveCount = 0;
+
+  function isSolved() {
+    for (const c of cubelets) {
+      const o = c.orient;
+      if (o[0][0] !== 1 || o[1][1] !== 1 || o[2][2] !== 1) return false;
+    }
+    return true;
+  }
+
+  function updateStatus() {
+    movesEl.textContent = moveCount;
+    if (moveCount > 0 && isSolved()) {
+      statusEl.innerHTML = '<span class="solved">✓ SOLVED</span>';
+    } else {
+      statusEl.innerHTML = "";
+    }
+  }
+
+  function applyMove(move, animate = true) {
+    return new Promise((resolve) => {
+      const spec = MOVES[move];
+      if (!spec) return resolve();
+      const { axis, layer, sign } = spec;
+      const selected = cubelets.filter((c) => c.pos[axis] === layer);
+      const R = rotMatrix(axis, sign);
+
+      const finish = () => {
+        // Bake: new_pos = R * pos, new_orient = R * orient
+        for (const c of selected) {
+          c.pos = matVec(R, c.pos).map(Math.round);
+          c.orient = matMul(R, c.orient);
+          renderCubelet(c);
+        }
+        moveCount++;
+        updateStatus();
+        resolve();
+      };
+
+      if (!animate) { finish(); return; }
+
+      const targetAngle = sign * Math.PI / 2;
+      const start = performance.now();
+      const ease = (t) => 1 - Math.pow(1 - t, 3); // cubic ease-out
+
+      function frame(now) {
+        const t = Math.min(1, (now - start) / TURN_MS);
+        const a = ease(t) * targetAngle;
+        const Ra = rotAngleMatrix(axis, a);
+        for (const c of selected) renderCubelet(c, Ra);
+        if (t < 1) {
+          requestAnimationFrame(frame);
+        } else {
+          finish();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  async function runMove(move) {
+    if (busy) return;
+    busy = true;
+    try { await applyMove(move); }
+    finally { busy = false; }
+  }
+
+  // ── Scramble / reset ───────────────────────────────────────
+  const MOVE_KEYS = Object.keys(MOVES);
+  async function scramble(n = 22) {
+    if (busy) return;
+    busy = true;
+    try {
+      let last = "";
+      for (let i = 0; i < n; i++) {
+        let m;
+        do { m = MOVE_KEYS[Math.floor(Math.random() * MOVE_KEYS.length)]; }
+        while (m[0] === last[0]); // avoid two turns on the same face in a row
+        last = m;
+        await applyMove(m);
+      }
+    } finally { busy = false; }
+  }
+
+  function reset() {
+    if (busy) return;
+    for (const c of cubelets) {
+      // Recompute initial pos from DOM index: rebuild state by reading cubelet's
+      // original grid position from its creation index.
+    }
+    // Simpler: destroy and rebuild.
+    for (const c of cubelets) c.el.remove();
+    cubelets.length = 0;
+    for (let x = -1; x <= 1; x++)
+      for (let y = -1; y <= 1; y++)
+        for (let z = -1; z <= 1; z++)
+          cubelets.push(buildCubelet(x, y, z));
+    moveCount = 0;
+    updateStatus();
+  }
+
+  // ── Wire up buttons ────────────────────────────────────────
+  document.querySelectorAll("button[data-move]").forEach((btn) => {
+    btn.addEventListener("click", () => runMove(btn.dataset.move));
+  });
+  document.getElementById("scramble").addEventListener("click", () => {
+    moveCount = 0; // don't count scramble toward user moves
+    scramble().then(() => { moveCount = 0; updateStatus(); });
+  });
+  document.getElementById("reset").addEventListener("click", reset);
+
+  // ── Keyboard shortcuts (Rubik's notation) ─────────────────
+  window.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    const key = e.key;
+    const upper = key.toUpperCase();
+    const isLetter = /^[UDLRFB]$/.test(upper);
+    if (!isLetter) return;
+    // lowercase / Shift = prime (inverse)
+    const prime = e.shiftKey || key === key.toLowerCase();
+    runMove(prime ? upper + "'" : upper);
+  });
+
+  // ── Drag to orbit ──────────────────────────────────────────
+  const scene = document.getElementById("scene");
+  const world = document.getElementById("world");
+  let rotX = -26, rotY = -32;
+  let dragStart = null;
+
+  function applyWorld() {
+    world.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+  }
+
+  function onDown(cx, cy) {
+    dragStart = { cx, cy, rx: rotX, ry: rotY };
+    scene.classList.add("dragging");
+  }
+  function onMove(cx, cy) {
+    if (!dragStart) return;
+    const dx = cx - dragStart.cx;
+    const dy = cy - dragStart.cy;
+    rotY = dragStart.ry + dx * 0.4;
+    rotX = Math.max(-89, Math.min(89, dragStart.rx - dy * 0.4));
+    applyWorld();
+  }
+  function onUp() { dragStart = null; scene.classList.remove("dragging"); }
+
+  scene.addEventListener("mousedown", (e) => onDown(e.clientX, e.clientY));
+  window.addEventListener("mousemove", (e) => onMove(e.clientX, e.clientY));
+  window.addEventListener("mouseup", onUp);
+  scene.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) onDown(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  scene.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  scene.addEventListener("touchend", onUp);
+
+  applyWorld();
+  updateStatus();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "slug": "rubiks-cube",
+  "title": "Rubik's Cube 3D",
+  "description": "Fully interactive 3×3 Rubik's Cube rendered with pure CSS 3D transforms — 27 cubelets, smooth face turns, mouse/touch-drag orbit, scramble, and solved-state detection. No WebGL, no libraries.",
+  "tags": ["HTML", "CSS 3D", "JavaScript", "Math"],
+  "preview": true
+}

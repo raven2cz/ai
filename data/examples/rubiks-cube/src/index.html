@@ -23,7 +23,7 @@
     --col-B: #3b82f6;   /* blue   — back   */
     --col-R: #ef4444;   /* red    — right  */
     --col-L: #f97316;   /* orange — left   */
-    --col-inside: #0b1120;
+    --col-inside: #1e2636;
 
     --cubelet: 64px;
     --gap: 2px;
@@ -586,12 +586,12 @@
   // ── Keyboard shortcuts (Rubik's notation) ─────────────────
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-    const key = e.key;
-    const upper = key.toUpperCase();
+    const upper = e.key.toUpperCase();
     const isLetter = /^[UDLRFB]$/.test(upper);
     if (!isLetter) return;
-    // lowercase / Shift = prime (inverse)
-    const prime = e.shiftKey || key === key.toLowerCase();
+    // Shift (or Ctrl) + letter = prime (inverse); plain letter = base move
+    const prime = e.shiftKey || e.ctrlKey;
+    e.preventDefault();
     runMove(prime ? upper + "'" : upper);
   });
 

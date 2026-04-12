@@ -8,8 +8,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="../../assets/workspace.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script defer src="../../assets/workspace.js"></script>
 
   <style>
     :root {
@@ -289,11 +291,7 @@
     <div id="user-result" class="content-section">
       <div class="card">
         <h2>Original (broken) result</h2>
-        <h3>File: script.sh</h3><pre><code class="language-sh">#!/bin/bash
-# Failed attempt — breaks on spaces, quotes, and special characters.
-# Parses ls, which is the "Parsing ls is evil" anti-pattern.
-ls *.txt | sed 's/.*/mv "&amp;" "backup_&amp;"/' | sh
-</code></pre>
+        <div class="workspace" data-manifest="solution-user/tree.json"></div>
       </div>
     </div>
 
@@ -307,17 +305,7 @@ ls *.txt | sed 's/.*/mv "&amp;" "backup_&amp;"/' | sh
     <div id="expert-result" class="content-section">
       <div class="card">
         <h2>Working result</h2>
-        <h3>File: proper_script.sh</h3><pre><code class="language-sh">#!/usr/bin/env bash
-# Working solution — native bash globbing, safe with spaces, quotes,
-# special characters and leading dashes. Idempotent (skips already-prefixed files).
-set -euo pipefail
-shopt -s nullglob
-
-for file in *.txt; do
-    [[ "$file" == backup_* ]] &amp;&amp; continue
-    mv -- "$file" "backup_$file"
-done
-</code></pre>
+        <div class="workspace" data-manifest="solution-expert/tree.json"></div>
       </div>
     </div>
 

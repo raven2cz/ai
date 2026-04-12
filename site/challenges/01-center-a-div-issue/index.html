@@ -8,8 +8,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="../../assets/workspace.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script defer src="../../assets/workspace.js"></script>
 
   <style>
     :root {
@@ -289,7 +291,7 @@
     <div id="user-result" class="content-section">
       <div class="card">
         <h2>Original (broken) result</h2>
-        <iframe src="solution-user/index.html" class="iframe-container" loading="lazy"></iframe>
+        <div class="workspace" data-manifest="solution-user/tree.json"></div>
       </div>
     </div>
 
@@ -303,7 +305,7 @@
     <div id="expert-result" class="content-section">
       <div class="card">
         <h2>Working result</h2>
-        <iframe src="solution-expert/index.html" class="iframe-container" loading="lazy"></iframe>
+        <div class="workspace" data-manifest="solution-expert/tree.json"></div>
       </div>
     </div>
 

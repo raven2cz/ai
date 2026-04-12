@@ -1,0 +1,7 @@
+{
+  "slug": "analog-clock",
+  "title": "Analog Clock",
+  "description": "Smooth animated analog clock with a black frame, classic black hands and a red second hand. Continuous motion via requestAnimationFrame.",
+  "tags": ["HTML", "CSS", "JavaScript"],
+  "preview": true
+}

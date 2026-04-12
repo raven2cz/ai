@@ -19,10 +19,55 @@ import shutil
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_CHALLENGES = os.path.join(ROOT, "data", "challenges")
 DATA_ARTICLES = os.path.join(ROOT, "data", "articles")
+DATA_EXAMPLES = os.path.join(ROOT, "data", "examples")
 SITE_DIR = os.path.join(ROOT, "site")
 SITE_CHALLENGES = os.path.join(SITE_DIR, "challenges")
 SITE_ARTICLES = os.path.join(SITE_DIR, "articles")
+SITE_EXAMPLES = os.path.join(SITE_DIR, "examples")
 SITE_INDEX = os.path.join(SITE_DIR, "index.html")
+
+
+# ---------------------------------------------------------------------------
+# Workspace component
+# ---------------------------------------------------------------------------
+def collect_files(src_dir):
+    """Return sorted list of file paths relative to src_dir (posix-style)."""
+    results = []
+    for dirpath, _dirs, files in os.walk(src_dir):
+        for f in files:
+            full = os.path.join(dirpath, f)
+            rel = os.path.relpath(full, src_dir).replace(os.sep, "/")
+            results.append(rel)
+    results.sort()
+    return results
+
+
+def emit_workspace(src_dir, dest_dir, manifest_rel, title="", preview_file="index.html"):
+    """Copy src_dir → dest_dir, write tree.json manifest, return workspace HTML.
+
+    manifest_rel is the URL (relative to the host page) at which the browser
+    will fetch tree.json. The manifest's `files` are relative to that URL.
+    """
+    if not os.path.isdir(src_dir):
+        return '<div class="empty">No code provided.</div>'
+
+    if os.path.exists(dest_dir):
+        shutil.rmtree(dest_dir)
+    shutil.copytree(src_dir, dest_dir)
+
+    files = collect_files(src_dir)
+    has_preview = preview_file in files
+
+    manifest = {
+        "title": title,
+        "files": files,
+        "preview": has_preview,
+        "preview_file": preview_file if has_preview else None,
+    }
+    with open(os.path.join(dest_dir, "tree.json"), "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+
+    return f'<div class="workspace" data-manifest="{manifest_rel}"></div>'
 
 
 # ---------------------------------------------------------------------------
@@ -68,8 +113,10 @@ CHALLENGE_TEMPLATE = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="../../assets/workspace.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script defer src="../../assets/workspace.js"></script>
 
   <style>
     :root {
@@ -457,33 +504,16 @@ CHALLENGE_TEMPLATE = """<!DOCTYPE html>
 """
 
 
-def process_solution_dir(src_dir, dest_dir):
-    """Copy solution dir and return HTML fragment (iframe or code listing)."""
+def process_solution_dir(src_dir, dest_dir, title=""):
+    """Copy solution dir and return a <div class="workspace"> fragment."""
     if not os.path.exists(src_dir):
         return '<div class="empty">No code provided.</div>'
-
-    if os.path.exists(dest_dir):
-        shutil.rmtree(dest_dir)
-    shutil.copytree(src_dir, dest_dir)
-
-    if os.path.exists(os.path.join(dest_dir, "index.html")):
-        folder_name = os.path.basename(dest_dir)
-        return f'<iframe src="{folder_name}/index.html" class="iframe-container" loading="lazy"></iframe>'
-
-    html_parts = []
-    for file in sorted(os.listdir(src_dir)):
-        fp = os.path.join(src_dir, file)
-        if not os.path.isfile(fp):
-            continue
-        with open(fp, "r", encoding="utf-8") as f:
-            content = f.read()
-        ext = file.split(".")[-1] if "." in file else ""
-        escaped = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        html_parts.append(
-            f'<h3>File: {file}</h3>'
-            f'<pre><code class="language-{ext}">{escaped}</code></pre>'
-        )
-    return "\n".join(html_parts) if html_parts else '<div class="empty">Folder is empty.</div>'
+    folder_name = os.path.basename(dest_dir)
+    return emit_workspace(
+        src_dir, dest_dir,
+        manifest_rel=f"{folder_name}/tree.json",
+        title=title,
+    )
 
 
 def build_challenges():
@@ -519,10 +549,12 @@ def build_challenges():
         os.makedirs(dest, exist_ok=True)
 
         user_result = process_solution_dir(
-            os.path.join(ch_dir, "solution-user"), os.path.join(dest, "solution-user")
+            os.path.join(ch_dir, "solution-user"), os.path.join(dest, "solution-user"),
+            title=f"{title} — failed attempt",
         )
         expert_result = process_solution_dir(
-            os.path.join(ch_dir, "solution-expert"), os.path.join(dest, "solution-expert")
+            os.path.join(ch_dir, "solution-expert"), os.path.join(dest, "solution-expert"),
+            title=f"{title} — working solution",
         )
 
         html = CHALLENGE_TEMPLATE.replace("{TITLE}", title)
@@ -678,6 +710,162 @@ def build_articles():
 
 
 # ---------------------------------------------------------------------------
+# Examples
+# ---------------------------------------------------------------------------
+EXAMPLE_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{TITLE} — AI Playground</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark-dimmed.min.css">
+  <link rel="stylesheet" href="../../assets/workspace.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script defer src="../../assets/workspace.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0b1120;
+      color: #e2e8f0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 32px;
+      border-bottom: 1px solid #1e293b;
+      background: #0f172a;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .topbar a.back {
+      color: #e2e8f0;
+      text-decoration: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: color 0.2s;
+    }
+    .topbar a.back:hover { color: #38bdf8; }
+    .topbar .sep { color: #334155; }
+    .topbar .crumb-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+    .topbar .tag-row { margin-left: auto; display: flex; gap: 6px; }
+    .topbar .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(56,189,248,0.08);
+      border: 1px solid rgba(56,189,248,0.25);
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    main { padding: 32px; max-width: 1240px; margin: 0 auto; }
+    .example-header { margin-bottom: 24px; }
+    .example-header h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -0.015em;
+      margin-bottom: 8px;
+    }
+    .example-header p {
+      color: #94a3b8;
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 780px;
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: 14px 18px; flex-wrap: wrap; }
+      main { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../../index.html"><span>←</span> AI Playground</a>
+    <span class="sep">·</span>
+    <span class="crumb-title">Examples</span>
+    <span class="sep">·</span>
+    <span class="crumb-title" style="color:#e2e8f0;">{TITLE}</span>
+    <div class="tag-row">{TAGS_HTML}</div>
+  </header>
+  <main>
+    <div class="example-header">
+      <h1>{TITLE}</h1>
+      <p>{DESCRIPTION}</p>
+    </div>
+    {WORKSPACE_HTML}
+  </main>
+</body>
+</html>
+"""
+
+
+def build_examples():
+    examples_meta = []
+    if not os.path.exists(DATA_EXAMPLES):
+        return examples_meta
+
+    os.makedirs(SITE_EXAMPLES, exist_ok=True)
+
+    for folder in sorted(os.listdir(DATA_EXAMPLES)):
+        ex_dir = os.path.join(DATA_EXAMPLES, folder)
+        meta_path = os.path.join(ex_dir, "meta.json")
+        src_dir = os.path.join(ex_dir, "src")
+        if not os.path.isdir(ex_dir) or not os.path.exists(meta_path) or not os.path.isdir(src_dir):
+            continue
+
+        with open(meta_path, "r", encoding="utf-8") as f:
+            meta = json.load(f)
+
+        print(f"  example: {meta.get('slug', folder)}")
+
+        dest = os.path.join(SITE_EXAMPLES, meta.get("slug", folder))
+        os.makedirs(dest, exist_ok=True)
+
+        workspace_html = emit_workspace(
+            src_dir,
+            os.path.join(dest, "src"),
+            manifest_rel="src/tree.json",
+            title=meta.get("title", folder),
+        )
+
+        tags = meta.get("tags", [])
+        tags_html = "".join(f'<span class="tag">{t}</span>' for t in tags)
+
+        html = EXAMPLE_TEMPLATE
+        html = html.replace("{TITLE}", meta.get("title", folder))
+        html = html.replace("{DESCRIPTION}", meta.get("description", ""))
+        html = html.replace("{TAGS_HTML}", tags_html)
+        html = html.replace("{WORKSPACE_HTML}", workspace_html)
+
+        write_file(os.path.join(dest, "index.html"), html)
+
+        examples_meta.append({
+            "folder": meta.get("slug", folder),
+            "title": meta.get("title", folder),
+            "description": meta.get("description", ""),
+            "tags": tags,
+        })
+
+    return examples_meta
+
+
+# ---------------------------------------------------------------------------
 # Landing page updater
 # ---------------------------------------------------------------------------
 def render_challenge_cards(items):
@@ -698,18 +886,12 @@ def render_challenge_cards(items):
     return "\n".join(rows)
 
 
-def render_example_cards():
-    examples = [
-        {
-            "folder": "analog-clock",
-            "title": "Analog Clock",
-            "desc": "Smooth animated analog clock with continuous movement via <code>requestAnimationFrame</code>.",
-            "tags": ["HTML", "CSS", "JavaScript"],
-        },
-    ]
+def render_example_cards(items):
+    if not items:
+        return '          <p class="empty-grid">No examples yet.</p>'
     rows = []
-    for ex in examples:
-        tags_html = " ".join(f'<span class="tag">{t}</span>' for t in ex["tags"])
+    for ex in items:
+        tags_html = " ".join(f'<span class="tag">{t}</span>' for t in ex.get("tags", []))
         rows.append(f"""          <a class="card-link" href="examples/{ex['folder']}/index.html">
             <article class="mini-card">
               <div class="mini-card-head">
@@ -717,7 +899,7 @@ def render_example_cards():
                 <span class="mini-card-arrow" aria-hidden="true">→</span>
               </div>
               <h3 class="mini-card-title">{ex['title']}</h3>
-              <p class="mini-card-desc">{ex['desc']}</p>
+              <p class="mini-card-desc">{ex['description']}</p>
               <div class="mini-card-tags">{tags_html}</div>
             </article>
           </a>""")
@@ -756,7 +938,7 @@ def render_article_series(series_list):
     return "\n".join(out)
 
 
-def update_index_page(challenges_meta, articles_meta):
+def update_index_page(challenges_meta, articles_meta, examples_meta):
     if not os.path.exists(SITE_INDEX):
         print(f"  site/index.html not found — skipping landing update")
         return
@@ -772,7 +954,7 @@ def update_index_page(challenges_meta, articles_meta):
     )
     content = replace_between(
         content, "<!-- EXAMPLES:START -->", "<!-- EXAMPLES:END -->",
-        render_example_cards(),
+        render_example_cards(examples_meta),
     )
     write_file(SITE_INDEX, content)
     print("  updated site/index.html")
@@ -784,8 +966,10 @@ def build():
     challenges_meta = build_challenges()
     print("Building articles…")
     articles_meta = build_articles()
+    print("Building examples…")
+    examples_meta = build_examples()
     print("Updating landing page…")
-    update_index_page(challenges_meta, articles_meta)
+    update_index_page(challenges_meta, articles_meta, examples_meta)
     print("Done.")
 
 

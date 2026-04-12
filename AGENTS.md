@@ -54,8 +54,60 @@ The flawed response.
 
 ### Solution folders
 
-- If the folder contains `index.html`, the build embeds it as an iframe.
-- Otherwise every file is rendered as a syntax-highlighted code block.
+Both `solution-user/` and `solution-expert/` are rendered through the unified
+**Code Workspace** component (see below). Any directory structure is supported
+— the build script walks the tree recursively and generates a `tree.json`
+manifest consumed by `site/assets/workspace.js` at runtime.
+
+- If `index.html` exists at the root of the solution folder, the workspace
+  shows a **Preview** tab (live iframe) alongside **Code**.
+- Otherwise only the **Code** tab is shown (tree + syntax-highlighted viewer).
+
+---
+
+## 🧰 Examples — `data/examples/<slug>/`
+
+Self-contained example apps showcased on the landing page. Each example
+renders as a standalone page with the Code Workspace component.
+
+```text
+data/examples/<slug>/
+├── meta.json               # { slug, title, description, tags[], preview }
+└── src/                    # any directory structure — copied as-is
+    ├── index.html
+    ├── assets/style.css
+    └── …
+```
+
+`meta.json` fields:
+
+- `slug` — URL-safe identifier (should match folder name)
+- `title` — display name
+- `description` — one-line summary used on the card and header
+- `tags` — array of short labels (e.g. `["HTML", "CSS", "JavaScript"]`)
+- `preview` — `true` if `src/index.html` should be rendered in the Preview tab
+
+---
+
+## 🖥 Code Workspace component
+
+`site/assets/workspace.css` + `site/assets/workspace.js` provide a reusable
+file-tree + preview + syntax-highlighted viewer. It hydrates any
+`<div class="workspace" data-manifest="path/to/tree.json"></div>` at page load.
+The manifest is JSON:
+
+```json
+{
+  "title": "Human-friendly title",
+  "files": ["index.html", "assets/main.js"],
+  "preview": true,
+  "preview_file": "index.html"
+}
+```
+
+File paths in `files` are resolved relative to the manifest URL. The build
+script generates these manifests automatically for every challenge solution
+folder and every example `src/` directory.
 
 ---
 

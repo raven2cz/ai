@@ -606,13 +606,12 @@
   // ── Keyboard shortcuts (Rubik's notation) ─────────────────
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-    const key = e.key;
-    const upper = key.toUpperCase();
+    const upper = e.key.toUpperCase();
     const isLetter = /^[UDLRFBMES]$/.test(upper);
     if (!isLetter) return;
-    // Shift = inverse turn. Plain key (whether typed as 'u' or 'U') is the
-    // forward turn — matches the on-screen buttons.
-    const prime = e.shiftKey;
+    // Shift (or Ctrl) + letter = prime (inverse); plain letter = base move
+    const prime = e.shiftKey || e.ctrlKey;
+    e.preventDefault();
     runMove(prime ? upper + "'" : upper);
   });
 

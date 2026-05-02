@@ -23,7 +23,7 @@
     --col-B: #3b82f6;   /* blue   — back   */
     --col-R: #ef4444;   /* red    — right  */
     --col-L: #f97316;   /* orange — left   */
-    --col-inside: #1e2636;
+    --col-inside: #334155;
 
     --cubelet: 64px;
     --gap: 2px;
@@ -274,6 +274,15 @@
     <button data-move="B'">B'</button>
   </div>
   <div class="group">
+    <span class="group-label">Slice</span>
+    <button data-move="M">M</button>
+    <button data-move="M'">M'</button>
+    <button data-move="E">E</button>
+    <button data-move="E'">E'</button>
+    <button data-move="S">S</button>
+    <button data-move="S'">S'</button>
+  </div>
+  <div class="group">
     <button id="scramble" class="primary">Scramble</button>
     <button id="reset" class="danger">Reset</button>
   </div>
@@ -450,6 +459,16 @@
     "F'": { axis: 2, layer: +1, sign: -1 },
     B:  { axis: 2, layer: -1, sign: -1 },
     "B'": { axis: 2, layer: -1, sign: +1 },
+
+    // Slice (middle-layer) turns. Each follows the direction of the
+    // adjacent face: M follows L (axis 0), E follows D (axis 1),
+    // S follows F (axis 2).
+    M:  { axis: 0, layer: 0, sign: -1 },
+    "M'": { axis: 0, layer: 0, sign: +1 },
+    E:  { axis: 1, layer: 0, sign: +1 },
+    "E'": { axis: 1, layer: 0, sign: -1 },
+    S:  { axis: 2, layer: 0, sign: +1 },
+    "S'": { axis: 2, layer: 0, sign: -1 },
   };
 
   // ── Turn execution (with animation) ────────────────────────
@@ -533,7 +552,8 @@
   }
 
   // ── Scramble / reset ───────────────────────────────────────
-  const MOVE_KEYS = Object.keys(MOVES);
+  // Standard scrambles use only the six face turns, never slice turns.
+  const MOVE_KEYS = ["U","U'","D","D'","L","L'","R","R'","F","F'","B","B'"];
   async function scramble(n = 22) {
     if (busy) return;
     busy = true;
@@ -587,7 +607,7 @@
   window.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
     const upper = e.key.toUpperCase();
-    const isLetter = /^[UDLRFB]$/.test(upper);
+    const isLetter = /^[UDLRFBMES]$/.test(upper);
     if (!isLetter) return;
     // Shift (or Ctrl) + letter = prime (inverse); plain letter = base move
     const prime = e.shiftKey || e.ctrlKey;

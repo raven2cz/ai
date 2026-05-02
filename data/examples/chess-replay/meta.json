@@ -1,0 +1,7 @@
+{
+  "slug": "chess-replay",
+  "title": "Chess Replay",
+  "description": "Animated 2D viewer for legendary chess games — pick from a curated set, hit play, scrub through the moves. The Immortal (1851), Game of the Century (1956), and Kasparov–Topalov (1999) come preloaded; adding more is a one-line edit to games.json.",
+  "tags": ["HTML", "CSS", "JavaScript", "Chess"],
+  "preview": true
+}

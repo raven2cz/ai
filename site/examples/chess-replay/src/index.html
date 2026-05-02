@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Chess Replay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+<style>
+  :root {
+    --bg: #0b1120;
+    --panel: #0f172a;
+    --panel-2: #172033;
+    --border: #1e293b;
+    --border-soft: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #38bdf8;
+    --danger: #ef4444;
+
+    /* Board palette — warm wood */
+    --sq-light: #ebd6b0;
+    --sq-dark:  #b58863;
+    --sq-light-shade: #d8c094;
+    --sq-dark-shade:  #9d7048;
+
+    /* Highlights */
+    --hl-last: rgba(247, 213, 0, 0.45);
+    --hl-check: rgba(239, 68, 68, 0.7);
+
+    --piece-white: #f8fafc;
+    --piece-white-edge: #11161f;
+    --piece-black: #11161f;
+    --piece-black-edge: #f8fafc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(ellipse at top, #0f172a 0%, var(--bg) 60%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ───────────────────────────────────────────────── */
+  header.app-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  header.app-header h1 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header.app-header h1 .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+  }
+  .game-select-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .game-select-wrap label {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  select#game-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 7px 32px 7px 12px;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%2394a3b8' stroke-width='1.5'><path d='M1 1l5 5 5-5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px 7px;
+  }
+  select#game-select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* ── Game-info strip ──────────────────────────────────────── */
+  .game-info {
+    padding: 10px 18px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 16px;
+    align-items: start;
+    flex-shrink: 0;
+  }
+  .game-info .players {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .game-info .players .vs {
+    color: var(--dim);
+    font-weight: 500;
+    font-size: 0.85rem;
+  }
+  .game-info .meta {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.5;
+  }
+  .game-info .meta .result {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .game-info .description {
+    grid-column: 1 / -1;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* ── Main area: board + move list ─────────────────────────── */
+  main.app-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 16px;
+    padding: 16px;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .board-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .board-frame {
+    position: relative;
+    width: min(80vmin, 480px);
+    aspect-ratio: 1 / 1;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.5),
+      0 0 0 6px #4a3520,
+      0 22px 50px -18px rgba(0,0,0,0.85);
+    border-radius: 4px;
+    background: #4a3520;
+  }
+
+  .board {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .sq {
+    position: relative;
+    overflow: hidden;
+  }
+  .sq.light {
+    background:
+      linear-gradient(135deg, var(--sq-light) 0%, var(--sq-light-shade) 100%);
+  }
+  .sq.dark {
+    background:
+      linear-gradient(135deg, var(--sq-dark) 0%, var(--sq-dark-shade) 100%);
+  }
+  /* Last-move highlight overlay (under pieces) */
+  .sq.last::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--hl-last);
+    pointer-events: none;
+  }
+  /* Check highlight — radial red glow on king's square */
+  .sq.check::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, var(--hl-check) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .sq-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0;
+    user-select: none;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .sq.light .sq-label { color: var(--sq-dark-shade); }
+  .sq.dark  .sq-label { color: var(--sq-light); }
+  .sq-file { right: 3px; bottom: 2px; }
+  .sq-rank { left: 3px; top: 2px; }
+
+  /* ── Pieces (absolute, transform-translated) ──────────────── */
+  .pieces-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* Force monochrome glyph rendering — emoji fonts otherwise hijack
+       these codepoints on Windows / Android and ignore color/stroke. */
+    font-variant-emoji: text;
+  }
+  .piece {
+    position: absolute;
+    width: 12.5%;
+    height: 12.5%;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    font-family: 'DejaVu Sans', 'Segoe UI Symbol', 'Noto Sans Symbols 2',
+                 'Symbola', 'Arial Unicode MS', sans-serif;
+    font-variant-emoji: text;
+    font-size: calc(min(80vmin, 480px) / 9.5);
+    line-height: 1;
+    will-change: transform;
+    transition: transform var(--anim-ms, 0ms) cubic-bezier(0.33, 0.7, 0.4, 1),
+                opacity 200ms ease-out;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+  }
+  .piece.white {
+    color: var(--piece-white);
+    -webkit-text-stroke: 1.2px var(--piece-white-edge);
+    text-shadow:
+      0 1px 0 rgba(0,0,0,0.25);
+  }
+  .piece.black {
+    color: var(--piece-black);
+    -webkit-text-stroke: 1.2px var(--piece-black-edge);
+    text-shadow:
+      0 1px 0 rgba(255,255,255,0.15);
+  }
+  .piece.captured {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Moves panel ──────────────────────────────────────────── */
+  aside.moves-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .moves-panel-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+  .moves-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 6px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.8rem;
+    line-height: 1.7;
+  }
+  .move-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr;
+    gap: 4px;
+    align-items: center;
+  }
+  .move-num {
+    color: var(--dim);
+    text-align: right;
+    padding-right: 4px;
+  }
+  .move-cell {
+    padding: 1px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: background 0.12s, color 0.12s;
+  }
+  .move-cell:hover {
+    color: var(--text);
+    background: rgba(56, 189, 248, 0.08);
+  }
+  .move-cell.active {
+    background: var(--accent);
+    color: #0b1120;
+    font-weight: 600;
+  }
+
+  .moves-list::-webkit-scrollbar { width: 8px; }
+  .moves-list::-webkit-scrollbar-track { background: transparent; }
+  .moves-list::-webkit-scrollbar-thumb {
+    background: var(--border-soft);
+    border-radius: 4px;
+  }
+
+  /* ── Controls bar ─────────────────────────────────────────── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .ctrl-group {
+    display: flex;
+    gap: 4px;
+  }
+  button.ctrl {
+    appearance: none;
+    background: var(--panel-2);
+    border: 1px solid var(--border-soft);
+    color: var(--muted);
+    font: inherit;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    width: 38px;
+    height: 34px;
+    padding: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: grid;
+    place-items: center;
+  }
+  button.ctrl:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.08);
+  }
+  button.ctrl:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  button.ctrl.play {
+    width: 50px;
+    background: var(--accent);
+    color: #0b1120;
+    border-color: var(--accent);
+  }
+  button.ctrl.play:hover:not(:disabled) {
+    background: #7dd3fc;
+    border-color: #7dd3fc;
+  }
+  .speed-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--dim);
+  }
+  .speed-wrap span.label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 130px;
+    height: 4px;
+    background: var(--border-soft);
+    border-radius: 2px;
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--panel);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--panel);
+  }
+  .speed-val {
+    color: var(--text);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* ── Status bar (small under-board indicator) ─────────────── */
+  .status-line {
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.74rem;
+    color: var(--muted);
+    text-align: center;
+    height: 18px;
+  }
+  .status-line .ply { color: var(--text); }
+  .status-line .san { color: var(--accent); margin-left: 8px; }
+
+  /* ── Error banner ─────────────────────────────────────────── */
+  .err-banner {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 10px 14px;
+    margin: 12px 18px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: none;
+  }
+  .err-banner.shown { display: block; }
+
+  /* ── Mobile / narrow viewports: stack vertically ──────────── */
+  @media (max-width: 720px) {
+    main.app-main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      padding: 10px;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    aside.moves-panel {
+      max-height: 140px;
+    }
+    .moves-list { padding: 4px; font-size: 0.74rem; line-height: 1.5; }
+    header.app-header { padding: 10px 12px; }
+    .game-info { padding: 8px 12px; }
+    .game-info .meta { font-size: 0.66rem; }
+    .controls { padding: 8px 10px; gap: 8px; }
+    button.ctrl { width: 34px; height: 32px; font-size: 0.78rem; }
+    button.ctrl.play { width: 44px; }
+    .speed-wrap { width: 100%; margin-left: 0; }
+    input[type="range"] { flex: 1; }
+    .piece { font-size: calc(min(80vmin, 480px) / 9); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .piece { transition: opacity 120ms ease-out !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1><span class="dot"></span>Chess Replay</h1>
+  <div class="game-select-wrap">
+    <label for="game-select">GAME</label>
+    <select id="game-select" aria-label="Select game"></select>
+  </div>
+</header>
+
+<div class="game-info" id="game-info">
+  <div class="players">
+    <span id="info-white">—</span>
+    <span class="vs">vs</span>
+    <span id="info-black">—</span>
+  </div>
+  <div class="meta">
+    <div id="info-event">—</div>
+    <div><span id="info-date">—</span> · <span class="result" id="info-result">—</span></div>
+  </div>
+  <div class="description" id="info-description"></div>
+</div>
+
+<div class="err-banner" id="err-banner"></div>
+
+<main class="app-main">
+  <div class="board-area">
+    <div class="board-frame">
+      <div class="board" id="board"></div>
+      <div class="pieces-layer" id="pieces"></div>
+    </div>
+    <div class="status-line">
+      <span class="ply" id="status-ply">0 / 0</span>
+      <span class="san" id="status-san"></span>
+    </div>
+  </div>
+  <aside class="moves-panel">
+    <div class="moves-panel-head">Moves</div>
+    <div class="moves-list" id="moves-list"></div>
+  </aside>
+</main>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <button class="ctrl" id="btn-first" title="Jump to start">⏮</button>
+    <button class="ctrl" id="btn-prev"  title="Previous move">⏪</button>
+    <button class="ctrl play" id="btn-play" title="Play / pause">▶</button>
+    <button class="ctrl" id="btn-next"  title="Next move">⏩</button>
+    <button class="ctrl" id="btn-last"  title="Jump to end">⏭</button>
+  </div>
+  <div class="speed-wrap">
+    <span class="label">Speed</span>
+    <input type="range" id="speed" min="700" max="3000" step="100" value="1500" />
+    <span class="speed-val" id="speed-val">1.5s</span>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   Chess Replay — animated viewer for famous chess games.
+
+   - chess.js (UMD, global `Chess`) parses PGN, validates moves.
+   - At game-load we fully replay the game and pre-compute a `steps[]`
+     array with each ply's FEN and all the metadata we need to animate
+     into it (capture square, castling rook, promotion glyph, etc.).
+   - Forward animation: piece DOM transforms between squares with CSS.
+   - Backward / jump: snap (rebuild board from FEN) — standard chess
+     viewer convention; reverse-animation is more confusing than helpful.
+   ═══════════════════════════════════════════════════════════════════════ */
+(() => {
+  "use strict";
+
+  // ── DOM ─────────────────────────────────────────────────────
+  const $ = (id) => document.getElementById(id);
+  const boardEl = $("board");
+  const piecesEl = $("pieces");
+  const movesListEl = $("moves-list");
+  const gameSelectEl = $("game-select");
+  const errBanner = $("err-banner");
+
+  const btnFirst = $("btn-first");
+  const btnPrev  = $("btn-prev");
+  const btnPlay  = $("btn-play");
+  const btnNext  = $("btn-next");
+  const btnLast  = $("btn-last");
+  const speedEl  = $("speed");
+  const speedValEl = $("speed-val");
+  const statusPlyEl = $("status-ply");
+  const statusSanEl = $("status-san");
+
+  // ── Glyphs ─────────────────────────────────────────────────
+  // We use the FILLED Unicode chess glyphs for both colors and let CSS
+  // (color + -webkit-text-stroke) draw white pieces as outlined-white.
+  // Mixing filled + outlined glyphs renders inconsistently across fonts.
+  const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+
+  // ── State ──────────────────────────────────────────────────
+  let games = [];
+  let currentGame = null;
+  let steps = [];             // [{san, color, from, to, piece, captured, captureSquare,
+                              //    promotion, castleRook, fenAfter, isCheck,
+                              //    checkSquare, lastSquares}]
+  let ply = 0;                // 0..steps.length-1; 0 = starting position
+  let playing = false;
+  let busy = false;           // during a forward-step animation
+  let animTimer = null;
+  let prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ── Static board (squares + labels) — built once ───────────
+  function buildBoard() {
+    boardEl.innerHTML = "";
+    for (let rank = 8; rank >= 1; rank--) {
+      for (let fileIdx = 0; fileIdx < 8; fileIdx++) {
+        const file = String.fromCharCode(97 + fileIdx);
+        const sq = document.createElement("div");
+        const isLight = (fileIdx + rank) % 2 === 0;
+        sq.className = "sq " + (isLight ? "light" : "dark");
+        sq.dataset.square = file + rank;
+        if (rank === 1) {
+          const lbl = document.createElement("span");
+          lbl.className = "sq-label sq-file";
+          lbl.textContent = file;
+          sq.appendChild(lbl);
+        }
+        if (fileIdx === 0) {
+          const lbl = document.createElement("span");
+          lbl.className = "sq-label sq-rank";
+          lbl.textContent = rank;
+          sq.appendChild(lbl);
+        }
+        boardEl.appendChild(sq);
+      }
+    }
+  }
+
+  // ── Coord helpers ──────────────────────────────────────────
+  // Returns the translate values (in SELF-percent — pieces are 12.5%
+  // of the board, so each square step is `translate(100% of self)`).
+  // a1 sits visually at bottom-left.
+  function squareToXY(sq) {
+    const fileIdx = sq.charCodeAt(0) - 97;
+    const rank = +sq[1];
+    return { x: fileIdx * 100, y: (8 - rank) * 100 };
+  }
+
+  // ── PGN → steps[] ──────────────────────────────────────────
+  // Returns null on parse failure. Each step describes the transition
+  // INTO that ply (steps[0] is the empty starting position).
+  function buildSteps(pgn) {
+    if (typeof Chess === "undefined") return null;
+    const probe = new Chess();
+    if (!probe.load_pgn(pgn, { sloppy: true })) return null;
+    const verbose = probe.history({ verbose: true });
+
+    // Fresh engine — replay move-by-move so we can capture FEN at each ply.
+    const engine = new Chess();
+    const out = [{
+      san: null, color: null, from: null, to: null, piece: null,
+      captured: null, captureSquare: null, promotion: null, castleRook: null,
+      fenAfter: engine.fen(),
+      isCheck: false, checkSquare: null, lastSquares: [],
+    }];
+
+    for (const m of verbose) {
+      const applied = engine.move(m.san, { sloppy: true });
+      if (!applied) return null;
+
+      let captureSquare = null;
+      if (applied.captured) {
+        captureSquare = applied.flags.includes("e")
+          ? applied.to[0] + applied.from[1]   // en passant: pawn on ep file/from rank
+          : applied.to;
+      }
+
+      let castleRook = null;
+      const rank = applied.color === "w" ? "1" : "8";
+      if (applied.flags.includes("k")) {
+        castleRook = { from: "h" + rank, to: "f" + rank };
+      } else if (applied.flags.includes("q")) {
+        castleRook = { from: "a" + rank, to: "d" + rank };
+      }
+
+      const isCheck = engine.in_check();
+      let checkSquare = null;
+      if (isCheck) {
+        // Locate the king of the side now on move (the side just put in check).
+        const turn = engine.turn();
+        for (let r = 1; r <= 8; r++) {
+          for (let f = 0; f < 8; f++) {
+            const s = String.fromCharCode(97 + f) + r;
+            const p = engine.get(s);
+            if (p && p.type === "k" && p.color === turn) {
+              checkSquare = s;
+            }
+          }
+        }
+      }
+
+      out.push({
+        san: applied.san,
+        color: applied.color,
+        from: applied.from,
+        to: applied.to,
+        piece: applied.piece,
+        captured: applied.captured,
+        captureSquare,
+        promotion: applied.promotion || null,
+        castleRook,
+        fenAfter: engine.fen(),
+        isCheck,
+        checkSquare,
+        lastSquares: [applied.from, applied.to],
+      });
+    }
+    return out;
+  }
+
+  // ── Board rendering from FEN ────────────────────────────────
+  // Wipes and rebuilds the pieces layer to reflect the given FEN.
+  // Also updates last-move and check highlights on the squares.
+  function renderFromFen(fen, lastSquares = [], checkSquare = null) {
+    // Clear pieces
+    piecesEl.innerHTML = "";
+
+    // Clear square highlights
+    for (const sq of boardEl.children) sq.classList.remove("last", "check");
+
+    // Apply highlights
+    for (const s of lastSquares) {
+      const el = boardEl.querySelector(`[data-square="${s}"]`);
+      if (el) el.classList.add("last");
+    }
+    if (checkSquare) {
+      const el = boardEl.querySelector(`[data-square="${checkSquare}"]`);
+      if (el) el.classList.add("check");
+    }
+
+    // Place pieces
+    const board = fen.split(" ")[0];
+    const ranks = board.split("/");
+    for (let rIdx = 0; rIdx < 8; rIdx++) {
+      const rank = 8 - rIdx;
+      let fileIdx = 0;
+      for (const ch of ranks[rIdx]) {
+        if (ch >= "1" && ch <= "8") {
+          fileIdx += +ch;
+          continue;
+        }
+        const file = String.fromCharCode(97 + fileIdx);
+        const isWhite = ch === ch.toUpperCase();
+        const piece = createPiece(ch.toLowerCase(), isWhite, file + rank);
+        piecesEl.appendChild(piece);
+        fileIdx++;
+      }
+    }
+  }
+
+  // Create a piece DOM element pre-positioned at the given square (no transition).
+  function createPiece(typeChar, isWhite, square) {
+    const el = document.createElement("div");
+    el.className = "piece " + (isWhite ? "white" : "black");
+    el.textContent = GLYPH[typeChar];
+    el.dataset.square = square;
+    el.style.setProperty("--anim-ms", "0ms");
+    const { x, y } = squareToXY(square);
+    el.style.transform = `translate(${x}%, ${y}%)`;
+    return el;
+  }
+
+  // ── Animated forward step (ply → ply+1) ─────────────────────
+  function stepForward() {
+    if (busy) return Promise.resolve(false);
+    if (ply >= steps.length - 1) return Promise.resolve(false);
+    busy = true;
+    const next = steps[ply + 1];
+    const animMs = animationDuration();
+
+    // Find the piece DOM element currently at next.from. It MUST exist —
+    // we rebuild from FEN before each forward step in setPly().
+    const moverEl = piecesEl.querySelector(`[data-square="${next.from}"]`);
+    let capturedEl = null;
+    if (next.captureSquare && next.captureSquare !== next.from) {
+      capturedEl = piecesEl.querySelector(`[data-square="${next.captureSquare}"]`);
+    }
+    let rookEl = null;
+    if (next.castleRook) {
+      rookEl = piecesEl.querySelector(`[data-square="${next.castleRook.from}"]`);
+    }
+
+    // Schedule transitions. Force a reflow between setting --anim-ms and
+    // the new transform so the transition definition picks up before the
+    // value change.
+    if (moverEl) {
+      moverEl.style.setProperty("--anim-ms", animMs + "ms");
+      void moverEl.offsetHeight;
+      const { x, y } = squareToXY(next.to);
+      moverEl.style.transform = `translate(${x}%, ${y}%)`;
+      moverEl.dataset.square = next.to;
+    }
+    if (capturedEl) {
+      capturedEl.classList.add("captured");
+    }
+    if (rookEl) {
+      rookEl.style.setProperty("--anim-ms", animMs + "ms");
+      void rookEl.offsetHeight;
+      const { x, y } = squareToXY(next.castleRook.to);
+      rookEl.style.transform = `translate(${x}%, ${y}%)`;
+      rookEl.dataset.square = next.castleRook.to;
+    }
+
+    return new Promise((resolve) => {
+      animTimer = setTimeout(() => {
+        animTimer = null;
+        ply += 1;
+        // Rebuild from FEN so promotions / fade-out captures settle exactly.
+        renderFromFen(next.fenAfter, next.lastSquares, next.checkSquare);
+        updateMovesUI();
+        updateStatus();
+        busy = false;
+        resolve(true);
+      }, animMs + 20);
+    });
+  }
+
+  // ── Snap to a specific ply (no animation) ───────────────────
+  function setPly(target) {
+    target = Math.max(0, Math.min(steps.length - 1, target));
+    if (busy) {
+      // Cancel any in-flight animation
+      if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+      busy = false;
+    }
+    ply = target;
+    const s = steps[ply];
+    renderFromFen(s.fenAfter, s.lastSquares, s.checkSquare);
+    updateMovesUI();
+    updateStatus();
+  }
+
+  // ── Autoplay loop ───────────────────────────────────────────
+  let playLoopHandle = null;
+  function startPlay() {
+    if (playing) return;
+    if (ply >= steps.length - 1) {
+      // Restart from beginning when at end
+      setPly(0);
+    }
+    playing = true;
+    btnPlay.textContent = "⏸";
+    runPlayLoop();
+  }
+  function stopPlay() {
+    playing = false;
+    btnPlay.textContent = "▶";
+    if (playLoopHandle) { clearTimeout(playLoopHandle); playLoopHandle = null; }
+  }
+  function togglePlay() { playing ? stopPlay() : startPlay(); }
+
+  async function runPlayLoop() {
+    while (playing && ply < steps.length - 1) {
+      const ok = await stepForward();
+      if (!ok || !playing) break;
+      const speed = +speedEl.value;
+      const dwell = Math.max(80, speed - animationDuration());
+      await new Promise((r) => { playLoopHandle = setTimeout(r, dwell); });
+    }
+    if (ply >= steps.length - 1) stopPlay();
+  }
+
+  function animationDuration() {
+    if (prefersReduced) return 0;
+    const speed = +speedEl.value;
+    // Animation occupies ~40% of the per-move budget, capped at 800ms.
+    return Math.min(800, Math.round(speed * 0.4));
+  }
+
+  // ── Move list rendering & click-to-jump ─────────────────────
+  function buildMovesUI() {
+    movesListEl.innerHTML = "";
+    // steps[0] is start; steps[1..] are plies.
+    const total = steps.length - 1;
+    for (let i = 1; i <= total; i += 2) {
+      const num = (i + 1) / 2;
+      const w = steps[i];
+      const b = steps[i + 1];
+      const row = document.createElement("div");
+      row.className = "move-row";
+      row.innerHTML = `
+        <span class="move-num">${num}.</span>
+        <span class="move-cell" data-ply="${i}">${escapeHtml(w.san)}</span>
+        <span class="move-cell" data-ply="${i + 1}">${b ? escapeHtml(b.san) : ""}</span>`;
+      movesListEl.appendChild(row);
+    }
+    movesListEl.addEventListener("click", onMovesListClick);
+  }
+  function onMovesListClick(e) {
+    const cell = e.target.closest(".move-cell");
+    if (!cell || !cell.dataset.ply) return;
+    stopPlay();
+    setPly(+cell.dataset.ply);
+  }
+  function updateMovesUI() {
+    for (const c of movesListEl.querySelectorAll(".move-cell.active")) {
+      c.classList.remove("active");
+    }
+    if (ply >= 1) {
+      const cell = movesListEl.querySelector(`.move-cell[data-ply="${ply}"]`);
+      if (cell) {
+        cell.classList.add("active");
+        // Auto-scroll into view
+        cell.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    } else {
+      movesListEl.scrollTop = 0;
+    }
+  }
+
+  function updateStatus() {
+    const total = steps.length - 1;
+    statusPlyEl.textContent = `${ply} / ${total}`;
+    statusSanEl.textContent = ply >= 1 ? steps[ply].san : "";
+    btnFirst.disabled = ply === 0;
+    btnPrev.disabled = ply === 0;
+    btnNext.disabled = ply >= total;
+    btnLast.disabled = ply >= total;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  // ── Game loading ────────────────────────────────────────────
+  function showError(msg) {
+    errBanner.textContent = msg;
+    errBanner.classList.add("shown");
+  }
+  function hideError() {
+    errBanner.classList.remove("shown");
+    errBanner.textContent = "";
+  }
+
+  function loadGame(game) {
+    stopPlay();
+    hideError();
+    currentGame = game;
+    $("info-white").textContent = game.white;
+    $("info-black").textContent = game.black;
+    $("info-event").textContent = `${game.event}${game.site ? " · " + game.site : ""}`;
+    $("info-date").textContent = game.date || "";
+    $("info-result").textContent = game.result;
+    $("info-description").textContent = game.description || "";
+
+    const built = buildSteps(game.pgn);
+    if (!built) {
+      steps = [{
+        san: null, color: null, from: null, to: null, piece: null,
+        captured: null, captureSquare: null, promotion: null, castleRook: null,
+        fenAfter: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        isCheck: false, checkSquare: null, lastSquares: [],
+      }];
+      showError(`Could not parse PGN for "${game.name}". Game data may be malformed.`);
+    } else {
+      steps = built;
+    }
+    ply = 0;
+    buildMovesUI();
+    setPly(0);
+  }
+
+  // ── Bootstrap ───────────────────────────────────────────────
+  async function init() {
+    buildBoard();
+
+    // Wire controls
+    btnPlay.addEventListener("click", togglePlay);
+    btnNext.addEventListener("click", async () => { stopPlay(); await stepForward(); });
+    btnPrev.addEventListener("click", () => { stopPlay(); setPly(ply - 1); });
+    btnFirst.addEventListener("click", () => { stopPlay(); setPly(0); });
+    btnLast.addEventListener("click", () => { stopPlay(); setPly(steps.length - 1); });
+    speedEl.addEventListener("input", () => {
+      speedValEl.textContent = (+speedEl.value / 1000).toFixed(1) + "s";
+    });
+    gameSelectEl.addEventListener("change", () => {
+      const g = games.find((x) => x.id === gameSelectEl.value);
+      if (g) loadGame(g);
+    });
+
+    speedValEl.textContent = (+speedEl.value / 1000).toFixed(1) + "s";
+
+    if (typeof Chess === "undefined") {
+      showError("Chess engine failed to load (CDN unreachable). Replays disabled.");
+      return;
+    }
+
+    try {
+      const res = await fetch("games.json");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      games = data.games || [];
+    } catch (e) {
+      showError("Could not load games.json — " + e.message);
+      return;
+    }
+
+    if (games.length === 0) {
+      showError("No games found in games.json.");
+      return;
+    }
+
+    // Populate selector
+    for (const g of games) {
+      const opt = document.createElement("option");
+      opt.value = g.id;
+      opt.textContent = `${g.name} — ${g.white.split(" ").pop()} vs ${g.black.split(" ").pop()}, ${(g.date || "").slice(0,4)}`;
+      gameSelectEl.appendChild(opt);
+    }
+    loadGame(games[0]);
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>

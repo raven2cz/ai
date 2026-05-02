@@ -1,0 +1,9 @@
+{
+  "title": "Chess Replay",
+  "files": [
+    "games.json",
+    "index.html"
+  ],
+  "preview": true,
+  "preview_file": "index.html"
+}

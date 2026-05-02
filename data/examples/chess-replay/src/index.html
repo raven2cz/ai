@@ -107,52 +107,35 @@
     border-color: var(--accent);
   }
 
-  /* ── Game-info strip ──────────────────────────────────────── */
-  .game-info {
-    padding: 6px 18px;
-    background: var(--panel-2);
-    border-bottom: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2px 16px;
-    align-items: start;
-    flex-shrink: 0;
-  }
-  .game-info .players {
+  /* ── In-header game info (players + meta inline) ──────────── */
+  .header-game {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 14px;
+    flex-wrap: wrap;
+    min-width: 0;
+    flex: 1;
+  }
+  .header-game .players {
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.92rem;
+    color: var(--text);
+    white-space: nowrap;
   }
-  .game-info .players .vs {
+  .header-game .players .vs {
     color: var(--dim);
     font-weight: 500;
-    font-size: 0.85rem;
+    margin: 0 2px;
   }
-  .game-info .meta {
+  .header-game .meta {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--muted);
-    text-align: right;
-    line-height: 1.5;
+    white-space: nowrap;
   }
-  .game-info .meta .result {
-    color: var(--text);
-    font-weight: 600;
-  }
-  .game-info .description {
-    grid-column: 1 / -1;
-    color: var(--muted);
-    font-size: 0.78rem;
-    line-height: 1.4;
-    /* Cap to two lines so the description never eats much vertical space. */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+  .header-game .meta .dot-sep { margin: 0 4px; opacity: 0.5; }
+  .header-game .meta .result { color: var(--text); font-weight: 600; }
 
   /* ── Main area: board + move list ─────────────────────────── */
   main.app-main {
@@ -172,12 +155,10 @@
   .board-area {
     container-type: size;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 0;
     min-width: 0;
-    gap: 4px;
   }
 
   .board-frame {
@@ -185,10 +166,10 @@
        glyphs against the actual board height (10cqh ≈ 80 % of a square). */
     container-type: size;
     position: relative;
-    /* Square sized by the smaller of available width / available height
-       (minus a reserve for the wood frame + status line below). Capped
-       at 640 so it doesn't get cartoonishly large on big iframes. */
-    width: min(100cqw - 16px, 100cqh - 32px, 640px);
+    /* Square sized by whichever dimension is smaller — 16px reserved for
+       the wood frame's outer ring. No fixed cap: in big iframes we
+       prefer a big board over wasted whitespace. */
+    width: min(100cqw - 16px, 100cqh - 16px);
     aspect-ratio: 1 / 1;
     box-shadow:
       0 0 0 1px rgba(0,0,0,0.5),
@@ -459,17 +440,15 @@
     text-align: right;
   }
 
-  /* ── Status bar (small under-board indicator) ─────────────── */
-  .status-line {
+  /* ── Status indicator (left side of controls bar) ─────────── */
+  .controls .status-line {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.74rem;
+    font-size: 0.78rem;
     color: var(--muted);
-    text-align: center;
-    height: 18px;
-    flex-shrink: 0;
+    min-width: 110px;
   }
-  .status-line .ply { color: var(--text); }
-  .status-line .san { color: var(--accent); margin-left: 8px; }
+  .controls .status-line .ply { color: var(--text); font-weight: 600; }
+  .controls .status-line .san { color: var(--accent); margin-left: 8px; }
 
   /* ── Error banner ─────────────────────────────────────────── */
   .err-banner {
@@ -497,10 +476,10 @@
       max-height: 140px;
     }
     .moves-list { padding: 4px; font-size: 0.74rem; line-height: 1.5; }
-    header.app-header { padding: 10px 12px; }
-    .game-info { padding: 8px 12px; }
-    .game-info .meta { font-size: 0.66rem; }
+    header.app-header { padding: 8px 12px; }
+    .header-game .meta { display: none; }
     .controls { padding: 8px 10px; gap: 8px; }
+    .controls .status-line { min-width: 0; font-size: 0.72rem; }
     button.ctrl { width: 34px; height: 32px; font-size: 0.78rem; }
     button.ctrl.play { width: 44px; }
     .speed-wrap { width: 100%; margin-left: 0; }
@@ -514,26 +493,27 @@
 </head>
 <body>
 
-<header class="app-header">
+<header class="app-header" id="app-header">
   <h1><span class="dot"></span>Chess Replay</h1>
+  <div class="header-game" id="header-game">
+    <span class="players">
+      <span id="info-white">—</span>
+      <span class="vs">vs</span>
+      <span id="info-black">—</span>
+    </span>
+    <span class="meta">
+      <span id="info-event">—</span>
+      <span class="dot-sep">·</span>
+      <span id="info-date">—</span>
+      <span class="dot-sep">·</span>
+      <span class="result" id="info-result">—</span>
+    </span>
+  </div>
   <div class="game-select-wrap">
     <label for="game-select">GAME</label>
     <select id="game-select" aria-label="Select game"></select>
   </div>
 </header>
-
-<div class="game-info" id="game-info">
-  <div class="players">
-    <span id="info-white">—</span>
-    <span class="vs">vs</span>
-    <span id="info-black">—</span>
-  </div>
-  <div class="meta">
-    <div id="info-event">—</div>
-    <div><span id="info-date">—</span> · <span class="result" id="info-result">—</span></div>
-  </div>
-  <div class="description" id="info-description"></div>
-</div>
 
 <div class="err-banner" id="err-banner"></div>
 
@@ -543,10 +523,6 @@
       <div class="board" id="board"></div>
       <div class="pieces-layer" id="pieces"></div>
     </div>
-    <div class="status-line">
-      <span class="ply" id="status-ply">0 / 0</span>
-      <span class="san" id="status-san"></span>
-    </div>
   </div>
   <aside class="moves-panel">
     <div class="moves-panel-head">Moves</div>
@@ -555,6 +531,10 @@
 </main>
 
 <div class="controls">
+  <div class="status-line">
+    <span class="ply" id="status-ply">0 / 0</span>
+    <span class="san" id="status-san"></span>
+  </div>
   <div class="ctrl-group">
     <button class="ctrl" id="btn-first" title="Jump to start">⏮</button>
     <button class="ctrl" id="btn-prev"  title="Previous move">⏪</button>
@@ -964,7 +944,8 @@
     $("info-event").textContent = `${game.event}${game.site ? " · " + game.site : ""}`;
     $("info-date").textContent = game.date || "";
     $("info-result").textContent = game.result;
-    $("info-description").textContent = game.description || "";
+    // Description shown as tooltip on the header strip (saves vertical space).
+    $("header-game").title = game.description || "";
 
     const built = buildSteps(game.pgn);
     if (!built) {

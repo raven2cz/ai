@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Effectively: The Knowledge Base</title>
+<meta name="description" content="A file-based knowledge base gives AI agents durable, structured memory that survives context limits, new sessions, and many machines.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #fdf6e3;
+  --bg1: #f4f0d9;
+  --bg2: #efebd4;
+  --bg3: #e6e2cc;
+  --fg: #5c6a72;
+  --fg-dim: #829181;
+  --red: #f85552;
+  --orange: #f57d26;
+  --yellow: #dfa000;
+  --green: #8da101;
+  --aqua: #35a77c;
+  --blue: #3a94c5;
+  --purple: #df69ba;
+  --grey0: #a6b0a0;
+  --grey1: #939f91;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--bg3);
+}
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; }
+h1 .accent { color: var(--green); }
+.subtitle { font-family: 'Inter', sans-serif; font-size: 1.05rem; color: var(--grey1); margin-top: 0.3rem; font-weight: 400; }
+.prev-link { font-size: 0.88rem; color: var(--blue); margin-top: 0.6rem; }
+.prev-link a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--bg3); transition: border-color 0.2s; }
+.prev-link a:hover { border-bottom-color: var(--blue); }
+
+section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
+  letter-spacing: -0.01em;
+}
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h2[id], h3[id] { scroll-margin-top: 1.5rem; }
+p { margin-bottom: 1rem; }
+strong { font-weight: 600; }
+em { font-family: 'Source Serif 4', 'Georgia', serif; }
+
+/* -- Schema container -- */
+.schema-wrap {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 12px;
+  padding: 1.2rem 1rem;
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  position: relative;
+}
+.schema-wrap svg { width: 100%; height: auto; display: block; }
+.schema-wrap .hint {
+  position: absolute; bottom: 8px; right: 14px;
+  font-size: 0.75rem; color: var(--grey0);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.schema-wrap.active .hint { opacity: 0; }
+
+/* -- Component hover styles -- */
+.comp { cursor: pointer; transition: filter 0.35s ease, opacity 0.35s ease; }
+.schema-wrap.has-focus .comp { opacity: 0.4; }
+.schema-wrap.has-focus .comp.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--comp-glow, rgba(90,140,180,0.5)));
+}
+@keyframes compPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--comp-glow, rgba(90,140,180,0.35))); }
+  50% { filter: drop-shadow(0 0 14px var(--comp-glow, rgba(90,140,180,0.65))); }
+}
+.schema-wrap.has-focus .comp.active {
+  animation: compPulse 2.2s ease-in-out infinite;
+}
+.hover-zone { fill: transparent; cursor: pointer; }
+
+/* -- Floating tooltip -- */
+.schema-tip {
+  position: fixed;
+  z-index: 1000;
+  width: 280px;
+  background: rgba(253,246,227,0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--bg3);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem 0.6rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(7px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  will-change: opacity, transform;
+}
+.schema-tip.visible { opacity: 1; transform: translateY(0) scale(1); }
+.schema-tip .tip-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.2rem; letter-spacing: -0.01em; }
+.schema-tip .tip-desc { color: var(--fg); margin-bottom: 0.25rem; }
+.schema-tip .tip-detail {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 0.79rem; color: var(--fg-dim);
+  padding-top: 0.25rem; border-top: 1px solid var(--bg3);
+}
+.schema-tip .tip-detail em { font-style: italic; }
+
+/* -- Concept cards -- */
+.concepts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem; margin: 1.2rem 0;
+}
+.card {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-left: 4px solid var(--grey0);
+}
+.card h4 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+.card p { font-size: 0.84rem; line-height: 1.6; margin: 0; color: var(--fg-dim); }
+.card.c-blue   { border-left-color: var(--blue); }
+.card.c-green  { border-left-color: var(--green); }
+.card.c-purple { border-left-color: var(--purple); }
+.card.c-orange { border-left-color: var(--orange); }
+.card.c-red    { border-left-color: var(--red); }
+.card.c-yellow { border-left-color: var(--yellow); }
+.card.c-aqua   { border-left-color: var(--aqua); }
+
+/* -- Callout / formula box -- */
+.formula-box {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0;
+}
+.formula {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.08rem; font-style: italic; margin: 0.4rem 0;
+}
+.formula .m { font-weight: 700; font-style: normal; }
+
+/* -- Phase steps -- */
+.phase-steps { counter-reset: phase; margin: 1.2rem 0; }
+.phase-step {
+  counter-increment: phase;
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1rem 1.2rem 1rem 3.2rem;
+  margin-bottom: 0.8rem; position: relative;
+}
+.phase-step::before {
+  content: counter(phase);
+  position: absolute; left: 1rem; top: 1rem;
+  width: 1.6rem; height: 1.6rem;
+  background: var(--green); color: var(--bg0);
+  border-radius: 50%; font-size: 0.82rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.phase-step h4 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--fg);
+}
+.phase-step p { font-size: 0.86rem; line-height: 1.65; margin: 0; color: var(--fg-dim); }
+.phase-step.p-blue::before { background: var(--blue); }
+.phase-step.p-green::before { background: var(--green); }
+.phase-step.p-purple::before { background: var(--purple); }
+.phase-step.p-orange::before { background: var(--orange); }
+.phase-step.p-aqua::before { background: var(--aqua); }
+.phase-step.p-red::before { background: var(--red); }
+
+/* -- Code / file snippet -- */
+.snippet {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-left: 4px solid var(--grey0);
+  border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0;
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  font-size: 0.82rem; line-height: 1.7; color: var(--fg);
+  overflow-x: auto; white-space: pre;
+}
+.snippet .c { color: var(--grey1); }
+.snippet .k { color: var(--blue); font-weight: 600; }
+.snippet .s { color: var(--green); }
+.snippet .d { color: var(--purple); }
+.snippet b { color: var(--fg); font-weight: 700; }
+
+/* -- Mapping table -- */
+.mapping { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.mapping th, .mapping td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--bg3); }
+.mapping th { background: var(--bg2); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.mapping td:first-child { font-weight: 600; }
+.mapping tr:last-child td { border-bottom: none; }
+.mapping tbody tr:hover { background: var(--bg1); }
+.mapping code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.82em; background: var(--bg2); padding: 1px 5px; border-radius: 4px; }
+
+/* -- Article metadata -- */
+.meta {
+  font-size: 0.85rem; color: var(--fg-dim); margin-top: 0.8rem;
+  display: flex; justify-content: center; gap: 1.4rem; flex-wrap: wrap;
+}
+.meta span {
+  white-space: nowrap; background: var(--bg1);
+  padding: 0.2rem 0.7rem; border-radius: 4px; border: 1px solid var(--bg3);
+}
+
+/* -- Table of contents -- */
+.toc {
+  background: var(--bg1); border: 1px solid var(--bg3);
+  border-radius: 10px; padding: 1.2rem 1.5rem 1rem; margin-bottom: 2.5rem;
+}
+.toc h3 {
+  font-size: 1rem; font-weight: 700; margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--bg3); color: var(--fg);
+}
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
+.toc > ol > li { counter-increment: toc; margin-bottom: 0.15rem; }
+.toc > ol > li > a::before { content: counter(toc) ". "; font-weight: 700; color: var(--green); }
+.toc a { color: var(--fg); text-decoration: none; font-size: 0.88rem; line-height: 1.85; transition: color 0.2s; }
+.toc a:hover { color: var(--blue); }
+.toc .toc-sub { list-style: none; padding-left: 1.4rem; margin: 0; }
+.toc .toc-sub li a { font-size: 0.82rem; color: var(--fg-dim); }
+.toc .toc-sub li a::before { content: "- "; color: var(--bg3); }
+
+/* -- Closing note -- */
+.endnote {
+  margin-top: 2.5rem; padding-top: 1.5rem;
+  border-top: 2px solid var(--bg3);
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.02rem; color: var(--fg-dim);
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem; }
+  h1 { font-size: 1.7rem; }
+  .concepts { grid-template-columns: 1fr; }
+}
+</style>
+
+<style id="series-switcher-style">
+.series-switcher {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.7rem 1.25rem;
+  background: var(--bg1, #f4f0d9);
+  border-bottom: 1px solid var(--bg3, #e6e2cc);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--fg, #5c6a72);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  background-color: color-mix(in srgb, var(--bg1, #f4f0d9) 88%, transparent);
+}
+.series-switcher a { color: inherit; text-decoration: none; opacity: 0.75; transition: opacity 0.2s; }
+.series-switcher a:hover { opacity: 1; }
+.series-switcher .series-title { font-weight: 600; opacity: 0.9; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.series-switcher .series-sep { opacity: 0.4; }
+.series-switcher .parts { display: flex; gap: 0.4rem; }
+.series-switcher .chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--bg3, #e6e2cc);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.series-switcher .chip:hover { background: var(--bg2, #efebd4); }
+.series-switcher .chip.active {
+  background: var(--green, #8da101);
+  color: var(--bg0, #fdf6e3);
+  border-color: transparent;
+}
+@media (max-width: 640px) {
+  .series-switcher { font-size: 0.78rem; padding: 0.55rem 0.9rem; gap: 0.75rem; }
+  .series-switcher .series-title { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="series-switcher" role="navigation" aria-label="Series navigation">  <a href="../../../index.html">← AI Playground</a>  <span class="series-sep">·</span>  <span class="series-title">AI Effectively: A Systems Approach</span>  <div class="parts"><a class="chip" href="../01-systemic-approach/index.html">Part 1</a><a class="chip" href="../02-from-stone-to-sculpture/index.html">Part 2</a><span class="chip active" aria-current="page">Part 3</span></div></div>
+
+<div class="page">
+
+<header>
+  <h1><span class="accent">AI Effectively</span>: The Knowledge Base</h1>
+  <p class="subtitle">Durable memory for AI agents across sessions and machines</p>
+  <p class="prev-link">Part 3 of the series · <a href="../02-from-stone-to-sculpture/index.html">← Part 2: From Stone to Sculpture</a></p>
+  <div class="meta">
+    <span>Version 1.0</span>
+    <span>Updated: 16 Jun 2026</span>
+    <span>Author: <strong>raven2cz</strong> in collaboration with <strong>Claude</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>Article Contents</h3>
+  <ol>
+    <li><a href="#why">Working Memory Runs Out</a>
+      <ul class="toc-sub">
+        <li><a href="#hierarchy">The two-tier memory hierarchy</a></li>
+      </ul>
+    </li>
+    <li><a href="#anatomy">Anatomy of the Knowledge Base</a>
+      <ul class="toc-sub">
+        <li><a href="#schema-kb">Structure diagram</a></li>
+        <li><a href="#scopes">Three scopes, flat within each</a></li>
+      </ul>
+    </li>
+    <li><a href="#entry">The Entry: One Fact, One File</a>
+      <ul class="toc-sub">
+        <li><a href="#front-matter">The front-matter contract</a></li>
+        <li><a href="#links">Stable ids and linking</a></li>
+      </ul>
+    </li>
+    <li><a href="#recall">On-Demand Recall: The Token Economy</a></li>
+    <li><a href="#lifecycle">Lifecycle and Trust</a>
+      <ul class="toc-sub">
+        <li><a href="#status">Status as a confidence signal</a></li>
+      </ul>
+    </li>
+    <li><a href="#discipline">Curation Discipline</a></li>
+    <li><a href="#sync">Versioning, Sync, and Secrets</a>
+      <ul class="toc-sub">
+        <li><a href="#tiers">Three tiers of sensitivity</a></li>
+        <li><a href="#bootstrap">Bootstrapping a new machine</a></li>
+      </ul>
+    </li>
+    <li><a href="#loop">Closing the Loop</a></li>
+  </ol>
+</nav>
+
+<section>
+  <h2 id="why">Working Memory Runs Out</h2>
+  <p>Part 1 framed the agent as a regulator whose <strong>internal state x(t)</strong> is the context window,
+    and compared a long session to the film <em>"50 First Dates"</em>: the agent wakes up each session with no
+    memory of the last. Compaction makes it worse mid-session, silently summarizing away the very details you
+    depend on. The fix proposed there was written notes, a diary that substitutes for lost memory.</p>
+  <p>This article is about turning that diary into an actual system. A handful of scratch notes does not scale.
+    The moment you work across many projects, several machines, and weeks of sessions, you need something
+    deliberate: a <strong>knowledge base</strong>, a durable, indexed store the agent reads from and
+    writes to on its own. It is the part of the internal state that <strong>survives the session</strong>.</p>
+
+  <h3 id="hierarchy">The Two-Tier Memory Hierarchy</h3>
+  <p>The cleanest way to think about it is the classic memory hierarchy from computing: fast and volatile on top,
+    slow and durable underneath.</p>
+  <div class="concepts">
+    <div class="card c-purple">
+      <h4>Working memory: the context window</h4>
+      <p>Fast, in-the-moment, and <em>volatile</em>. Bounded by the window size, wiped on a new session, and
+        lossily compressed when it fills. This is RAM. Never assume something here is still there next turn.</p>
+    </div>
+    <div class="card c-green">
+      <h4>Long-term memory: the knowledge base</h4>
+      <p>Slower to reach (the agent must choose to load it) but <em>durable</em>, structured, and versioned.
+        This is disk. It outlives the session, the project, and the individual machine.</p>
+    </div>
+  </div>
+  <div class="formula-box">
+    <p>The discipline is the same one every operating system uses: <strong>keep working memory lean, page the
+      rest to durable storage, and load it back on demand.</strong> An agent that dumps everything into context
+      is a machine with no disk and no swap: it thrashes, then forgets.</p>
+  </div>
+</section>
+
+<section>
+  <h2 id="anatomy">Anatomy of the Knowledge Base</h2>
+  <p>A knowledge base is not a single sprawling document. It is a small filesystem with a deliberate shape:
+    a curated <strong>index</strong> at the front, content split into a few <strong>scopes</strong>, and every
+    fact stored as its own small file. <em>Hover over the diagram to inspect each part.</em></p>
+</section>
+
+<!-- ═══════════════ STRUCTURE DIAGRAM ═══════════════ -->
+<section>
+  <h3 id="schema-kb">Structure Diagram</h3>
+  <div class="schema-wrap" id="schema-kb">
+    <svg viewBox="0 0 940 470" xmlns="http://www.w3.org/2000/svg">
+      <!-- ── connectors ── -->
+      <line x1="470" y1="74" x2="470" y2="98" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="470,99 465,90 475,90" fill="#5c6a72"/>
+      <line x1="470" y1="226" x2="470" y2="262" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="470,263 465,254 475,254" fill="#5c6a72"/>
+      <line x1="470" y1="234" x2="470" y2="256" stroke="#35a77c" stroke-width="0"/>
+      <text x="486" y="250" font-size="10" fill="#829181" font-style="italic">git push / pull</text>
+      <line x1="470" y1="336" x2="470" y2="398" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="470,399 465,390 475,390" fill="#5c6a72"/>
+      <!-- dotted connectors from side notes to frame -->
+      <path d="M 250,300 Q 200,250 232,212" stroke="#35a77c" stroke-width="1.3" fill="none" stroke-dasharray="4,4" opacity="0.6"/>
+      <path d="M 690,300 Q 740,250 708,212" stroke="#f85552" stroke-width="1.3" fill="none" stroke-dasharray="4,4" opacity="0.6"/>
+
+      <!-- ── INDEX (entry point) ── -->
+      <g class="comp" data-comp="index" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="350" y="28" width="240" height="46" rx="9" fill="rgba(58,148,197,0.09)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="470" y="49" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3a94c5">INDEX.md / MEMORY.md</text>
+        <text x="470" y="65" text-anchor="middle" font-size="10" fill="#829181">curated entry point</text>
+      </g>
+
+      <!-- ── ~/.ai frame ── -->
+      <rect x="120" y="100" width="700" height="124" rx="14" fill="rgba(166,176,160,0.05)" stroke="#a6b0a0" stroke-width="1.3" stroke-dasharray="8,5"/>
+      <text x="138" y="120" font-size="11" fill="#939f91" font-weight="700" letter-spacing="0.04em">~/.ai  ·  knowledge base root</text>
+
+      <!-- scopes -->
+      <g class="comp" data-comp="system" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="140" y="130" width="206" height="80" rx="8" fill="rgba(141,161,1,0.08)" stroke="#8da101" stroke-width="2"/>
+        <text x="243" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8da101" letter-spacing="0.04em">system/</text>
+        <text x="243" y="180" text-anchor="middle" font-size="9.5" fill="#829181">OS, shell, tooling,</text>
+        <text x="243" y="194" text-anchor="middle" font-size="9.5" fill="#829181">per-machine records</text>
+      </g>
+      <g class="comp" data-comp="features" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="367" y="130" width="206" height="80" rx="8" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="470" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3a94c5" letter-spacing="0.04em">features/</text>
+        <text x="470" y="180" text-anchor="middle" font-size="9.5" fill="#829181">cross-project themes</text>
+        <text x="470" y="194" text-anchor="middle" font-size="9.5" fill="#829181">(auth, ci, observability)</text>
+      </g>
+      <g class="comp" data-comp="projects" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="594" y="130" width="206" height="80" rx="8" fill="rgba(223,105,186,0.08)" stroke="#df69ba" stroke-width="2"/>
+        <text x="697" y="160" text-anchor="middle" font-size="12.5" font-weight="700" fill="#df69ba" letter-spacing="0.04em">projects/</text>
+        <text x="697" y="180" text-anchor="middle" font-size="9.5" fill="#829181">bound to one codebase</text>
+        <text x="697" y="194" text-anchor="middle" font-size="9.5" fill="#829181">or initiative</text>
+      </g>
+
+      <!-- ── side note: entry anatomy ── -->
+      <g class="comp" data-comp="entry" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="60" y="300" width="248" height="88" rx="8" fill="rgba(53,167,124,0.07)" stroke="#35a77c" stroke-width="1.6" stroke-dasharray="6,4"/>
+        <text x="184" y="324" text-anchor="middle" font-size="11.5" font-weight="700" fill="#35a77c">one entry = one fact</text>
+        <text x="184" y="345" text-anchor="middle" font-size="9.5" fill="#829181">front-matter (id, scope, summary,</text>
+        <text x="184" y="359" text-anchor="middle" font-size="9.5" fill="#829181">tags, status, links) + body</text>
+        <text x="184" y="377" text-anchor="middle" font-size="9.5" fill="#829181" font-style="italic">flat within each scope</text>
+      </g>
+
+      <!-- ── side note: secrets ── -->
+      <g class="comp" data-comp="secrets" style="--comp-glow:rgba(248,85,82,0.5)">
+        <rect x="632" y="300" width="248" height="88" rx="8" fill="rgba(248,85,82,0.06)" stroke="#f85552" stroke-width="1.6" stroke-dasharray="6,4"/>
+        <text x="756" y="324" text-anchor="middle" font-size="11.5" font-weight="700" fill="#f85552">secrets / work</text>
+        <text x="756" y="345" text-anchor="middle" font-size="9.5" fill="#829181">tokens, internal knowledge</text>
+        <text x="756" y="359" text-anchor="middle" font-size="9.5" fill="#829181">gitignored · never synced</text>
+        <text x="756" y="377" text-anchor="middle" font-size="9.5" fill="#829181" font-style="italic">stays on the local machine</text>
+      </g>
+
+      <!-- ── repo ── -->
+      <g class="comp" data-comp="repo" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="338" y="264" width="264" height="72" rx="9" fill="rgba(141,161,1,0.07)" stroke="#8da101" stroke-width="2"/>
+        <text x="470" y="292" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8da101">private git repo</text>
+        <text x="470" y="312" text-anchor="middle" font-size="9.5" fill="#829181">versioned history · one source of truth</text>
+      </g>
+
+      <!-- ── sync (machines) ── -->
+      <g class="comp" data-comp="sync" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="250" y="406" width="120" height="40" rx="20" fill="rgba(58,148,197,0.07)" stroke="#3a94c5" stroke-width="1.6"/>
+        <text x="310" y="431" text-anchor="middle" font-size="11" font-weight="600" fill="#3a94c5">workstation</text>
+        <rect x="410" y="406" width="120" height="40" rx="20" fill="rgba(58,148,197,0.07)" stroke="#3a94c5" stroke-width="1.6"/>
+        <text x="470" y="431" text-anchor="middle" font-size="11" font-weight="600" fill="#3a94c5">laptop</text>
+        <rect x="570" y="406" width="120" height="40" rx="20" fill="rgba(58,148,197,0.07)" stroke="#3a94c5" stroke-width="1.6"/>
+        <text x="630" y="431" text-anchor="middle" font-size="11" font-weight="600" fill="#3a94c5">server / CI</text>
+        <line x1="470" y1="400" x2="310" y2="406" stroke="#a6b0a0" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <line x1="470" y1="400" x2="630" y2="406" stroke="#a6b0a0" stroke-width="1.2" stroke-dasharray="4,3"/>
+      </g>
+
+      <!-- ── hover zones ── -->
+      <rect class="hover-zone" data-comp="index"    x="350" y="28"  width="240" height="46"/>
+      <rect class="hover-zone" data-comp="system"   x="140" y="130" width="206" height="80"/>
+      <rect class="hover-zone" data-comp="features" x="367" y="130" width="206" height="80"/>
+      <rect class="hover-zone" data-comp="projects" x="594" y="130" width="206" height="80"/>
+      <rect class="hover-zone" data-comp="entry"    x="60"  y="300" width="248" height="88"/>
+      <rect class="hover-zone" data-comp="secrets"  x="632" y="300" width="248" height="88"/>
+      <rect class="hover-zone" data-comp="repo"     x="338" y="264" width="264" height="72"/>
+      <rect class="hover-zone" data-comp="sync"     x="250" y="406" width="440" height="40"/>
+    </svg>
+    <span class="hint">Hover over the parts</span>
+  </div>
+</section>
+
+<!-- ═══════════════ SCOPES ═══════════════ -->
+<section>
+  <h3 id="scopes">Three Scopes, Flat Within Each</h3>
+  <p>Everything the agent knows falls into one of three scopes. The test is a single question:
+    <em>"Is this fact universal, cross-project, or bound to one project?"</em></p>
+  <div class="concepts">
+    <div class="card c-green">
+      <h4>The system/ scope</h4>
+      <p>Knowledge about the OS, shell, desktop, tooling, and the conventions you hold across all work.
+        Per-machine snapshots live here too: one stable file per host.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>The features/ scope</h4>
+      <p>Topics that show up across multiple projects: auth flows, CI patterns, observability, error-handling
+        conventions. A topic earns a place here only after it appears in two or more projects.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>The projects/ scope</h4>
+      <p>Anything tied to a single repo or initiative: its architecture decisions, deployment specifics,
+        the lessons a bug taught you. Born here; promoted to <em>features/</em> only if it generalizes.</p>
+    </div>
+  </div>
+  <p>Within each scope the files are <strong>flat</strong>, with no deep folder trees. The <em>kind</em> of an entry
+    (a topic, a workflow, a decision, a reference) is declared in its front-matter, not encoded in a directory
+    path. This keeps the structure stable: re-classifying a note is a one-line edit, not a reshuffle. Resist the
+    urge to build elaborate hierarchies; a flat scope plus a good index beats a five-level tree every time.</p>
+</section>
+
+<!-- ═══════════════ ENTRY ═══════════════ -->
+<section>
+  <h2 id="entry">The Entry: One Fact, One File</h2>
+  <p>The atomic unit is a single Markdown file holding <strong>one fact, decision, or workflow</strong>. Small
+    files are easy to recall in isolation, easy to update without collateral edits, and easy to delete when they
+    turn out wrong. A 4,000-line "notes.md" is the opposite: impossible to load selectively and impossible to trust.</p>
+
+  <h3 id="front-matter">The Front-Matter Contract</h3>
+  <p>Every entry opens with structured metadata. This is what lets an agent triage relevance <em>without reading
+    the body</em>. That is the property the whole system depends on.</p>
+  <div class="snippet"><span class="c">---</span>
+<span class="k">id</span>: <span class="s">system.firefox-hidpi-scaling</span>     <span class="c"># stable, scope-prefixed, unique</span>
+<span class="k">title</span>: <span class="s">Firefox HiDPI chrome vs content scaling</span>
+<span class="k">type</span>: <span class="s">topic</span>                          <span class="c"># topic | workflow | decision | reference</span>
+<span class="k">scope</span>: <span class="s">system</span>
+<span class="k">summary</span>: <span class="s">One-line TL;DR an agent reads first to decide relevance.</span>
+<span class="k">tags</span>: <span class="d">[firefox, hidpi, wayland]</span>
+<span class="k">status</span>: <span class="s">active</span>                        <span class="c"># draft | active | deprecated | superseded</span>
+<span class="k">confidence</span>: <span class="s">high</span>
+<span class="k">last_updated</span>: <span class="s">2026-06-16</span>
+<span class="k">links</span>: <span class="d">[system.r7home]</span>              <span class="c"># cross-refs, by id</span>
+<span class="c">---</span>
+
+<span class="c"># Then free-form Markdown: the actual fact, and why it matters.</span></div>
+
+  <p>The <strong>summary</strong>, <strong>tags</strong>, and <strong>title</strong> are the recall surface.
+    An agent scanning for relevance reads only these across the whole base, then opens the two or three bodies
+    that actually matter. The body itself stays focused: state the fact, then the <em>why</em> and the
+    <em>how to apply it</em>. Link related entries instead of repeating them.</p>
+
+  <h3 id="links">Stable Ids and Linking</h3>
+  <p>Each entry has a permanent <code>id</code> of the form <code>scope.slug</code>: lowercase, dot-separated,
+    and <strong>stable forever</strong>, even if the file moves. Entries reference each other by id, never by path:</p>
+  <div class="snippet"><span class="c"># in the body</span>
+See <b>[[system.r7home]]</b> for the machine this applies to.</div>
+  <p>Linking by id turns a pile of notes into a graph. It survives renames, makes "what else relates to this?"
+    a mechanical lookup, and lets a <code>[[link]]</code> to a not-yet-written entry stand as a marker of work to do.
+    Cross-references are how the agent walks from a symptom to the decision that explains it.</p>
+</section>
+
+<!-- ═══════════════ RECALL ═══════════════ -->
+<section>
+  <h2 id="recall">On-Demand Recall: The Token Economy</h2>
+  <p>The rule: <strong>nothing loads automatically</strong>. Only the index, a hand-curated list of the
+    highest-value entries with one-line hooks, is ever in context by default. Everything else is pulled in when,
+    and only when, the task calls for it.</p>
+  <div class="formula-box">
+    <p><strong style="color:var(--red)">The anti-pattern:</strong> stuff the entire knowledge base into the system
+      prompt "so the agent has context". It bloats every request, drowns the relevant fact in noise, and pushes the
+      real work out of the window faster.</p>
+    <hr style="border:none; border-top:1px solid var(--bg3); margin:0.6rem 0;">
+    <p><strong style="color:var(--green)">The pattern:</strong> the agent reads the index, matches the task against
+      summaries and tags, and loads the two or three entries that apply. Working memory stays lean; recall is precise.
+      This is paging, not preloading.</p>
+  </div>
+  <p>Tie this back to Part 1: context is the agent's working memory, and feedback quality drives regulation. Loading
+    junk you do not need is negative feedback: it degrades every subsequent decision. A disciplined recall policy is
+    not a nicety, it is what keeps the regulation loop converging in long sessions.</p>
+</section>
+
+<!-- ═══════════════ LIFECYCLE ═══════════════ -->
+<section>
+  <h2 id="lifecycle">Lifecycle and Trust</h2>
+  <p>A knowledge base is only as useful as it is trustworthy, and trust decays. Code moves on; a note written three
+    weeks ago may now point at a function that no longer exists. The system has to make that decay <strong>visible</strong>
+    rather than silent.</p>
+
+  <h3 id="status">Status as a Confidence Signal</h3>
+  <p>Two fields carry the weight: <code>status</code> and <code>last_updated</code>. They tell a reader how much to
+    trust an entry before acting on it.</p>
+  <table class="mapping">
+    <thead><tr><th>Status</th><th>Meaning</th><th>How to treat it</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#dfa000">draft</td><td>Being written, may be wrong</td><td>Read, but verify everything</td></tr>
+      <tr><td style="color:#8da101">active</td><td>Current and trusted</td><td>Safe to rely on; still sanity-check stale-looking dates</td></tr>
+      <tr><td style="color:#f57d26">deprecated</td><td>Newer guidance exists</td><td>Follow <code>superseded_by</code> to the replacement</td></tr>
+      <tr><td style="color:#f85552">superseded</td><td>Replaced; kept for history</td><td>Do not act on it; it is a record, not advice</td></tr>
+    </tbody>
+  </table>
+  <div class="formula-box">
+    <p>This is Part 1's <strong>"trust, but verify"</strong> applied to memory. A recalled note is a
+      <em>point-in-time observation</em>, not live truth. If it names a file, a function, or a flag, the agent must
+      confirm that thing still exists before recommending it. Memory makes the agent faster; verification keeps it honest.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ DISCIPLINE ═══════════════ -->
+<section>
+  <h2 id="discipline">Curation Discipline</h2>
+  <p>The base stays valuable only with active gardening. Four habits do most of the work.</p>
+  <div class="phase-steps">
+    <div class="phase-step p-green">
+      <h4>Update, do not duplicate</h4>
+      <p>Before writing, check whether an entry already covers the topic. If it does, edit that file. Two notes on the
+        same fact are how a base rots into contradiction.</p>
+    </div>
+    <div class="phase-step p-blue">
+      <h4>One fact per file</h4>
+      <p>Keep entries atomic. If a note starts covering three unrelated things, split it. Atomicity is what makes
+        selective recall and clean deletion possible.</p>
+    </div>
+    <div class="phase-step p-orange">
+      <h4>Delete what is wrong</h4>
+      <p>A note that turned out false is worse than no note: it actively misleads. Remove it. The base is pruned,
+        not just grown.</p>
+    </div>
+    <div class="phase-step p-purple">
+      <h4>Do not store what the repo already records</h4>
+      <p>Code structure, past fixes, and git history live in the repo. Capture only what is <em>not</em> derivable from
+        the code: the why behind a decision, a non-obvious constraint, a lesson a bug taught.</p>
+    </div>
+  </div>
+  <p>A good entry answers a question the code cannot: not "what does this function do" but "why is it built this way,
+    and what breaks if you change it". That is the knowledge worth keeping.</p>
+</section>
+
+<!-- ═══════════════ SYNC ═══════════════ -->
+<section>
+  <h2 id="sync">Versioning, Sync, and Secrets</h2>
+  <p>The base is a directory of text files, so it is a <strong>git repository</strong>, and that one decision
+    buys history, diffs, rollback, and multi-machine sync for free. One source of truth; every workstation, laptop,
+    and CI box clones the same knowledge.</p>
+  <p>Putting memory under version control raises one question that must be answered before the first push:
+    <strong>where does this repository live, and what is allowed in it?</strong> Get this wrong and you publish
+    secrets to the world.</p>
+
+  <h3 id="tiers">Three Tiers of Sensitivity</h3>
+  <div class="concepts">
+    <div class="card c-green">
+      <h4>Tier C: shareable</h4>
+      <p>Generic, sanitized knowledge with no secrets or internal specifics. Safe to keep in a public repo. Most of
+        a personal base lives here.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Tier B: confidential</h4>
+      <p>Employer-internal hostnames, project ids, private architecture. Belongs in a <strong>private</strong> repo,
+        never a public one. Keep it in a clearly bounded subtree.</p>
+    </div>
+    <div class="card c-red">
+      <h4>Tier A: secrets</h4>
+      <p>API tokens, keys, credentials. These never go into <em>any</em> git, public or private. They live as local
+        files (restrictive permissions) and are <code>.gitignore</code>d so a careless commit cannot leak them.</p>
+    </div>
+  </div>
+  <div class="formula-box">
+    <p>A practical rule: <strong>if the repository is public, assume everything in it is already indexed by
+      someone.</strong> Decide the repo's visibility first, gitignore the secret and confidential subtrees
+      explicitly, and verify the staged set before every commit. A knowledge base is an asset until it leaks, then
+      it is a breach. The gap between the two is one <code>.gitignore</code> line and the habit of checking what
+      you are about to push.</p>
+  </div>
+
+  <h3 id="bootstrap">Bootstrapping a New Machine</h3>
+  <p>Because the base is a repo, onboarding a machine is one command. A small, idempotent install script clones it
+    into place and is careful never to delete the local, gitignored material (tokens, work notes) that does not
+    travel with the repo:</p>
+  <div class="snippet"><span class="c"># on a fresh machine</span>
+git clone <span class="s">&lt;your-private-kb-repo&gt;</span> ~/.ai
+~/.ai/install.sh        <span class="c"># clone or safe update; never wipes local secrets</span></div>
+  <p>The result is a single mental model that follows you everywhere. The same scopes, the same index, the same
+    conventions on the workstation, the laptop, and the build server, with the secret tier present only where it
+    is needed, and synced nowhere it should not be.</p>
+</section>
+
+<!-- ═══════════════ CLOSING ═══════════════ -->
+<section>
+  <h2 id="loop">Closing the Loop</h2>
+  <p>Part 1 cast the agent as a regulator and named the context window as its internal state. The knowledge base is
+    the rest of that state: the part you deliberately write down so it persists past the point where working memory
+    gives out. It is what lets the regulator pick up a project after a week, or on a different machine, without
+    re-learning everything from zero.</p>
+  <div class="concepts">
+    <div class="card c-purple">
+      <h4>Durable state</h4>
+      <p>The base extends x(t) beyond the session. The agent stops waking up with amnesia.</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Lean working memory</h4>
+      <p>On-demand recall keeps context focused, which keeps feedback clean and the loop converging.</p>
+    </div>
+    <div class="card c-green">
+      <h4>Compounding returns</h4>
+      <p>Every well-curated entry makes the next session start further ahead. Knowledge accrues instead of evaporating.</p>
+    </div>
+  </div>
+  <p class="endnote">A model with no knowledge base starts every session as a stranger to your project. A model
+    with a well-tended one starts where the last session ended, with the decisions and constraints already written
+    down. The pieces are ordinary: a few scopes, small files, honest front-matter, on-demand recall, and a private
+    repo that keeps secrets out. What they add up to is the difference between starting over and <strong>building on
+    what you already know</strong>.</p>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var TIPS = {
+  index: { title: 'INDEX.md / MEMORY.md', color: '#3a94c5',
+    desc: 'The hand-curated entry point. The only file always in context. Points the agent at the highest-value entries with a one-line hook each.',
+    detail: '▸ Curated, not auto-generated. Exhaustive listing is done with search.' },
+  system: { title: 'system/ scope', color: '#8da101',
+    desc: 'Knowledge about the machine, OS, shell, and tooling, plus per-host snapshots. Nothing project-bound.',
+    detail: '▸ Example: display scaling, shell setup, a machine record' },
+  features: { title: 'features/ scope', color: '#3a94c5',
+    desc: 'Themes that recur across many projects. A topic is promoted here only after it appears in two or more projects.',
+    detail: '▸ Example: auth, CI/CD, observability conventions' },
+  projects: { title: 'projects/ scope', color: '#df69ba',
+    desc: 'Anything bound to a single codebase or initiative. Born here; may migrate to features/ if it generalizes.',
+    detail: '▸ Example: a deployment quirk, an architecture decision' },
+  entry: { title: 'One entry = one fact', color: '#35a77c',
+    desc: 'A single Markdown file: front-matter (id, scope, summary, tags, status, links) plus a focused body. Flat within its scope.',
+    detail: '<em>The summary and tags are the recall surface.</em>' },
+  secrets: { title: 'Secrets & work content', color: '#f85552',
+    desc: 'Tokens and employer-internal knowledge. Gitignored, kept local, never pushed. Present only on machines that need them.',
+    detail: '▸ Tier A never enters any git; Tier B only a private repo' },
+  repo: { title: 'Private git repo', color: '#8da101',
+    desc: 'The whole base under version control: history, diffs, rollback, and one source of truth synced across machines.',
+    detail: '▸ Decide visibility first; gitignore the secret subtrees' },
+  sync: { title: 'Many machines, one base', color: '#3a94c5',
+    desc: 'Every workstation, laptop, and server clones the same repo. The same scopes and conventions everywhere.',
+    detail: '▸ install.sh bootstraps a new box without wiping local secrets' }
+};
+
+var wrap = document.getElementById('schema-kb');
+if (!wrap) return;
+var svg = wrap.querySelector('svg');
+var comps = svg.querySelectorAll('.comp');
+var zones = svg.querySelectorAll('.hover-zone');
+
+var tip = document.createElement('div');
+tip.className = 'schema-tip';
+tip.innerHTML = '<div class="tip-title"></div><div class="tip-desc"></div><div class="tip-detail"></div>';
+document.body.appendChild(tip);
+var tTitle = tip.querySelector('.tip-title');
+var tDesc = tip.querySelector('.tip-desc');
+var tDetail = tip.querySelector('.tip-detail');
+
+function setActive(name) {
+  wrap.classList.add('active', 'has-focus');
+  comps.forEach(function(c) { c.classList.toggle('active', c.dataset.comp === name); });
+}
+function clearActive() {
+  wrap.classList.remove('has-focus');
+  comps.forEach(function(c) { c.classList.remove('active'); });
+}
+function moveTip(x, y) {
+  var w = tip.offsetWidth || 280, h = tip.offsetHeight || 90;
+  var nx = x + 18, ny = y + 18;
+  if (nx + w > window.innerWidth - 12) nx = x - w - 18;
+  if (ny + h > window.innerHeight - 12) ny = y - h - 18;
+  tip.style.left = Math.max(8, nx) + 'px';
+  tip.style.top = Math.max(8, ny) + 'px';
+}
+function showTip(name, x, y) {
+  var d = TIPS[name];
+  if (!d) return;
+  tTitle.textContent = d.title;
+  tTitle.style.color = d.color;
+  tDesc.innerHTML = d.desc;
+  if (d.detail) { tDetail.style.display = ''; tDetail.innerHTML = d.detail; }
+  else { tDetail.style.display = 'none'; }
+  tip.style.borderLeftColor = d.color;
+  moveTip(x, y);
+  tip.classList.add('visible');
+}
+function hideTip() { tip.classList.remove('visible'); }
+
+zones.forEach(function(z) {
+  z.addEventListener('mouseenter', function(e) { setActive(z.dataset.comp); showTip(z.dataset.comp, e.clientX, e.clientY); });
+  z.addEventListener('mousemove', function(e) { moveTip(e.clientX, e.clientY); });
+  z.addEventListener('mouseleave', function() { clearActive(); hideTip(); });
+});
+})();
+</script>
+</body>
+</html>

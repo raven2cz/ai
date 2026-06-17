@@ -362,6 +362,12 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
       </ul>
     </li>
     <li><a href="#loop">Closing the Loop</a></li>
+    <li><a href="#vault">Bridging an Existing Vault</a>
+      <ul class="toc-sub">
+        <li><a href="#direction">Direction is the whole design</a></li>
+        <li><a href="#moc-parallel">MOCs and the agent's index</a></li>
+      </ul>
+    </li>
   </ol>
 </nav>
 
@@ -718,11 +724,127 @@ git clone <span class="s">&lt;your-private-kb-repo&gt;</span> ~/.ai
       <p>Every well-curated entry makes the next session start further ahead. Knowledge accrues instead of evaporating.</p>
     </div>
   </div>
-  <p class="endnote">A model with no knowledge base starts every session as a stranger to your project. A model
-    with a well-tended one starts where the last session ended, with the decisions and constraints already written
-    down. The pieces are ordinary: a few scopes, small files, honest front-matter, on-demand recall, and a private
-    repo that keeps secrets out. What they add up to is the difference between starting over and <strong>building on
-    what you already know</strong>.</p>
+  <p>The base extends the regulator's reach across time. But you do not have to start it from nothing: you have
+    probably been writing knowledge down for years already, in a different form.</p>
+</section>
+
+<!-- ═══════════════ VAULT BRIDGE ═══════════════ -->
+<section>
+  <h2 id="vault">Bridging an Existing Vault</h2>
+  <p>If you have been building software for a while, you probably already have a knowledge base, just not one made
+    for an agent. A wiki, a Notion workspace, an Obsidian vault: years of designs, procedures, post-mortems, and
+    half-finished proposals, all written for people. Many of us quietly stopped tending it when agents arrived.
+    That is a real loss. The agent then re-derives, every session, context you already wrote down once.</p>
+  <p>The reflex is to pour the whole vault into the agent base. That reflex is wrong. A human vault and an agent
+    base have different shapes and different readers: one is long-form and narrative, the other atomic and
+    operational. Merge them and you get a base too verbose for an agent to recall and too fragmented for a person
+    to read. Keep them separate and connect them by reference: the agent base gains a small map to the vault, and
+    the vault stays human-first, a corpus the agent consults on demand. <em>Hover over the bridge to see each side.</em></p>
+
+  <div class="schema-wrap" id="schema-bridge">
+    <svg viewBox="0 0 940 380" xmlns="http://www.w3.org/2000/svg">
+      <!-- read arrow: vault -> agent -->
+      <g class="comp" data-comp="read" style="--comp-glow:rgba(141,161,1,0.5)">
+        <line x1="384" y1="150" x2="554" y2="150" stroke="#8da101" stroke-width="2.6"/>
+        <polygon points="556,150 545,144 545,156" fill="#8da101"/>
+        <text x="470" y="138" text-anchor="middle" font-size="11" font-weight="600" fill="#8da101">read on demand</text>
+        <text x="470" y="171" text-anchor="middle" font-size="9" fill="#829181">start at a MOC, follow links</text>
+      </g>
+      <!-- write arrow: agent -> vault (dashed, gated) -->
+      <g class="comp" data-comp="write" style="--comp-glow:rgba(245,125,38,0.5)">
+        <line x1="556" y1="250" x2="386" y2="250" stroke="#f57d26" stroke-width="1.8" stroke-dasharray="6,4"/>
+        <polygon points="384,250 395,244 395,256" fill="#f57d26"/>
+        <text x="470" y="238" text-anchor="middle" font-size="11" font-weight="600" fill="#f57d26">write only on request</text>
+        <text x="470" y="267" text-anchor="middle" font-size="9" fill="#829181">you review before it lands</text>
+      </g>
+
+      <!-- vault box -->
+      <g class="comp" data-comp="vault" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="50" y="80" width="330" height="240" rx="12" fill="rgba(223,105,186,0.06)" stroke="#df69ba" stroke-width="2"/>
+        <text x="215" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#df69ba" letter-spacing="0.04em">HUMAN VAULT</text>
+        <text x="215" y="122" text-anchor="middle" font-size="9.5" fill="#829181">Obsidian / wiki / Notion, written for people</text>
+        <text x="215" y="214" text-anchor="middle" font-size="10" fill="#5c6a72">Projects · Areas · Resources · Archives</text>
+        <text x="215" y="233" text-anchor="middle" font-size="10" fill="#5c6a72">journal · designs · decisions · proposals</text>
+        <text x="215" y="258" text-anchor="middle" font-size="9.5" fill="#829181" font-style="italic">long-form, narrative, slow-changing</text>
+      </g>
+      <!-- moc node inside vault -->
+      <g class="comp" data-comp="moc" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="78" y="140" width="274" height="46" rx="8" fill="rgba(53,167,124,0.10)" stroke="#35a77c" stroke-width="1.8"/>
+        <text x="215" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#35a77c">MOC: Map of Content</text>
+        <text x="215" y="177" text-anchor="middle" font-size="9" fill="#829181">human-curated entry point</text>
+      </g>
+
+      <!-- agent box -->
+      <g class="comp" data-comp="agent" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="560" y="80" width="330" height="240" rx="12" fill="rgba(141,161,1,0.06)" stroke="#8da101" stroke-width="2"/>
+        <text x="725" y="106" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8da101" letter-spacing="0.04em">AGENT KB (~/.ai)</text>
+        <text x="725" y="122" text-anchor="middle" font-size="9.5" fill="#829181">atomic, front-matter, on-demand</text>
+        <rect x="590" y="150" width="270" height="118" rx="8" fill="rgba(58,148,197,0.05)" stroke="#a6b0a0" stroke-width="1.1" stroke-dasharray="6,4"/>
+        <text x="725" y="177" text-anchor="middle" font-size="10.5" font-weight="700" fill="#3a94c5">index + scopes</text>
+        <text x="725" y="196" text-anchor="middle" font-size="9.5" fill="#829181">system / features / projects</text>
+        <text x="725" y="231" text-anchor="middle" font-size="9.5" fill="#5c6a72">holds a reference that MAPS the vault,</text>
+        <text x="725" y="248" text-anchor="middle" font-size="9.5" fill="#5c6a72">not a copy of it</text>
+      </g>
+
+      <!-- hover zones (vault first, moc on top of it) -->
+      <rect class="hover-zone" data-comp="vault" x="50"  y="80"  width="330" height="240"/>
+      <rect class="hover-zone" data-comp="moc"   x="78"  y="140" width="274" height="46"/>
+      <rect class="hover-zone" data-comp="agent" x="560" y="80"  width="330" height="240"/>
+      <rect class="hover-zone" data-comp="read"  x="384" y="124" width="172" height="50"/>
+      <rect class="hover-zone" data-comp="write" x="384" y="226" width="172" height="50"/>
+    </svg>
+    <span class="hint">Hover over the parts</span>
+  </div>
+
+  <h3 id="direction">Direction Is the Whole Design</h3>
+  <p>Almost everything that can go wrong here is a direction-of-flow problem, so decide the flow deliberately.</p>
+  <div class="concepts">
+    <div class="card c-green">
+      <h4>Read freely</h4>
+      <p>The agent pulls a past design, a procedure, or the reasoning behind a decision whenever a task calls for
+        it. This is where nearly all the value sits, and the risk is low.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Write only on request</h4>
+      <p>The agent writes to the vault only when you ask (drafting a note or an article from your material), and you
+        review the result. Its day-to-day operational scratch stays in the agent base, never in the vault.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Supplementary, not authoritative</h4>
+      <p>The vault is background the agent draws on, not a source it must obey. Treat what it recalls as a
+        point-in-time note, verified like any other memory before you act on it.</p>
+    </div>
+  </div>
+  <p>That single rule, read by default and write by exception, keeps machine-generated text out of the place you
+    write for humans, while still letting the agent stand on everything you have already thought through. It matters
+    even more when the vault holds private or work material: a read-only bridge cannot leak what it never writes.</p>
+
+  <h3 id="moc-parallel">MOCs and the Agent's Index</h3>
+  <p>A well-kept vault already solved the recall problem, in human form. A <strong>Map of Content</strong> (MOC) is
+    a hand-curated note that links out to everything on a topic. It is the same idea as the agent base's index and
+    its front-matter summaries: a small, trusted map you navigate from, so you never load everything to find the few
+    notes that matter.</p>
+  <table class="mapping">
+    <thead><tr><th>Human vault</th><th>Agent knowledge base</th><th>Shared purpose</th></tr></thead>
+    <tbody>
+      <tr><td>MOC (Map of Content)</td><td><code>INDEX.md</code>, curated index</td><td>One curated entry point, navigate by map</td></tr>
+      <tr><td>Note front-matter, tags</td><td>Entry <code>summary</code> + <code>tags</code></td><td>Judge relevance without reading the body</td></tr>
+      <tr><td><code>[[wikilinks]]</code></td><td>Links by <code>id</code></td><td>Walk from one note to the related ones</td></tr>
+      <tr><td>PARA folders</td><td>system / features / projects</td><td>A few stable buckets, flat within each</td></tr>
+    </tbody>
+  </table>
+  <p>That parallel is what makes the bridge cheap. The agent does not need a generated index of your vault: it would
+    only duplicate the maps you already keep and fall out of date the moment the vault changes. The agent starts at
+    a MOC, follows the wikilinks to the relevant notes, and reads only those. On-demand recall, across the boundary,
+    riding on structure you maintain for yourself anyway. If navigating through MOCs proves too coarse, reach for
+    search before you reach for an index.</p>
+
+  <p class="endnote">A model with no knowledge base starts every session as a stranger to your project. A model with
+    a well-tended one, bridged to the years of notes you already wrote, starts where you left off: the decisions,
+    the constraints, the designs already on the page. The pieces are ordinary: a few scopes, small files, honest
+    front-matter, on-demand recall, a private repo that keeps secrets out, and a read-only bridge to the human
+    knowledge you have been building all along. What they add up to is the difference between starting over and
+    <strong>building on what you already know</strong>.</p>
 </section>
 
 </div>
@@ -730,7 +852,8 @@ git clone <span class="s">&lt;your-private-kb-repo&gt;</span> ~/.ai
 <script>
 (function(){
 'use strict';
-var TIPS = {
+var TIP_DATA = {};
+TIP_DATA['schema-kb-diagram'] = {
   index: { title: 'INDEX.md / MEMORY.md', color: '#3a94c5',
     desc: 'The hand-curated entry point. The only file always in context. Points the agent at the highest-value entries with a one-line hook each.',
     detail: '▸ Curated, not auto-generated. Exhaustive listing is done with search.' },
@@ -757,11 +880,23 @@ var TIPS = {
     detail: '▸ install.sh bootstraps a new box without wiping local secrets' }
 };
 
-var wrap = document.getElementById('schema-kb-diagram');
-if (!wrap) return;
-var svg = wrap.querySelector('svg');
-var comps = svg.querySelectorAll('.comp');
-var zones = svg.querySelectorAll('.hover-zone');
+TIP_DATA['schema-bridge'] = {
+  vault: { title: 'Human vault', color: '#df69ba',
+    desc: 'Years of human-written notes: designs, procedures, decisions, proposals. Long-form and narrative, organized for people (often PARA).',
+    detail: '▸ Obsidian, a wiki, Notion: the base you already have' },
+  moc: { title: 'MOC: Map of Content', color: '#35a77c',
+    desc: 'A hand-curated note that links out to everything on a topic. The human entry point the agent starts from.',
+    detail: '▸ The vault equivalent of the agent index' },
+  agent: { title: 'Agent KB (~/.ai)', color: '#8da101',
+    desc: 'Atomic, front-matter, on-demand operational memory. It holds a small reference that maps the vault, not a copy of it.',
+    detail: '▸ References the vault; never ingests it whole' },
+  read: { title: 'Read on demand', color: '#8da101',
+    desc: 'The agent reads specific vault notes when a task needs them, starting at a MOC and following links. Low risk, high value.',
+    detail: '▸ On-demand recall across the boundary' },
+  write: { title: 'Write only on request', color: '#f57d26',
+    desc: 'The agent writes to the vault only when you ask, and you review. Its operational scratch stays in the agent base.',
+    detail: '▸ A read-mostly bridge cannot leak what it never writes' }
+};
 
 var tip = document.createElement('div');
 tip.className = 'schema-tip';
@@ -771,14 +906,6 @@ var tTitle = tip.querySelector('.tip-title');
 var tDesc = tip.querySelector('.tip-desc');
 var tDetail = tip.querySelector('.tip-detail');
 
-function setActive(name) {
-  wrap.classList.add('active', 'has-focus');
-  comps.forEach(function(c) { c.classList.toggle('active', c.dataset.comp === name); });
-}
-function clearActive() {
-  wrap.classList.remove('has-focus');
-  comps.forEach(function(c) { c.classList.remove('active'); });
-}
 function moveTip(x, y) {
   var w = tip.offsetWidth || 280, h = tip.offsetHeight || 90;
   var nx = x + 18, ny = y + 18;
@@ -787,7 +914,7 @@ function moveTip(x, y) {
   tip.style.left = Math.max(8, nx) + 'px';
   tip.style.top = Math.max(8, ny) + 'px';
 }
-function showTip(name, x, y) {
+function showTip(TIPS, name, x, y) {
   var d = TIPS[name];
   if (!d) return;
   tTitle.textContent = d.title;
@@ -801,10 +928,26 @@ function showTip(name, x, y) {
 }
 function hideTip() { tip.classList.remove('visible'); }
 
-zones.forEach(function(z) {
-  z.addEventListener('mouseenter', function(e) { setActive(z.dataset.comp); showTip(z.dataset.comp, e.clientX, e.clientY); });
-  z.addEventListener('mousemove', function(e) { moveTip(e.clientX, e.clientY); });
-  z.addEventListener('mouseleave', function() { clearActive(); hideTip(); });
+Object.keys(TIP_DATA).forEach(function(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var svg = wrap.querySelector('svg');
+  if (!svg) return;
+  var comps = svg.querySelectorAll('.comp');
+  var TIPS = TIP_DATA[wrapId];
+  svg.querySelectorAll('.hover-zone').forEach(function(z) {
+    z.addEventListener('mouseenter', function(e) {
+      wrap.classList.add('active', 'has-focus');
+      comps.forEach(function(c) { c.classList.toggle('active', c.dataset.comp === z.dataset.comp); });
+      showTip(TIPS, z.dataset.comp, e.clientX, e.clientY);
+    });
+    z.addEventListener('mousemove', function(e) { moveTip(e.clientX, e.clientY); });
+    z.addEventListener('mouseleave', function() {
+      wrap.classList.remove('has-focus');
+      comps.forEach(function(c) { c.classList.remove('active'); });
+      hideTip();
+    });
+  });
 });
 })();
 </script>

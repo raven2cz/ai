@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="cs">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Trading as a System — an unlisted, shareable essay.">
-<title>Trading as a System</title>
+<meta name="description" content="Základy burzy a tradingu — od nabídky a poptávky přes long a short pozice až k systematickému obchodování, diverzifikaci a psychice obchodníka.">
+<title>Základy burzy a tradingu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@ body {
 
 header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 2.5rem;
   padding-bottom: 2rem;
   border-bottom: 2px solid var(--bg3);
 }
@@ -75,21 +75,36 @@ h1 .accent { color: var(--green); }
   border: 1px solid var(--bg3);
 }
 
-section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+.perex {
+  font-size: 1.05rem;
+  color: var(--fg-dim);
+  border-left: 3px solid var(--green);
+  padding-left: 1.1rem;
+  margin-bottom: 2.5rem;
+}
+
+section { margin-bottom: 2.8rem; scroll-margin-top: 1rem; }
 h2 {
   font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
   padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
   letter-spacing: -0.01em;
 }
-h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin: 1.6rem 0 0.6rem; letter-spacing: -0.005em; }
 h2[id], h3[id] { scroll-margin-top: 1.5rem; }
 p { margin-bottom: 1rem; }
-strong { font-weight: 600; }
+strong { font-weight: 600; color: var(--fg); }
 em { font-family: 'Source Serif 4', 'Georgia', serif; }
 a { color: var(--blue); }
 
-ul, ol { margin: 0 0 1rem 1.4rem; }
-li { margin-bottom: 0.3rem; }
+ul, ol { margin: 0 0 1rem 1.3rem; }
+li { margin-bottom: 0.35rem; }
+
+/* ── Anglický termín ── */
+.en {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em;
+  color: var(--fg-dim);
+}
 
 /* ── Table of contents ── */
 .toc {
@@ -100,69 +115,136 @@ li { margin-bottom: 0.3rem; }
   margin-bottom: 2.5rem;
 }
 .toc h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.6rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--bg3);
-  color: var(--fg);
+  font-size: 1rem; font-weight: 700; margin: 0 0 0.6rem;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--bg3); color: var(--fg);
 }
-.toc ol {
-  list-style: none;
-  counter-reset: toc;
-  padding: 0;
-  margin: 0;
-}
-.toc > ol > li {
-  counter-increment: toc;
-  margin-bottom: 0.15rem;
-}
-.toc > ol > li > a::before {
-  content: counter(toc) ". ";
-  font-weight: 700;
-  color: var(--green);
-}
-.toc a {
-  color: var(--fg);
-  text-decoration: none;
-  font-size: 0.88rem;
-  line-height: 1.85;
-  transition: color 0.2s;
-}
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
+.toc > ol > li { counter-increment: toc; margin-bottom: 0.1rem; }
+.toc > ol > li > a::before { content: counter(toc) ". "; font-weight: 700; color: var(--green); }
+.toc a { color: var(--fg); text-decoration: none; font-size: 0.88rem; line-height: 1.85; transition: color 0.2s; }
 .toc a:hover { color: var(--blue); }
 
-/* ── Callout / note box ── */
+/* ── Figures ── */
+.fig {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 12px;
+  padding: 1.2rem 1.1rem 0.8rem;
+  margin: 1.6rem 0 2rem;
+  overflow: hidden;
+}
+.fig svg { width: 100%; height: auto; display: block; }
+.figcap {
+  margin: 0.8rem 0 0;
+  font-size: 0.82rem;
+  color: var(--fg-dim);
+  text-align: center;
+  line-height: 1.6;
+}
+.figcap b { color: var(--fg); font-weight: 600; }
+
+/* ── SVG typography & primitives ── */
+.fig svg text { font-family: 'Inter', system-ui, sans-serif; }
+.fig svg .t-lbl  { font-size: 13px; font-weight: 700; fill: #5c6a72; }
+.fig svg .t      { font-size: 12px; fill: #5c6a72; }
+.fig svg .t-s    { font-size: 10.5px; fill: #829181; }
+.fig svg .t-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; fill: #5c6a72; }
+.fig svg .up   { fill: #8da101; }
+.fig svg .dn   { fill: #f85552; }
+.fig svg .blu  { fill: #3a94c5; }
+.fig svg .dim  { fill: #829181; }
+.fig svg .ax   { stroke: #a6b0a0; stroke-width: 1.2; fill: none; }
+.fig svg .grid { stroke: #e6e2cc; stroke-width: 1; fill: none; }
+.fig svg .dash { stroke-dasharray: 4 4; }
+.fig svg .box  { fill: #fdf6e3; stroke: #e6e2cc; stroke-width: 1.5; }
+
+/* ── Callout ── */
 .callout {
   background: var(--bg1);
   border: 1px solid var(--bg3);
   border-left: 4px solid var(--green);
   border-radius: 10px;
-  padding: 1rem 1.2rem;
-  margin: 1.5rem 0 2rem;
+  padding: 0.9rem 1.2rem;
+  margin: 1.4rem 0 1.8rem;
   font-size: 0.95rem;
 }
-.callout strong { color: var(--fg); }
+.callout.warn { border-left-color: var(--red); }
+.callout.info { border-left-color: var(--blue); }
+.callout p:last-child { margin-bottom: 0; }
 
-/* ── Placeholder skeleton (removed once content lands) ── */
-.placeholder {
-  color: var(--fg-dim);
-  font-style: italic;
+/* ── Concept cards ── */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+  margin: 1.4rem 0 1.8rem;
 }
+.card {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-top: 3px solid var(--green);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+}
+.card.c-blue   { border-top-color: var(--blue); }
+.card.c-orange { border-top-color: var(--orange); }
+.card.c-purple { border-top-color: var(--purple); }
+.card h4 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--fg);
+}
+.card .sub { font-size: 0.76rem; color: var(--fg-dim); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.5rem; }
+.card p { font-size: 0.88rem; margin: 0; line-height: 1.65; }
 
-code, pre {
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; margin: 1.4rem 0 1.8rem; }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.88rem; background: var(--bg1);
+  border: 1px solid var(--bg3); border-radius: 10px; overflow: hidden;
+}
+th, td { padding: 0.6rem 0.85rem; text-align: left; border-bottom: 1px solid var(--bg3); }
+th {
+  background: var(--bg2); font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700; font-size: 0.82rem; color: var(--fg);
+}
+tr:last-child td { border-bottom: none; }
+td.num { font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+td .pos { color: var(--green); font-weight: 600; }
+td .neg { color: var(--red); font-weight: 600; }
+
+/* ── Formula ── */
+.formula {
+  background: var(--bg2);
+  border: 1px solid var(--bg3);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin: 1.1rem 0;
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.9em;
+  font-size: 0.88rem;
+  text-align: center;
+  overflow-x: auto;
 }
+
 code {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.88em;
   background: var(--bg2);
   border: 1px solid var(--bg3);
   border-radius: 4px;
-  padding: 0.1rem 0.35rem;
+  padding: 0.05rem 0.35rem;
+}
+
+footer.article-footer {
+  margin-top: 3rem; padding-top: 1.5rem;
+  border-top: 2px solid var(--bg3);
+  font-size: 0.85rem; color: var(--fg-dim); text-align: center;
 }
 
 @media (max-width: 600px) {
   .page { padding: 1.5rem 1rem; }
   h1 { font-size: 1.7rem; }
+  .cards { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -218,34 +300,1149 @@ code {
 <div class="page">
 
 <header>
-  <h1><span class="accent">Trading</span> as a System</h1>
-  <p class="subtitle">A systematic approach to markets</p>
+  <h1><span class="accent">Základy</span> burzy a tradingu</h1>
+  <p class="subtitle">Od nabídky a poptávky k systematickému obchodování</p>
   <div class="meta">
-    <span>Draft</span>
-    <span>Unlisted</span>
-    <span>Author: <strong>raven2cz</strong></span>
+    <span>Díl 1</span>
+    <span>Verze 0.1 — draft</span>
+    <span>Autor: <strong>raven2cz</strong></span>
   </div>
 </header>
 
+<p class="perex">
+  Tento díl je úvod pro úplné začátečníky. Projdeme si, co burza vlastně je a jak na ní
+  vzniká cena, jaké se obchodují instrumenty, kdo jsou účastníci trhu, jak se otevírá
+  pozice na obě strany, jak se řídí risk — a proč je nakonec největší překážkou
+  obchodníkova vlastní hlava. České výklady, <strong>termíny anglicky</strong>, tak jak
+  se s nimi reálně potkáte.
+</p>
+
 <nav class="toc">
-  <h3>Article Contents</h3>
+  <h3>Obsah článku</h3>
   <ol>
-    <li><a href="#intro">Introduction</a></li>
+    <li><a href="#burza">Co je burza a jak vzniká cena</a></li>
+    <li><a href="#instrumenty">Instrumenty: akcie, futures, opce</a></li>
+    <li><a href="#centralizace">Centralizovaná burza vs. decentralizovaný trh</a></li>
+    <li><a href="#ucastnici">Kdo obchoduje: tradeři, investoři, market makers</a></li>
+    <li><a href="#pozice">Otevření pozice: long a short</a></li>
+    <li><a href="#drzeni">Držení pozice, čas a akceptace risku</a></li>
+    <li><a href="#sl-pt">Stop-Loss a Profit Target</a></li>
+    <li><a href="#rr">Risk-Reward, equity křivka a Sharpe ratio</a></li>
+    <li><a href="#strategie">Strategie a edge: zisk v náhodném prostředí</a></li>
+    <li><a href="#portfolio">Portfolio a diverzifikační pravidlo</a></li>
+    <li><a href="#psychika">Psychika: největší nepřítel obchodníka</a></li>
   </ol>
 </nav>
 
+<!-- ═══════════════════ 1 ═══════════════════ -->
 <section>
-  <h2 id="intro">Introduction</h2>
-  <p class="placeholder">
-    This article is a placeholder — its content is being written and will be added
-    progressively. The page is already live at its unique, unlisted address and is
-    safe to share.
-  </p>
-  <div class="callout">
-    <strong>Note.</strong> This essay is intentionally kept off the main AI Playground
-    landing page. It is reachable only via its direct link.
+  <h2 id="burza">1. Co je burza a jak vzniká cena</h2>
+
+  <p><strong>Burza</strong> <span class="en">(exchange)</span> je organizované místo, kde se
+    potkávají kupující a prodávající. Sama o sobě nic nevlastní a nic neurčuje — je to
+    <em>tržiště</em>, které pouze zajišťuje, aby se protistrany našly, aby platila stejná
+    pravidla pro všechny a aby obchod nakonec skutečně proběhl a byl vypořádán.</p>
+
+  <p>Cenu neurčuje burza, ani „někdo nahoře". Cena je výsledkem střetu <strong>nabídky</strong>
+    <span class="en">(supply)</span> a <strong>poptávky</strong> <span class="en">(demand)</span>.
+    Čím je cena vyšší, tím méně lidí chce kupovat a tím více lidí chce prodávat — a naopak.
+    Bod, kde se obě křivky protnou, je cena, za kterou jsou obě strany ochotné obchod uzavřít.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 460 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Graf střetu nabídky a poptávky, jejich průsečík určuje rovnovážnou tržní cenu">
+      <!-- grid -->
+      <line class="grid" x1="70" y1="90" x2="430" y2="90"/>
+      <line class="grid" x1="70" y1="200" x2="430" y2="200"/>
+      <!-- axes -->
+      <line class="ax" x1="70" y1="45" x2="70" y2="250"/>
+      <line class="ax" x1="70" y1="250" x2="430" y2="250"/>
+      <!-- demand (klesající) -->
+      <line x1="85" y1="70" x2="415" y2="235" stroke="#f57d26" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- supply (rostoucí) -->
+      <line x1="85" y1="235" x2="415" y2="70" stroke="#3a94c5" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- equilibrium -->
+      <line class="ax dash" x1="250" y1="152.5" x2="250" y2="250"/>
+      <line class="ax dash" x1="70" y1="152.5" x2="250" y2="152.5"/>
+      <circle cx="250" cy="152.5" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+      <!-- anotace v ose klínu mezi křivkami (y = P*), s vodicí linkou od průsečíku -->
+      <line x1="259" y1="152.5" x2="324" y2="152.5" stroke="#a6b0a0" stroke-width="1"/>
+      <text class="t-s up" x="330" y="148" font-weight="700">Rovnovážná cena</text>
+      <text class="t-s dim" x="330" y="164">tady proběhne obchod</text>
+      <!-- axis labels -->
+      <text class="t" x="62" y="157" text-anchor="end">P*</text>
+      <text class="t" x="250" y="266" text-anchor="middle">Q*</text>
+      <text class="t-lbl" x="26" y="150" text-anchor="middle" transform="rotate(-90 26 150)">Cena (Price)</text>
+      <text class="t-s" x="430" y="268" text-anchor="end">Množství (Quantity)</text>
+      <!-- line labels (u příslušných konců křivek) -->
+      <text class="t-s" x="92" y="64" fill="#f57d26" font-weight="700">Poptávka (Demand)</text>
+      <text class="t-s" x="412" y="62" text-anchor="end" fill="#3a94c5" font-weight="700">Nabídka (Supply)</text>
+      <!-- legend -->
+      <rect x="88" y="288" width="16" height="4" rx="2" fill="#f57d26"/>
+      <text class="t-s" x="110" y="293">Poptávka (Demand) — kupující</text>
+      <rect x="270" y="288" width="16" height="4" rx="2" fill="#3a94c5"/>
+      <text class="t-s" x="292" y="293">Nabídka (Supply) — prodávající</text>
+    </svg>
+    <p class="figcap"><b>Obr. 1</b> — Cena není vyhlášena, cena je <i>nalezena</i>. Průsečík nabídky
+      a poptávky je jediný bod, kde se kupující i prodávající shodnou.</p>
+  </div>
+
+  <h3 id="bid-ask">Bid, Ask a spread</h3>
+
+  <p>V reálném čase se tento střet odehrává v <strong>knize objednávek</strong>
+    <span class="en">(order book)</span>. Ta má dvě strany:</p>
+
+  <ul>
+    <li><strong>Bid</strong> — nejvyšší cena, za kterou je někdo ochoten <em>koupit</em>.
+      Za tuto cenu tedy vy můžete okamžitě <em>prodat</em>.</li>
+    <li><strong>Ask</strong> (též <span class="en">Offer</span>) — nejnižší cena, za kterou je někdo
+      ochoten <em>prodat</em>. Za tuto cenu vy můžete okamžitě <em>koupit</em>.</li>
+    <li><strong>Spread</strong> — rozdíl mezi nimi. Je to okamžitá cena za vstup do trhu
+      a zároveň odměna pro toho, kdo likviditu poskytuje.</li>
+  </ul>
+
+  <p>Ask je vždy vyšší než Bid. Kdyby tomu tak nebylo, obě objednávky by se okamžitě
+    spárovaly a zmizely. <strong>Poslední cena</strong> <span class="en">(last price)</span>, kterou
+    vidíte v grafu, je jen cena posledního <em>uskutečněného</em> obchodu — je to historie.
+    Skutečnost, za kolik můžete obchodovat <em>teď</em>, popisují Bid a Ask.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 460 336" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Kniha objednávek: nahoře červené prodejní příkazy (ask), dole zelené nákupní (bid), mezi nimi pásmo spreadu">
+      <!-- headers -->
+      <text class="t-s" x="115" y="34" text-anchor="middle" font-weight="700">Objem</text>
+      <text class="t-s" x="230" y="34" text-anchor="middle" font-weight="700">Cena</text>
+      <text class="t-s" x="345" y="34" text-anchor="middle" font-weight="700">Objem</text>
+      <line class="grid" x1="30" y1="42" x2="430" y2="42"/>
+
+      <!-- ASK side (nahoře, červená, bary doprava) -->
+      <text class="t-s dn" x="30" y="62" font-weight="700">ASK — prodejní příkazy (nabídka)</text>
+      <rect x="256" y="72"  width="40"  height="16" rx="3" fill="#f85552" opacity="0.30"/>
+      <rect x="256" y="96"  width="70"  height="16" rx="3" fill="#f85552" opacity="0.42"/>
+      <rect x="256" y="120" width="95"  height="16" rx="3" fill="#f85552" opacity="0.55"/>
+      <rect x="256" y="144" width="120" height="16" rx="3" fill="#f85552" opacity="0.72"/>
+      <text class="t-mono" x="230" y="84"  text-anchor="middle">100.20</text>
+      <text class="t-mono" x="230" y="108" text-anchor="middle">100.15</text>
+      <text class="t-mono" x="230" y="132" text-anchor="middle">100.10</text>
+      <text class="t-mono" x="230" y="156" text-anchor="middle" font-weight="700">100.05</text>
+      <text class="t-s dim" x="302" y="84">40</text>
+      <text class="t-s dim" x="332" y="108">70</text>
+      <text class="t-s dim" x="357" y="132">95</text>
+      <text class="t-s dim" x="382" y="156">120</text>
+
+      <!-- SPREAD band -->
+      <rect x="30" y="168" width="400" height="40" rx="6" fill="#dfa000" opacity="0.13"/>
+      <line class="ax dash" x1="30" y1="168" x2="430" y2="168"/>
+      <line class="ax dash" x1="30" y1="208" x2="430" y2="208"/>
+      <text class="t-s" x="112" y="186" text-anchor="middle" font-weight="700" fill="#a06000">SPREAD = 0.05</text>
+      <text class="t-s dim" x="112" y="200" text-anchor="middle">nikdo tu neobchoduje</text>
+      <text class="t-s dn" x="310" y="186" text-anchor="middle" font-weight="700">▲ Best Ask — kupujete za 100.05</text>
+      <text class="t-s up" x="310" y="200" text-anchor="middle" font-weight="700">▼ Best Bid — prodáváte za 100.00</text>
+
+      <!-- BID side (dole, zelená, bary doleva) -->
+      <rect x="84"  y="220" width="120" height="16" rx="3" fill="#8da101" opacity="0.72"/>
+      <rect x="109" y="244" width="95"  height="16" rx="3" fill="#8da101" opacity="0.55"/>
+      <rect x="134" y="268" width="70"  height="16" rx="3" fill="#8da101" opacity="0.42"/>
+      <rect x="159" y="292" width="45"  height="16" rx="3" fill="#8da101" opacity="0.30"/>
+      <text class="t-mono" x="230" y="232" text-anchor="middle" font-weight="700">100.00</text>
+      <text class="t-mono" x="230" y="256" text-anchor="middle">99.95</text>
+      <text class="t-mono" x="230" y="280" text-anchor="middle">99.90</text>
+      <text class="t-mono" x="230" y="304" text-anchor="middle">99.85</text>
+      <text class="t-s dim" x="76"  y="232" text-anchor="end">120</text>
+      <text class="t-s dim" x="101" y="256" text-anchor="end">95</text>
+      <text class="t-s dim" x="126" y="280" text-anchor="end">70</text>
+      <text class="t-s dim" x="151" y="304" text-anchor="end">45</text>
+      <text class="t-s up" x="30" y="328" font-weight="700">BID — nákupní příkazy (poptávka)</text>
+    </svg>
+    <p class="figcap"><b>Obr. 2</b> — Kniha objednávek. Kupujete za <b>Ask</b> (100.05), prodáváte za
+      <b>Bid</b> (100.00). Rozdíl 0.05 je <b>spread</b> — vaše okamžitá vstupní ztráta.</p>
+  </div>
+
+  <div class="callout info">
+    <p><strong>Důsledek pro začátečníka.</strong> Jakmile otevřete pozici, jste automaticky
+      v mírné ztrátě o velikosti spreadu. Trh se musí pohnout ve váš prospěch alespoň o spread,
+      abyste byli na nule. U likvidních trhů je spread zanedbatelný, u nelikvidních vás sežere.</p>
   </div>
 </section>
+
+<!-- ═══════════════════ 2 ═══════════════════ -->
+<section>
+  <h2 id="instrumenty">2. Instrumenty: akcie, futures, opce</h2>
+
+  <p><strong>Instrument</strong> <span class="en">(instrument, security)</span> je to, co se
+    na burze obchoduje. Instrumenty se liší tím, <em>co vlastně kupujete</em> — a to má zásadní
+    dopad na risk, páku i na to, jak dlouho lze pozici držet.</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>Akcie</h4>
+      <div class="sub">stock / share / equity</div>
+      <p>Podíl na firmě. Vlastníte kus majetku, máte nárok na dividendu a hlasovací právo.
+        Nemá expiraci — můžete držet donekonečna.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Futures</h4>
+      <div class="sub">futures contract</div>
+      <p>Závazek koupit/prodat podkladové aktivum k danému datu za dnes dohodnutou cenu.
+        Standardizovaný, pákový, má <strong>expiraci</strong>.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Opce</h4>
+      <div class="sub">option — call / put</div>
+      <p><em>Právo</em>, nikoli povinnost, koupit (call) nebo prodat (put) za realizační cenu.
+        Za toto právo platíte <strong>prémii</strong>.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Deriváty obecně</h4>
+      <div class="sub">derivatives, CFD, ETF</div>
+      <p>Jejich cena je <em>odvozena</em> od něčeho jiného (akcie, index, komodita, měna).
+        Sami o sobě žádnou hodnotu nemají.</p>
+    </div>
+  </div>
+
+  <p>Klíčové rozlišení: u akcie vlastníte <em>něco</em>. U derivátu vlastníte <em>smlouvu</em>
+    o něčem. Derivát proto nese <strong>páku</strong> <span class="en">(leverage)</span> — složíte
+    jen zálohu (<span class="en">margin</span>), ale nesete zisk i ztrátu z plné nominální hodnoty.
+    Páka nezvyšuje vaši šanci na úspěch, pouze násobí rychlost, jakou se výsledek dostaví.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Instrument</th><th>Co vlastníte</th><th>Expirace</th><th>Páka</th><th>Max. ztráta</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Akcie</td><td>podíl na firmě</td><td>ne</td><td>ne (bez marginu)</td><td>vložená částka</td></tr>
+        <tr><td>Futures</td><td>závazek</td><td>ano</td><td>ano, vysoká</td><td class="num"><span class="neg">i více než vklad</span></td></tr>
+        <tr><td>Opce — koupená</td><td>právo</td><td>ano</td><td>ano</td><td>zaplacená prémie</td></tr>
+        <tr><td>Opce — vypsaná</td><td>povinnost</td><td>ano</td><td>ano</td><td class="num"><span class="neg">teoreticky neomezená</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="opce-payoff">Výplatní diagram opce</h3>
+
+  <p>Nejnázornější je <strong>payoff diagram</strong> koupené call opce. Dokud je cena podkladu
+    pod realizační cenou <span class="en">(strike)</span>, opce nemá smysl uplatnit a vy ztrácíte
+    přesně zaplacenou prémii — nic víc. Nad strikem začíná opce nabírat hodnotu a od
+    <strong>bodu zvratu</strong> <span class="en">(break-even)</span> jste v zisku.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 460 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Payoff diagram koupené call opce: plochá ztráta ve výši prémie pod strike, nad strike lineárně rostoucí zisk">
+      <!-- zones -->
+      <rect x="55" y="40" width="355" height="130" fill="#8da101" opacity="0.05"/>
+      <rect x="55" y="170" width="355" height="60" fill="#f85552" opacity="0.05"/>
+      <!-- axes -->
+      <line class="ax" x1="55" y1="170" x2="415" y2="170"/>
+      <line class="ax" x1="55" y1="35" x2="55" y2="235"/>
+      <text class="t-s dim" x="48" y="48" text-anchor="end">Zisk +</text>
+      <text class="t-s dim" x="48" y="228" text-anchor="end">Ztráta −</text>
+      <text class="t-s" x="415" y="248" text-anchor="end">Cena podkladu (underlying)</text>
+      <!-- strike -->
+      <line class="ax dash" x1="210" y1="40" x2="210" y2="230"/>
+      <text class="t-s" x="210" y="248" text-anchor="middle" font-weight="700">Strike (K)</text>
+      <!-- premium level (jen po strike, aby nekřížila popisky vpravo) -->
+      <line class="grid dash" x1="55" y1="200" x2="212" y2="200"/>
+      <text class="t-s dn" x="62" y="215">− prémie (premium)</text>
+      <!-- payoff -->
+      <path d="M 70 200 L 210 200 L 400 60" fill="none" stroke="#8da101" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- break even -->
+      <circle cx="250" cy="170" r="5.5" fill="#dfa000" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s" x="262" y="190" font-weight="700" fill="#a06000">Break-even</text>
+      <text class="t-s dim" x="262" y="204">= strike + prémie</text>
+      <!-- annotations -->
+      <text class="t-s dn" x="202" y="188" text-anchor="end" font-weight="700">ztráta je omezená</text>
+      <text class="t-s up" x="300" y="90" text-anchor="end" font-weight="700">zisk roste 1:1</text>
+    </svg>
+    <p class="figcap"><b>Obr. 3</b> — Koupená call opce. Ztráta je <b>zastropovaná</b> prémií,
+      zisk teoreticky neomezený. U <i>vypsané</i> opce je diagram zrcadlově obrácený — a to je
+      přesně důvod, proč je výpis opcí pro začátečníka nebezpečný.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 3 ═══════════════════ -->
+<section>
+  <h2 id="centralizace">3. Centralizovaná burza vs. decentralizovaný trh</h2>
+
+  <p>Klasická burza je <strong>centrálně řízená</strong>. Existuje jeden orchestrátor, který
+    drží knihu objednávek, páruje obchody a — což je nejdůležitější — stojí uprostřed jako
+    <strong>clearingové centrum</strong> <span class="en">(clearing house)</span>. To garantuje,
+    že když vaše protistrana zkrachuje, vy své peníze dostanete. Za tuto jistotu platíte
+    poplatky, regulaci a nutnost mít brokera.</p>
+
+  <p>Naproti tomu kryptoměnové trhy typu Bitcoin fungují na <strong>decentralizované</strong>
+    <span class="en">(peer-to-peer)</span> síti. Neexistuje centrální autorita ani clearing.
+    To přináší otevřenost a nonstop provoz, ale také zásadní rizika: protistrana není garantovaná,
+    burzy mohou padnout i s vašimi prostředky, a ochrana investora prakticky neexistuje.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 310" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vlevo centralizovaná burza s clearingovým centrem uprostřed, vpravo decentralizovaná peer-to-peer síť bez středu">
+      <line class="grid dash" x1="250" y1="20" x2="250" y2="295" stroke="#a6b0a0"/>
+
+      <!-- LEFT: centralized -->
+      <text class="t-lbl" x="125" y="32" text-anchor="middle">Centralizovaná burza</text>
+      <text class="t-s dim" x="125" y="48" text-anchor="middle">CME, CBOT, NYSE, Nasdaq</text>
+      <!-- spokes -->
+      <g stroke="#3a94c5" stroke-width="1.6" opacity="0.55">
+        <line x1="125" y1="85" x2="125" y2="140"/>
+        <line x1="203" y1="135" x2="152" y2="155"/>
+        <line x1="176" y1="228" x2="141" y2="185"/>
+        <line x1="74" y1="228" x2="109" y2="185"/>
+        <line x1="47" y1="135" x2="98" y2="155"/>
+      </g>
+      <!-- hub -->
+      <rect x="68" y="140" width="114" height="46" rx="9" fill="#3a94c5" opacity="0.14" stroke="#3a94c5" stroke-width="1.6"/>
+      <text class="t-s" x="125" y="159" text-anchor="middle" font-weight="700" fill="#256d96">Burza</text>
+      <text class="t-s" x="125" y="175" text-anchor="middle" fill="#256d96">+ Clearing house</text>
+      <!-- satellites -->
+      <g fill="#fdf6e3" stroke="#829181" stroke-width="1.5">
+        <circle cx="125" cy="76" r="13"/><circle cx="212" cy="130" r="13"/>
+        <circle cx="182" cy="236" r="13"/><circle cx="68" cy="236" r="13"/>
+        <circle cx="38" cy="130" r="13"/>
+      </g>
+      <g class="t-s dim" text-anchor="middle" font-size="9">
+        <text x="125" y="80">T</text><text x="212" y="134">T</text>
+        <text x="182" y="240">T</text><text x="68" y="240">T</text><text x="38" y="134">T</text>
+      </g>
+      <text class="t-s dim" x="125" y="272" text-anchor="middle">Vše prochází středem.</text>
+      <text class="t-s dim" x="125" y="287" text-anchor="middle">Protistrana je garantovaná.</text>
+
+      <!-- RIGHT: decentralized -->
+      <text class="t-lbl" x="375" y="32" text-anchor="middle">Decentralizovaná síť (P2P)</text>
+      <text class="t-s dim" x="375" y="48" text-anchor="middle">Bitcoin, blockchain, DEX</text>
+      <g stroke="#df69ba" stroke-width="1.4" opacity="0.5">
+        <line x1="375" y1="80" x2="447" y2="122"/><line x1="447" y1="122" x2="447" y2="196"/>
+        <line x1="447" y1="196" x2="375" y2="238"/><line x1="375" y1="238" x2="303" y2="196"/>
+        <line x1="303" y1="196" x2="303" y2="122"/><line x1="303" y1="122" x2="375" y2="80"/>
+        <line x1="375" y1="80" x2="375" y2="238"/><line x1="303" y1="122" x2="447" y2="196"/>
+        <line x1="447" y1="122" x2="303" y2="196"/><line x1="303" y1="122" x2="447" y2="122"/>
+        <line x1="303" y1="196" x2="447" y2="196"/>
+      </g>
+      <g fill="#fdf6e3" stroke="#df69ba" stroke-width="1.8">
+        <circle cx="375" cy="80" r="13"/><circle cx="447" cy="122" r="13"/>
+        <circle cx="447" cy="196" r="13"/><circle cx="375" cy="238" r="13"/>
+        <circle cx="303" cy="196" r="13"/><circle cx="303" cy="122" r="13"/>
+      </g>
+      <g class="t-s dim" text-anchor="middle" font-size="9">
+        <text x="375" y="84">N</text><text x="447" y="126">N</text><text x="447" y="200">N</text>
+        <text x="375" y="242">N</text><text x="303" y="200">N</text><text x="303" y="126">N</text>
+      </g>
+      <text class="t-s dim" x="375" y="272" text-anchor="middle">Žádný střed, žádný clearing.</text>
+      <text class="t-s dn" x="375" y="287" text-anchor="middle" font-weight="700">Riziko protistrany nesete vy.</text>
+    </svg>
+    <p class="figcap"><b>Obr. 4</b> — Vlevo hvězdicová topologie s garantem uprostřed,
+      vpravo síť rovnocenných uzlů. <b>T</b> = trader, <b>N</b> = node.</p>
+  </div>
+
+  <h3 id="us-burzy">Hlavní americké burzy</h3>
+
+  <p>Většina světového objemu derivátů se točí kolem několika center. Znát je se vyplatí už
+    proto, že určují otevírací hodiny a specifikace kontraktů:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th>Zkratka</th><th>Plný název</th><th>Co se tam obchoduje</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>CME</strong></td><td>Chicago Mercantile Exchange</td><td>indexy (ES, NQ), měny, úroky, maso</td></tr>
+        <tr><td><strong>CBOT</strong></td><td>Chicago Board of Trade</td><td>obiloviny (kukuřice, sója, pšenice), dluhopisy</td></tr>
+        <tr><td><strong>NYMEX</strong></td><td>New York Mercantile Exchange</td><td>ropa, zemní plyn, energie</td></tr>
+        <tr><td><strong>COMEX</strong></td><td>Commodity Exchange</td><td>zlato, stříbro, měď</td></tr>
+        <tr><td><strong>CBOE</strong></td><td>Chicago Board Options Exchange</td><td>opce, index volatility VIX</td></tr>
+        <tr><td><strong>NYSE</strong> / <strong>Nasdaq</strong></td><td>New York Stock Exchange / Nasdaq</td><td>akcie</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout info">
+    <p>CME, CBOT, NYMEX i COMEX dnes spadají pod jednu skupinu — <strong>CME Group</strong>.
+      Historické názvy ale přetrvávají, protože označují, kde má kontrakt „domovské" specifikace.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 4 ═══════════════════ -->
+<section>
+  <h2 id="ucastnici">4. Kdo obchoduje: tradeři, investoři, market makers</h2>
+
+  <p>Na trhu nestojí jeden typ účastníka. Zásadní dělicí čára vede mezi <strong>investorem</strong>
+    a <strong>traderem</strong> — a není to o velikosti účtu, ale o <em>časovém horizontu</em>
+    a o tom, na čem vyděláváte.</p>
+
+  <p><strong>Investor</strong> kupuje podíl na hodnotě. Věří, že firma poroste, drží měsíce až roky,
+    inkasuje dividendy a krátkodobé propady ignoruje. Obchoduje prakticky vždy jen
+    <em>na růst</em> <span class="en">(long only)</span>.</p>
+
+  <p><strong>Trader</strong> nekupuje hodnotu, ale <em>pohyb</em>. Je mu jedno, jestli je firma dobrá.
+    Zajímá ho, jestli se cena pohne — a klidně dolů. Proto trader obchoduje i
+    <strong>na short stranu</strong>, tedy vydělává na poklesu. Drží sekundy až týdny.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 560 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Časová osa horizontů držení pozice: scalper sekundy až minuty, day trader hodiny, swing trader dny až týdny, investor měsíce až roky">
+      <!-- axis -->
+      <line class="ax" x1="60" y1="195" x2="470" y2="195"/>
+      <g class="grid">
+        <line x1="60" y1="40" x2="60" y2="195"/><line x1="128" y1="40" x2="128" y2="195"/>
+        <line x1="196" y1="40" x2="196" y2="195"/><line x1="264" y1="40" x2="264" y2="195"/>
+        <line x1="332" y1="40" x2="332" y2="195"/><line x1="400" y1="40" x2="400" y2="195"/>
+        <line x1="468" y1="40" x2="468" y2="195"/>
+      </g>
+      <g class="t-s dim" text-anchor="middle">
+        <text x="60" y="211">sekundy</text><text x="128" y="211">minuty</text>
+        <text x="196" y="211">hodiny</text><text x="264" y="211">dny</text>
+        <text x="332" y="211">týdny</text><text x="400" y="211">měsíce</text>
+        <text x="468" y="211">roky</text>
+      </g>
+      <text class="t-s dim" x="265" y="232" text-anchor="middle">Doba držení pozice (holding period) — logaritmicky</text>
+
+      <!-- bars -->
+      <rect x="60" y="46" width="80" height="22" rx="6" fill="#f85552" opacity="0.75"/>
+      <text class="t-s" x="148" y="61" fill="#5c6a72" font-weight="700">Scalper</text>
+      <text class="t-s dim" x="205" y="61">desítky obchodů denně</text>
+
+      <rect x="100" y="82" width="140" height="22" rx="6" fill="#f57d26" opacity="0.75"/>
+      <text class="t-s" x="248" y="97" fill="#5c6a72" font-weight="700">Day trader</text>
+      <text class="t-s dim" x="322" y="97">zavírá do konce dne (intraday)</text>
+
+      <rect x="230" y="118" width="128" height="22" rx="6" fill="#8da101" opacity="0.75"/>
+      <text class="t-s" x="366" y="133" fill="#5c6a72" font-weight="700">Swing trader</text>
+      <text class="t-s dim" x="450" y="133">drží přes noc</text>
+
+      <rect x="352" y="154" width="116" height="22" rx="6" fill="#3a94c5" opacity="0.75"/>
+      <text class="t-s dim" x="344" y="169" text-anchor="end">drží měsíce až roky</text>
+      <text class="t-s" x="476" y="169" fill="#5c6a72" font-weight="700">Investor</text>
+
+      <!-- side note -->
+      <text class="t-s dim" x="60" y="32" font-weight="700">Kratší horizont = více obchodů, vyšší náklady, vyšší nároky na disciplínu</text>
+    </svg>
+    <p class="figcap"><b>Obr. 5</b> — Horizonty držení. Žádný z nich není „lepší". Liší se
+      frekvencí obchodů, náklady a tím, kolik času vyžadují.</p>
+  </div>
+
+  <h3 id="banky">Banky a velké peníze</h3>
+
+  <p>Objem na trhu netvoří drobní obchodníci, ale <strong>instituce</strong>: banky, hedgeové fondy,
+    penzijní fondy, korporace zajišťující si cenu vstupů. Významná část jejich aktivity není
+    spekulace, ale <strong>hedging</strong> — zajištění proti nepříznivému pohybu ceny.
+    Aerolinka nakupuje futures na ropu ne proto, že věří v její růst, ale proto, aby si
+    <em>uzamkla náklad</em>.</p>
+
+  <p>Pro vás z toho plyne praktický důsledek: na druhé straně vašeho obchodu skoro nikdy nestojí
+    člověk, který by přemýšlel jako vy. Stojí tam algoritmus, zajišťovatel nebo market maker.</p>
+
+  <h3 id="likvidita">Likvidita a market makers</h3>
+
+  <p><strong>Likvidita</strong> <span class="en">(liquidity)</span> je schopnost trhu vstřebat vaši
+    objednávku bez toho, aby se cena výrazně pohnula. Likvidní trh poznáte podle úzkého spreadu
+    a velkých objemů v knize objednávek. V nelikvidním trhu i malá objednávka „prokousne" několik
+    cenových hladin a vy dostanete výrazně horší cenu, než jste viděli — tomu se říká
+    <strong>skluz</strong> <span class="en">(slippage)</span>.</p>
+
+  <p>Likviditu do trhu dodávají <strong>market makers</strong> <span class="en">(tvůrci trhu)</span>.
+    Jejich role je jednoduchá: neustále kotují <em>obě</em> strany — cenu, za kterou koupí (Bid),
+    i cenu, za kterou prodají (Ask). Nespekulují na směr. Vydělávají na tom, že opakovaně nakoupí
+    levněji a prodají dráž. Jejich zisk je právě <strong>spread</strong>.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Market maker uprostřed kupuje od prodávajícího za bid a prodává kupujícímu za ask, rozdíl je jeho zisk">
+      <defs>
+        <marker id="arrGreen" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L7,3.2 L0,6.4 z" fill="#8da101"/>
+        </marker>
+        <marker id="arrRed" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+          <path d="M0,0 L7,3.2 L0,6.4 z" fill="#f85552"/>
+        </marker>
+      </defs>
+
+      <!-- seller -->
+      <rect class="box" x="18" y="88" width="104" height="54" rx="9"/>
+      <text class="t-s" x="70" y="110" text-anchor="middle" font-weight="700">Prodávající</text>
+      <text class="t-s dim" x="70" y="126" text-anchor="middle">(seller)</text>
+
+      <!-- market maker -->
+      <rect x="188" y="80" width="124" height="70" rx="10" fill="#dfa000" opacity="0.14" stroke="#dfa000" stroke-width="1.8"/>
+      <text class="t-s" x="250" y="104" text-anchor="middle" font-weight="700" fill="#8a6300">Market Maker</text>
+      <text class="t-s" x="250" y="121" text-anchor="middle" fill="#8a6300">kotuje obě strany</text>
+      <text class="t-s dim" x="250" y="138" text-anchor="middle">nespekuluje na směr</text>
+
+      <!-- buyer -->
+      <rect class="box" x="378" y="88" width="104" height="54" rx="9"/>
+      <text class="t-s" x="430" y="110" text-anchor="middle" font-weight="700">Kupující</text>
+      <text class="t-s dim" x="430" y="126" text-anchor="middle">(buyer)</text>
+
+      <!-- arrows -->
+      <line x1="124" y1="115" x2="182" y2="115" stroke="#8da101" stroke-width="2" marker-end="url(#arrGreen)"/>
+      <text class="t-s up" x="153" y="102" text-anchor="middle" font-weight="700">Bid</text>
+      <text class="t-mono up" x="153" y="136" text-anchor="middle">100.00</text>
+
+      <line x1="314" y1="115" x2="372" y2="115" stroke="#f85552" stroke-width="2" marker-end="url(#arrRed)"/>
+      <text class="t-s dn" x="343" y="102" text-anchor="middle" font-weight="700">Ask</text>
+      <text class="t-mono dn" x="343" y="136" text-anchor="middle">100.05</text>
+
+      <text class="t-s dim" x="70" y="164" text-anchor="middle">prodá MM za Bid</text>
+      <text class="t-s dim" x="430" y="164" text-anchor="middle">koupí od MM za Ask</text>
+
+      <!-- profit box -->
+      <rect x="150" y="188" width="200" height="40" rx="8" fill="#8da101" opacity="0.13" stroke="#8da101" stroke-width="1.5"/>
+      <text class="t-s up" x="250" y="205" text-anchor="middle" font-weight="700">Zisk MM = Ask − Bid = 0.05</text>
+      <text class="t-s dim" x="250" y="220" text-anchor="middle">× tisíce obchodů denně</text>
+
+      <text class="t-s dim" x="250" y="34" text-anchor="middle" font-weight="700">Market maker dodává likviditu — je vždy ochoten obchodovat</text>
+      <text class="t-s dim" x="250" y="52" text-anchor="middle">Díky němu najdete protistranu i v okamžiku, kdy žádná „skutečná" není</text>
+    </svg>
+    <p class="figcap"><b>Obr. 6</b> — Market maker nevydělává na predikci směru, ale na
+      <b>opakování</b>. Jeho edge je strukturální, ne prediktivní.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 5 ═══════════════════ -->
+<section>
+  <h2 id="pozice">5. Otevření pozice: long a short</h2>
+
+  <p><strong>Pozice</strong> <span class="en">(position)</span> je otevřená expozice vůči trhu.
+    Otevřete ji obchodem <span class="en">(entry)</span> a uzavřete opačným obchodem
+    <span class="en">(exit)</span>. Rozdíl mezi vstupní a výstupní cenou, vynásobený velikostí
+    pozice, je váš zisk nebo ztráta <span class="en">(P/L, profit and loss)</span>.</p>
+
+  <p>Existují právě dva směry a jsou dokonale symetrické.</p>
+
+  <h3 id="long">Long pozice — vydělávám na růstu</h3>
+
+  <p><strong>Long</strong> je intuitivní: <em>koupím levně, prodám draho</em>. Nejprve nakoupíte,
+    potom (doufejte) prodáte výš. Maximální ztráta je omezená — cena nemůže spadnout pod nulu.
+    Maximální zisk je teoreticky neomezený.</p>
+
+  <h3 id="short">Short pozice — vydělávám na poklesu</h3>
+
+  <p><strong>Short</strong> je otočený v čase: <em>prodám draho, koupím levně</em>. Prodáte něco,
+    co nevlastníte (broker vám to půjčí), a později to koupíte zpět levněji. Rozdíl je váš zisk.</p>
+
+  <p>Pozor na asymetrii: u shortu je maximální zisk omezený (cena může spadnout nejvýš na nulu),
+    ale maximální <strong>ztráta je teoreticky neomezená</strong>, protože cena může růst donekonečna.
+    Proto je short vždy o něco nebezpečnější než long.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 270" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vlevo long pozice: nákup dole, prodej nahoře. Vpravo short pozice: prodej nahoře, zpětný nákup dole. Obojí končí ziskem 20">
+      <line class="grid dash" x1="250" y1="22" x2="250" y2="252" stroke="#a6b0a0"/>
+
+      <!-- ══ LONG ══ -->
+      <text class="t-lbl up" x="125" y="32" text-anchor="middle">LONG — sázka na růst</text>
+      <line class="ax" x1="42" y1="215" x2="228" y2="215"/>
+      <line class="ax" x1="42" y1="46" x2="42" y2="215"/>
+      <rect x="55" y="72" width="158" height="110" fill="#8da101" opacity="0.08"/>
+      <polyline points="58,182 92,164 118,150 152,120 186,96 210,72"
+                fill="none" stroke="#5c6a72" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- entry -->
+      <circle cx="58" cy="182" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s up" x="66" y="199" font-weight="700">1. Nákup (Buy)</text>
+      <text class="t-mono dim" x="66" y="212">100</text>
+      <!-- exit -->
+      <circle cx="210" cy="72" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s up" x="202" y="62" text-anchor="end" font-weight="700">2. Prodej (Sell)</text>
+      <text class="t-mono dim" x="202" y="50" text-anchor="end">120</text>
+      <!-- profit bracket -->
+      <line class="ax" x1="222" y1="72" x2="222" y2="182" stroke="#8da101"/>
+      <text class="t-s up" x="230" y="130" font-weight="700" transform="rotate(-90 230 130)" text-anchor="middle">+20</text>
+      <text class="t-s dim" x="125" y="243" text-anchor="middle">koupím levně → prodám draho</text>
+      <text class="t-s dim" x="125" y="258" text-anchor="middle">čas →</text>
+
+      <!-- ══ SHORT ══ -->
+      <text class="t-lbl dn" x="375" y="32" text-anchor="middle">SHORT — sázka na pokles</text>
+      <line class="ax" x1="292" y1="215" x2="478" y2="215"/>
+      <line class="ax" x1="292" y1="46" x2="292" y2="215"/>
+      <rect x="305" y="72" width="158" height="110" fill="#8da101" opacity="0.08"/>
+      <polyline points="308,72 342,94 368,110 402,138 436,158 460,182"
+                fill="none" stroke="#5c6a72" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- entry -->
+      <circle cx="308" cy="72" r="6" fill="#f85552" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s dn" x="316" y="62" font-weight="700">1. Prodej (Sell)</text>
+      <text class="t-mono dim" x="316" y="50">120</text>
+      <!-- exit -->
+      <circle cx="460" cy="182" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s up" x="452" y="199" text-anchor="end" font-weight="700">2. Nákup (Buy)</text>
+      <text class="t-mono dim" x="452" y="212" text-anchor="end">100</text>
+      <!-- profit bracket -->
+      <line class="ax" x1="472" y1="72" x2="472" y2="182" stroke="#8da101"/>
+      <text class="t-s up" x="480" y="130" font-weight="700" transform="rotate(-90 480 130)" text-anchor="middle">+20</text>
+      <text class="t-s dim" x="375" y="243" text-anchor="middle">prodám draho → koupím levně</text>
+      <text class="t-s dim" x="375" y="258" text-anchor="middle">čas →</text>
+    </svg>
+    <p class="figcap"><b>Obr. 7</b> — Zisk vzniká vždy stejně: <b>levně dovnitř, draho ven</b>.
+      U shortu je jen prohozené pořadí obou kroků v čase.</p>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr><th></th><th>Long</th><th>Short</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Vstup</td><td>nákup <span class="en">(buy)</span></td><td>prodej <span class="en">(sell)</span></td></tr>
+        <tr><td>Výstup</td><td>prodej</td><td>zpětný nákup <span class="en">(buy to cover)</span></td></tr>
+        <tr><td>Vyděláváte když</td><td class="num"><span class="pos">cena ↑</span></td><td class="num"><span class="pos">cena ↓</span></td></tr>
+        <tr><td>Maximální zisk</td><td>neomezený</td><td>omezený (cena → 0)</td></tr>
+        <tr><td>Maximální ztráta</td><td>omezená (cena → 0)</td><td class="num"><span class="neg">neomezená</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>Příklad shortu, který bolí.</strong> Shortujete akcii za 100 s vidinou poklesu na 80.
+      Místo toho firma oznámí převzetí a akcie otevře na 180. Vaše ztráta je 80 na akcii —
+      tedy <em>víc, než kolik jste do obchodu vložili</em>. Právě proto se short nikdy neobchoduje
+      bez stop-lossu.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 6 ═══════════════════ -->
+<section>
+  <h2 id="drzeni">6. Držení pozice, čas a akceptace risku</h2>
+
+  <p>Jakmile je pozice otevřená, začíná pracovat <strong>čas</strong>. Cena se pohybuje a s ní
+    i vaše <strong>plovoucí</strong> (nerealizovaná) ztráta či zisk <span class="en">(unrealized
+    P/L)</span>. Dokud pozici nezavřete, žádný výsledek neexistuje — jen momentální ocenění.</p>
+
+  <p>Z toho plyne fakt, který začátečníky mate: <strong>ztrátová pozice se může stát ziskovou</strong>.
+    Cena zajde proti vám, pak se otočí a projde vaším cílem. Kdybyste vydrželi, vyděláte.
+    A právě tady číhá past.</p>
+
+  <div class="callout warn">
+    <p>Protože ztrátová pozice <em>někdy</em> skončí v zisku, mozek si z toho odvodí, že stačí
+      vždycky počkat. To je logická past. Občas totiž cena nezajde proti vám o 5 %, ale o 60 %,
+      a už se nikdy nevrátí. Jednou stačí.</p>
+  </div>
+
+  <p>Klíčem tedy není doufat, ale předem <strong>akceptovat risk</strong>. Ještě než pozici otevřete,
+    musíte vědět: <em>kolik jsem ochoten na tomto obchodu ztratit?</em> Tuto částku definujete
+    předem, je malá vůči účtu, a když ji trh dosáhne, pozici zavíráte — bez diskuze a bez výjimek.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cenová dráha po otevření pozice: nejprve klesne do plovoucí ztráty, poté se otočí a skončí v zisku. Níže je čárkovaná linie předem přijatého limitu risku.">
+      <!-- zones -->
+      <rect x="60" y="58" width="410" height="62" fill="#8da101" opacity="0.07"/>
+      <rect x="60" y="120" width="410" height="90" fill="#f85552" opacity="0.07"/>
+
+      <!-- entry line -->
+      <line x1="60" y1="120" x2="470" y2="120" stroke="#3a94c5" stroke-width="1.8" stroke-dasharray="5 4"/>
+      <text class="t-s blu" x="64" y="113" font-weight="700">Vstupní cena (Entry)</text>
+
+      <!-- risk limit line -->
+      <line x1="60" y1="210" x2="470" y2="210" stroke="#f85552" stroke-width="1.8" stroke-dasharray="5 4"/>
+      <text class="t-s dn" x="64" y="228" font-weight="700">Předem přijatý limit risku — tady zavírám, konec diskuze</text>
+
+      <!-- price path -->
+      <polyline points="60,120 105,146 150,166 190,178 230,163 275,142 320,124 365,104 410,86 455,70"
+                fill="none" stroke="#5c6a72" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="60" cy="120" r="5.5" fill="#3a94c5" stroke="#fdf6e3" stroke-width="2"/>
+      <circle cx="190" cy="178" r="5" fill="#f85552" stroke="#fdf6e3" stroke-width="2"/>
+      <circle cx="455" cy="70" r="5.5" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+
+      <!-- annotations -->
+      <text class="t-s up" x="66" y="78" font-weight="700">ZISK</text>
+      <text class="t-s dn" x="66" y="200">ZTRÁTA</text>
+      <text class="t-s dn" x="205" y="196" font-weight="700">plovoucí ztráta (unrealized loss)</text>
+      <text class="t-s up" x="450" y="60" text-anchor="end" font-weight="700">realizovaný zisk</text>
+
+      <text class="t-s dim" x="260" y="262" text-anchor="middle">Pozice prošla ztrátou, ale limitu se nedotkla — proto zůstala otevřená.</text>
+      <text class="t-s dim" x="260" y="278" text-anchor="middle">Kdyby ho protnula, zavíráme. Nikdy nespoléháme na to, že „se to vrátí".</text>
+      <text class="t-s dim" x="60" y="46">čas →</text>
+    </svg>
+    <p class="figcap"><b>Obr. 8</b> — Plovoucí ztráta není prohra. Prohra je až <b>překročení limitu</b>,
+      který jste si stanovili předem. Rozdíl mezi obojím je celý trading.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 7 ═══════════════════ -->
+<section>
+  <h2 id="sl-pt">7. Stop-Loss a Profit Target</h2>
+
+  <p>Akceptaci risku z minulé kapitoly přeložíme do konkrétních příkazů, které zadáte brokerovi
+    zároveň s otevřením pozice.</p>
+
+  <div class="cards">
+    <div class="card" style="border-top-color:var(--red)">
+      <h4>Stop-Loss (SL)</h4>
+      <div class="sub">stop-loss order</div>
+      <p>Příkaz, který <strong>automaticky uzavře</strong> pozici, když cena dosáhne předem
+        definované ztrátové úrovně. Chrání účet před jediným katastrofálním obchodem.</p>
+    </div>
+    <div class="card">
+      <h4>Profit Target (PT)</h4>
+      <div class="sub">take-profit order</div>
+      <p>Příkaz, který <strong>automaticky vybere zisk</strong>, když cena dosáhne cílové úrovně.
+        Chrání zisk před tím, aby se rozplynul zpět do trhu.</p>
+    </div>
+  </div>
+
+  <p>Vzdálenost od vstupu ke stop-lossu definuje jednotku risku, které se říká <strong>1R</strong>.
+    Vše ostatní se pak měří v násobcích R. Pokud je vzdálenost k profit targetu dvojnásobná,
+    má obchod poměr <strong>1:2</strong> — riskujete 1R, abyste získali 2R.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma stop-loss a profit target: z bodu vstupu vede jedna dráha nahoru k profit targetu ve vzdálenosti 2R, druhá dolů ke stop-lossu ve vzdálenosti 1R">
+      <!-- bands -->
+      <rect x="60" y="70" width="360" height="80" fill="#8da101" opacity="0.07"/>
+      <rect x="60" y="150" width="360" height="40" fill="#f85552" opacity="0.07"/>
+
+      <!-- PT -->
+      <line x1="60" y1="70" x2="420" y2="70" stroke="#8da101" stroke-width="2" stroke-dasharray="6 4"/>
+      <text class="t-s up" x="64" y="62" font-weight="700">Profit Target — zisk +2R</text>
+      <!-- Entry -->
+      <line x1="60" y1="150" x2="420" y2="150" stroke="#3a94c5" stroke-width="2"/>
+      <text class="t-s blu" x="416" y="144" text-anchor="end" font-weight="700">Vstup (Entry)</text>
+      <!-- SL -->
+      <line x1="60" y1="190" x2="420" y2="190" stroke="#f85552" stroke-width="2" stroke-dasharray="6 4"/>
+      <text class="t-s dn" x="64" y="206" font-weight="700">Stop-Loss — ztráta −1R</text>
+
+      <!-- winning path -->
+      <polyline points="70,150 120,138 170,120 220,104 270,88 315,70"
+                fill="none" stroke="#8da101" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="315" cy="70" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s up" x="325" y="86" font-weight="700">výhra: +2R</text>
+
+      <!-- losing path -->
+      <polyline points="70,150 115,161 160,172 205,181 240,190"
+                fill="none" stroke="#f85552" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="240" cy="190" r="6" fill="#f85552" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s dn" x="250" y="182" font-weight="700">prohra: −1R</text>
+
+      <!-- entry dot -->
+      <circle cx="70" cy="150" r="6" fill="#3a94c5" stroke="#fdf6e3" stroke-width="2"/>
+
+      <!-- R brackets -->
+      <line class="ax" x1="440" y1="70" x2="440" y2="150" stroke="#8da101" stroke-width="1.6"/>
+      <line class="ax" x1="436" y1="70" x2="444" y2="70" stroke="#8da101"/>
+      <line class="ax" x1="436" y1="150" x2="444" y2="150" stroke="#8da101"/>
+      <text class="t-s up" x="456" y="114" font-weight="700">2R</text>
+
+      <line class="ax" x1="440" y1="150" x2="440" y2="190" stroke="#f85552" stroke-width="1.6"/>
+      <line class="ax" x1="436" y1="190" x2="444" y2="190" stroke="#f85552"/>
+      <text class="t-s dn" x="456" y="175" font-weight="700">1R</text>
+
+      <text class="t-s dim" x="240" y="240" text-anchor="middle" font-weight="700">Risk-Reward Ratio (RRR) = 1 : 2</text>
+      <text class="t-s dim" x="240" y="258" text-anchor="middle">Obě úrovně zadávám při otevření pozice, ne až když se něco děje.</text>
+      <text class="t-s dim" x="240" y="276" text-anchor="middle">Stop-loss nikdy neposouvám proti sobě.</text>
+      <text class="t-s dim" x="60" y="290">čas →</text>
+    </svg>
+    <p class="figcap"><b>Obr. 9</b> — <b>1R</b> je vzdálenost vstup → stop-loss. Je to jediná
+      jednotka, ve které má smysl měřit výsledky obchodů napříč trhy.</p>
+  </div>
+
+  <h3 id="proc-sl">Proč to vůbec děláme</h3>
+
+  <p>Důvod je matematický, ne psychologický. Ztráta a zisk nejsou symetrické. Ztratíte-li 50 %
+    účtu, potřebujete <strong>+100 %</strong>, abyste se vrátili na start. Ztratíte-li 90 %,
+    potřebujete +900 %.</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Ztráta účtu</th><th>Potřebný zisk k návratu na původní hodnotu</th></tr></thead>
+      <tbody>
+        <tr><td class="num">−10 %</td><td class="num"><span class="pos">+11 %</span></td></tr>
+        <tr><td class="num">−25 %</td><td class="num"><span class="pos">+33 %</span></td></tr>
+        <tr><td class="num">−50 %</td><td class="num"><span class="pos">+100 %</span></td></tr>
+        <tr><td class="num">−75 %</td><td class="num"><span class="pos">+300 %</span></td></tr>
+        <tr><td class="num">−90 %</td><td class="num"><span class="neg">+900 %</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Stop-loss tedy není „přiznání porážky". Je to nástroj, který drží vaše ztráty v pásmu,
+    ze kterého je matematicky reálné se vrátit. Bez něj jediný obchod smaže stovky předchozích.</p>
+</section>
+
+<!-- ═══════════════════ 8 ═══════════════════ -->
+<section>
+  <h2 id="rr">8. Risk-Reward, equity křivka a Sharpe ratio</h2>
+
+  <p>Začátečníci se ptají: <em>„Jaká je vaše úspěšnost?"</em> To je špatná otázka. Úspěšnost
+    <span class="en">(win rate)</span> sama o sobě neříká nic. Můžete mít 90 % úspěšnost a být
+    v mínusu, pokud jedna ztráta smaže deset zisků.</p>
+
+  <p>Co rozhoduje, je součin úspěšnosti a poměru zisku ke ztrátě. Tomu se říká
+    <strong>očekávaná hodnota</strong> <span class="en">(expectancy)</span>:</p>
+
+  <div class="formula">
+    Expectancy = (Win% × průměrný zisk) − (Loss% × průměrná ztráta)
+  </div>
+
+  <p>Při poměru <strong>1:2</strong> vám stačí uhodnout jen o něco víc než třetinu obchodů,
+    abyste byli na nule. Sledujme sérii 10 obchodů se 40% úspěšností: 4 výhry po +2R
+    a 6 proher po −1R.</p>
+
+  <div class="formula">
+    (4 × +2R) + (6 × −1R) = +8R − 6R = <strong>+2R</strong>
+  </div>
+
+  <p>Přestože jste se <strong>mýlili v 60 % případů</strong>, skončili jste v zisku. To je celé
+    jádro obchodování. Nemusíte mít pravdu často — musíte mít pravdu <em>výnosně</em>.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Equity křivka deseti obchodů s poměrem 1:2 a 40% úspěšností. Přes sérii ztrát končí křivka na plus dvou R.">
+      <!-- grid -->
+      <g class="grid">
+        <line x1="60" y1="116" x2="470" y2="116"/>
+        <line x1="60" y1="144" x2="470" y2="144"/>
+        <line x1="60" y1="172" x2="470" y2="172"/>
+        <line x1="60" y1="228" x2="470" y2="228"/>
+        <line x1="60" y1="256" x2="470" y2="256"/>
+      </g>
+      <!-- drawdown zone -->
+      <rect x="60" y="200" width="410" height="56" fill="#f85552" opacity="0.07"/>
+
+      <!-- zero line -->
+      <line x1="60" y1="200" x2="470" y2="200" stroke="#a6b0a0" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <text class="t-s dim" x="52" y="204" text-anchor="end">0R</text>
+      <text class="t-s dim" x="52" y="176" text-anchor="end">+1R</text>
+      <text class="t-s dim" x="52" y="148" text-anchor="end">+2R</text>
+      <text class="t-s dim" x="52" y="120" text-anchor="end">+3R</text>
+      <text class="t-s dim" x="52" y="232" text-anchor="end">−1R</text>
+      <text class="t-s dim" x="52" y="260" text-anchor="end">−2R</text>
+
+      <!-- axes -->
+      <line class="ax" x1="60" y1="90" x2="60" y2="270"/>
+
+      <!-- equity curve: e = 0,-1,-2,0,-1,1,0,-1,1,3,2 -->
+      <polyline points="60,200 100,228 140,256 180,200 220,228 260,172 300,200 340,228 380,172 420,116 460,144"
+                fill="none" stroke="#3a94c5" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+      <g fill="#3a94c5" stroke="#fdf6e3" stroke-width="1.6">
+        <circle cx="60" cy="200" r="4"/><circle cx="100" cy="228" r="4"/><circle cx="140" cy="256" r="4"/>
+        <circle cx="180" cy="200" r="4"/><circle cx="220" cy="228" r="4"/><circle cx="260" cy="172" r="4"/>
+        <circle cx="300" cy="200" r="4"/><circle cx="340" cy="228" r="4"/><circle cx="380" cy="172" r="4"/>
+      </g>
+      <circle cx="420" cy="116" r="4.5" fill="#8da101" stroke="#fdf6e3" stroke-width="1.6"/>
+      <circle cx="460" cy="144" r="6" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+
+      <!-- labels -->
+      <text class="t-s dn" x="140" y="274" text-anchor="middle" font-weight="700">max drawdown −2R</text>
+      <text class="t-s up" x="466" y="132" text-anchor="end" font-weight="700">+2R</text>
+
+      <!-- trade markers -->
+      <g class="t-s dim" text-anchor="middle" font-size="9">
+        <text x="80" y="290">L</text><text x="120" y="290">L</text><text x="160" y="290">W</text>
+        <text x="200" y="290">L</text><text x="240" y="290">W</text><text x="280" y="290">L</text>
+        <text x="320" y="290">L</text><text x="360" y="290">W</text><text x="400" y="290">W</text>
+        <text x="440" y="290">L</text>
+      </g>
+      <text class="t-s dim" x="60" y="290" text-anchor="end">obchod:</text>
+      <text class="t-s dim" x="265" y="80" text-anchor="middle" font-weight="700">Equity křivka — 10 obchodů, 4 výhry (W) / 6 proher (L), RRR 1:2</text>
+    </svg>
+    <p class="figcap"><b>Obr. 10</b> — Tři ztráty v řadě na začátku vypadají jako konec světa.
+      Přesto série končí v <b>+2R</b>. Drawdown je normální provozní stav, ne selhání.</p>
+  </div>
+
+  <h3 id="equity-dd">Equity křivka a drawdown</h3>
+
+  <p><strong>Equity křivka</strong> <span class="en">(equity curve)</span> je vývoj hodnoty vašeho
+    účtu v čase. Je to jediný graf, který o vás skutečně vypovídá. Její nejdůležitější vlastností
+    není konečná hodnota, ale <strong>drawdown</strong> — pokles z dosavadního maxima.
+    <strong>Maximum Drawdown (MaxDD)</strong> je nejhorší takový pokles, jaký jste zažili.
+    Je to číslo, které rozhoduje, jestli u strategie psychicky vydržíte.</p>
+
+  <h3 id="sharpe">Sharpe ratio</h3>
+
+  <p>Dva obchodníci mohou mít stejný roční výnos, ale jeden ho získal klidnou, hladkou křivkou
+    a druhý divokou jízdou s propady. <strong>Sharpe ratio</strong> měří výnos <em>na jednotku
+    podstoupené volatility</em>:</p>
+
+  <div class="formula">
+    Sharpe = (výnos portfolia − bezrizikový výnos) ÷ směrodatná odchylka výnosů
+  </div>
+
+  <p>Vysoké Sharpe znamená hladkou křivku. Zjednodušené vodítko: pod 1 je slabé, kolem 1 slušné,
+    nad 2 velmi dobré, nad 3 vzácné. Cílem systematického obchodníka není maximální výnos,
+    ale <strong>maximální výnos na jednotku risku</strong>.</p>
+</section>
+
+<!-- ═══════════════════ 9 ═══════════════════ -->
+<section>
+  <h2 id="strategie">9. Strategie a edge: zisk v náhodném prostředí</h2>
+
+  <p><strong>Strategie</strong> <span class="en">(trading strategy, system)</span> je úplný,
+    jednoznačný předpis, který odpovídá na čtyři otázky:</p>
+
+  <ol>
+    <li><strong>Kdy vstoupím?</strong> <span class="en">(entry rules)</span></li>
+    <li><strong>Kolik riskuji?</strong> <span class="en">(position sizing)</span></li>
+    <li><strong>Kdy vystoupím se ztrátou?</strong> <span class="en">(stop-loss)</span></li>
+    <li><strong>Kdy vystoupím se ziskem?</strong> <span class="en">(profit target / exit)</span></li>
+  </ol>
+
+  <p>Je-li předpis jednoznačný, dá se otestovat na historických datech
+    <span class="en">(backtest)</span> a lze ho vykonávat opakovaně a bez emocí. Tomu se říká
+    <strong>systematické obchodování</strong>.</p>
+
+  <h3 id="edge">Co je edge</h3>
+
+  <p><strong>Edge</strong> (výhoda, převaha) je malá, ale <em>statisticky doložitelná</em> odchylka
+    od náhody ve váš prospěch. Jinými slovy: kladná očekávaná hodnota. Nemusí být velká —
+    kasino má na ruletě edge kolem 2,7 % a přesto neomylně bohatne.</p>
+
+  <p>Kasino nevyhrává každou hru. Kasino vyhrává, protože hraje <strong>hodně her</strong>,
+    každou se stejnými pravidly, a nikdy nesází víc, než unese. To je přesná definice
+    systematického obchodníka. Váš protivník není trh — je jím <em>náhoda</em>, a tu neporazíte
+    predikcí, ale opakováním.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Deset dlaždic, šest červených proher a čtyři zelené výhry, pod nimi výpočet očekávané hodnoty plus 0,2 R a graf akumulace zisku přes mnoho obchodů">
+      <text class="t-s dim" x="250" y="26" text-anchor="middle" font-weight="700">10 obchodů podle stejného pravidla</text>
+
+      <!-- 10 tiles -->
+      <g>
+        <rect x="55" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="97" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="139" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="181" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="223" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="265" y="40" width="34" height="34" rx="6" fill="#f85552" opacity="0.75"/>
+        <rect x="307" y="40" width="34" height="34" rx="6" fill="#8da101" opacity="0.85"/>
+        <rect x="349" y="40" width="34" height="34" rx="6" fill="#8da101" opacity="0.85"/>
+        <rect x="391" y="40" width="34" height="34" rx="6" fill="#8da101" opacity="0.85"/>
+        <rect x="433" y="40" width="34" height="34" rx="6" fill="#8da101" opacity="0.85"/>
+      </g>
+      <g fill="#fdf6e3" font-size="11" font-weight="700" text-anchor="middle" font-family="'JetBrains Mono',monospace">
+        <text x="72" y="62">−1R</text><text x="114" y="62">−1R</text><text x="156" y="62">−1R</text>
+        <text x="198" y="62">−1R</text><text x="240" y="62">−1R</text><text x="282" y="62">−1R</text>
+        <text x="324" y="62">+2R</text><text x="366" y="62">+2R</text><text x="408" y="62">+2R</text>
+        <text x="450" y="62">+2R</text>
+      </g>
+      <text class="t-s dn" x="177" y="92" text-anchor="middle" font-weight="700">6 proher — 60 %</text>
+      <text class="t-s up" x="387" y="92" text-anchor="middle" font-weight="700">4 výhry — 40 %</text>
+
+      <!-- expectancy -->
+      <rect x="80" y="108" width="340" height="52" rx="9" fill="#8da101" opacity="0.12" stroke="#8da101" stroke-width="1.5"/>
+      <text class="t-mono" x="250" y="129" text-anchor="middle">Expectancy = 0.4 × (+2R) + 0.6 × (−1R)</text>
+      <text class="t-mono up" x="250" y="149" text-anchor="middle" font-weight="700" font-size="13">= +0.2R na každý obchod</text>
+
+      <!-- accumulation chart -->
+      <line class="ax" x1="60" y1="288" x2="470" y2="288"/>
+      <line class="ax" x1="60" y1="180" x2="60" y2="288"/>
+      <path d="M 60 288 C 160 282, 230 262, 300 236 S 410 196, 465 182"
+            fill="none" stroke="#3a94c5" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- noise around -->
+      <path d="M 60 288 L 90 284 L 120 289 L 150 279 L 180 284 L 210 271 L 240 277 L 270 259 L 300 264 L 330 245 L 360 250 L 390 227 L 420 214 L 450 196 L 465 182"
+            fill="none" stroke="#a6b0a0" stroke-width="1.2" opacity="0.85"/>
+      <text class="t-s dim" x="70" y="196">kapitál</text>
+      <text class="t-s dim" x="470" y="304" text-anchor="end">počet obchodů →</text>
+      <!-- popisky v prázdném poli nad křivkou, s vodicí linkou -->
+      <text class="t-s blu" x="118" y="222" font-weight="700">akumulace edge</text>
+      <text class="t-s dim" x="118" y="237">zákon velkých čísel</text>
+      <line x1="196" y1="242" x2="248" y2="256" stroke="#a6b0a0" stroke-width="1"/>
+      <text class="t-s dim" x="250" y="176" text-anchor="middle">Jednotlivý obchod je náhoda. Tisíc obchodů je statistika.</text>
+    </svg>
+    <p class="figcap"><b>Obr. 11</b> — Kladná expectancy je motor. Krátkodobě ji přehluší šum
+      (šedá čára), dlouhodobě ale vždy vyhraje (modrá).</p>
+  </div>
+
+  <div class="callout">
+    <p><strong>Tři podmínky, aby edge fungoval.</strong> (1) Musí být skutečně kladný — ověřený
+      na datech, ne pocitem. (2) Musíte ho vykonat <em>u každého</em> obchodu, jinak z něj děláte
+      loterii. (3) Musíte přežít drawdown — proto position sizing. Vypadnete-li z hry,
+      edge už pro vás neexistuje.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 10 ═══════════════════ -->
+<section>
+  <h2 id="portfolio">10. Portfolio a diverzifikační pravidlo</h2>
+
+  <p><strong>Portfolio</strong> je soubor pozic, strategií a trhů, které držíte současně.
+    A tady je asi nejcennější poznatek celého článku: <strong>diverzifikace je jediný oběd zdarma,
+    který finanční trhy nabízejí.</strong></p>
+
+  <p>Důvod je matematický. Když skládáte dvě aktiva, výnos portfolia je prostý <em>vážený průměr</em>
+    jejich výnosů. Ale risk portfolia — měřený směrodatnou odchylkou — <strong>není</strong> vážený
+    průměr jejich risků. Je nižší, pokud spolu aktiva perfektně nekorelují:</p>
+
+  <div class="formula">
+    σ<sub>p</sub>² = w₁²σ₁² + w₂²σ₂² + 2·w₁w₂·<strong>ρ</strong>·σ₁σ₂
+  </div>
+
+  <p>Ono <strong>ρ</strong> (korelace) je celé kouzlo. Je-li ρ = 1 (aktiva se hýbou stejně),
+    nezískáte nic. Je-li ρ &lt; 1, risk klesá. A je-li ρ = 0 (nezávislá aktiva), platí
+    <strong>diverzifikační pravidlo</strong>: risk portfolia klesá s odmocninou počtu složek.</p>
+
+  <div class="formula">
+    σ<sub>portfolia</sub> = σ<sub>jedné strategie</sub> ÷ √N
+  </div>
+
+  <p>Čtyři nekorelované strategie tedy nesou <em>polovinu</em> risku jedné (√4 = 2). Devět jich
+    nese třetinu. Výnos zůstává, kolísání se krátí. To je přesně to, proč fondy neobchodují
+    jeden trh, ale desítky.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Nahoře tři nekorelované equity křivky s propady v různých obdobích, dole jejich součet jako hladká portfoliová křivka s malým drawdownem">
+      <text class="t-s dim" x="250" y="22" text-anchor="middle" font-weight="700">Tři nekorelované strategie — každá má drawdown jinde</text>
+
+      <!-- A: drawdown brzy -->
+      <text class="t-s" x="42" y="52" text-anchor="end" font-weight="700">A</text>
+      <line class="grid" x1="55" y1="72" x2="470" y2="72"/>
+      <rect x="135" y="24" width="80" height="48" fill="#f85552" opacity="0.12"/>
+      <polyline points="55,62 95,50 135,42 175,60 215,66 255,48 295,40 335,46 375,32 415,28 460,20"
+                fill="none" stroke="#f85552" stroke-width="1.8" stroke-linejoin="round"/>
+
+      <!-- B: drawdown uprostřed -->
+      <text class="t-s" x="42" y="112" text-anchor="end" font-weight="700">B</text>
+      <line class="grid" x1="55" y1="132" x2="470" y2="132"/>
+      <rect x="215" y="84" width="80" height="48" fill="#f85552" opacity="0.12"/>
+      <polyline points="55,124 95,112 135,120 175,102 215,94 255,116 295,124 335,100 375,96 415,80 460,86"
+                fill="none" stroke="#3a94c5" stroke-width="1.8" stroke-linejoin="round"/>
+
+      <!-- C: drawdown pozdě -->
+      <text class="t-s" x="42" y="172" text-anchor="end" font-weight="700">C</text>
+      <line class="grid" x1="55" y1="192" x2="470" y2="192"/>
+      <rect x="295" y="144" width="120" height="48" fill="#f85552" opacity="0.12"/>
+      <polyline points="55,186 95,178 135,168 175,158 215,166 255,150 295,142 335,156 375,170 415,182 460,150"
+                fill="none" stroke="#df69ba" stroke-width="1.8" stroke-linejoin="round"/>
+
+      <text class="t-s dim" x="466" y="206" text-anchor="end">červené pásmo = drawdown dané strategie</text>
+
+      <!-- arrow -->
+      <text class="t-s dim" x="250" y="222" text-anchor="middle" font-weight="700">↓  součet  ↓</text>
+
+      <!-- portfolio -->
+      <rect x="55" y="234" width="415" height="82" rx="8" fill="#8da101" opacity="0.07"/>
+      <line class="grid" x1="55" y1="308" x2="470" y2="308"/>
+      <polyline points="55,302 95,294 135,290 175,282 215,280 255,270 295,260 335,248 375,240 415,226 460,216"
+                fill="none" stroke="#8da101" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+      <text class="t-s up" x="62" y="250" font-weight="700">Portfolio (A + B + C)</text>
+      <text class="t-s dim" x="62" y="266">hladká křivka, mělký drawdown</text>
+      <text class="t-s dim" x="250" y="334" text-anchor="middle">Propady se navzájem překrývají a ruší. Výnos zůstává — kolísání mizí.</text>
+    </svg>
+    <p class="figcap"><b>Obr. 12</b> — Diverzifikace nesnižuje výnos, snižuje <b>rozptyl</b>.
+      Tím zvedá Sharpe ratio a — což je důležitější — činí strategii psychicky udržitelnou.</p>
+  </div>
+
+  <p>Diverzifikovat lze ve více vrstvách současně, a jejich efekt se násobí:</p>
+
+  <div class="cards">
+    <div class="card c-blue">
+      <h4>Napříč trhy</h4>
+      <div class="sub">markets</div>
+      <p>Indexy, komodity, měny, dluhopisy. Ropa se nehýbe podle stejných příčin jako pšenice.</p>
+    </div>
+    <div class="card">
+      <h4>Napříč strategiemi</h4>
+      <div class="sub">systems</div>
+      <p>Trendová strategie vydělává v trendu, mean-reversion v pásmu. Doplňují se.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Napříč časovými rámci</h4>
+      <div class="sub">timeframes</div>
+      <p>Stejné pravidlo na denním a hodinovém grafu generuje jinak korelované obchody.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Napříč směry</h4>
+      <div class="sub">long / short</div>
+      <p>Short pozice vydělávají, když long pozice krvácejí. Přirozený hedge.</p>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>Zrada korelace.</strong> V krizi má většina aktiv tendenci zkorelovat k jedničce —
+      padá všechno naráz. Diverzifikace, na kterou spoléháte v klidných časech, vám může selhat
+      přesně v den, kdy ji potřebujete nejvíc. Proto se nikdy nespoléhá <em>jen</em> na ni.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ 11 ═══════════════════ -->
+<section>
+  <h2 id="psychika">11. Psychika: největší nepřítel obchodníka</h2>
+
+  <p>Vše výše uvedené je snadné pochopit. Pravidla zaberou dvě stránky. A přesto drtivá většina
+    drobných obchodníků <span class="en">(retail traders)</span> dlouhodobě prodělává.
+    Problém není znalost. Problém je <strong>exekuce</strong>.</p>
+
+  <p>Lidský mozek je optimalizovaný na přežití, ne na obchodování. Vyvinul se tak, aby se vyhýbal
+    ztrátě — a v trzích ho tento instinkt vede přesně opačným směrem, než by měl.</p>
+
+  <h3 id="asymetrie">Averze ke ztrátě</h3>
+
+  <p>Bolest ze ztráty 100 Kč je psychologicky asi <strong>dvakrát silnější</strong> než radost ze
+    zisku 100 Kč <span class="en">(loss aversion)</span>. Důsledek je zničující a lze ho popsat
+    jedinou větou:</p>
+
+  <div class="callout warn">
+    <p><strong>Retail obchodník rychle vybírá malé zisky, aby si užil úlevu, a nechává běžet
+      velké ztráty, aby nemusel přiznat chybu.</strong> Tím systematicky dělá pravý opak
+      poměru 1:2 — vytváří si poměr 2:1 ve svůj neprospěch. A s tím nelze vyhrát, ani
+      s 60% úspěšností.</p>
+  </div>
+
+  <p>K tomu se přidávají další zkreslení: <strong>confirmation bias</strong> (hledám jen zprávy,
+    které potvrzují mou pozici), <strong>sunk cost fallacy</strong> (už jsem v tom tolik,
+    nemůžu teď vystoupit), <strong>revenge trading</strong> (po ztrátě otevřu dvojnásobnou pozici,
+    abych to hned dohnal) a <strong>overtrading</strong> (nuda mě nutí obchodovat i tam,
+    kde signál není).</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cyklus emocí obchodníka na cenové bublině: optimismus, nadšení, euforie na vrcholu jako bod maximálního rizika, poté úzkost, popírání, panika a kapitulace na dně jako bod maximální příležitosti">
+      <!-- curve -->
+      <path d="M 40 250 L 90 218 L 140 188 L 190 148 L 240 102 L 295 62 L 350 92 L 392 142 L 432 204 L 480 252"
+            fill="none" stroke="#5c6a72" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+
+      <!-- points -->
+      <circle cx="90" cy="218" r="5" fill="#8da101" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="190" cy="148" r="5" fill="#8da101" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="240" cy="102" r="5" fill="#dfa000" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="295" cy="62" r="7.5" fill="#f85552" stroke="#fdf6e3" stroke-width="2"/>
+      <circle cx="350" cy="92" r="5" fill="#f57d26" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="392" cy="142" r="5" fill="#f57d26" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="432" cy="204" r="5" fill="#f85552" stroke="#fdf6e3" stroke-width="1.8"/>
+      <circle cx="480" cy="252" r="7.5" fill="#8da101" stroke="#fdf6e3" stroke-width="2"/>
+
+      <!-- labels (odsazené od křivky) -->
+      <text class="t-s dim" x="48" y="272" text-anchor="start">Optimismus</text>
+      <text class="t-s dim" x="176" y="142" text-anchor="end">Nadšení</text>
+      <text class="t-s" x="222" y="92" text-anchor="end" fill="#a06000" font-weight="700">Euforie</text>
+
+      <text class="t-s dn" x="295" y="40" text-anchor="middle" font-weight="700">BOD MAXIMÁLNÍHO RIZIKA</text>
+      <text class="t-s dim" x="295" y="53" text-anchor="middle">„tentokrát je to jiné"</text>
+
+      <text class="t-s dim" x="366" y="86" text-anchor="start">Úzkost</text>
+      <text class="t-s dim" x="404" y="138" text-anchor="start">Popírání</text>
+      <text class="t-s dn" x="440" y="198" text-anchor="start" font-weight="700">Panika</text>
+      <text class="t-s dn" x="470" y="272" text-anchor="middle" font-weight="700">Kapitulace</text>
+
+      <text class="t-s up" x="404" y="300" text-anchor="middle" font-weight="700">BOD MAXIMÁLNÍ PŘÍLEŽITOSTI</text>
+      <text class="t-s dim" x="404" y="313" text-anchor="middle">„už nikdy nebudu obchodovat"</text>
+
+      <!-- chování retailu — v prázdném poli pod obloukem -->
+      <rect x="168" y="212" width="196" height="50" rx="8" fill="#fdf6e3" stroke="#e6e2cc" stroke-width="1.2"/>
+      <text class="t-s dn" x="180" y="232" font-weight="700">▲ retail nakupuje v euforii</text>
+      <text class="t-s up" x="180" y="250" font-weight="700">▼ retail prodává v kapitulaci</text>
+
+      <text class="t-s dim" x="40" y="308">čas →</text>
+      <text class="t-s dim" x="30" y="150" transform="rotate(-90 30 150)" text-anchor="middle">cena / emoce</text>
+    </svg>
+    <p class="figcap"><b>Obr. 13</b> — Emoční cyklus. Největší riziko cítíme jako největší jistotu,
+      největší příležitost jako největší hrůzu. <b>Systém existuje proto, aby tuhle inverzi obešel.</b></p>
+  </div>
+
+  <h3 id="reseni">Co s tím</h3>
+
+  <p>Řešením není „být silnější". Vůle je vyčerpatelný zdroj a v okamžiku ztráty jí máte nejméně.
+    Řešením je <strong>odebrat rozhodnutí z okamžiku, kdy jste emočně kompromitovaní</strong>:</p>
+
+  <ul>
+    <li>Zapsat pravidla <em>předem</em>, na papír, ještě než trh otevře.</li>
+    <li>Zadat stop-loss a profit target <em>zároveň se vstupem</em>, ne později.</li>
+    <li>Riskovat na jeden obchod tak málo (typicky 0,5–2 % účtu), aby na výsledku emočně nezáleželo.</li>
+    <li>Vést <strong>trading deník</strong> a hodnotit se podle <em>dodržení pravidel</em>,
+      ne podle zisku jednotlivého obchodu.</li>
+    <li>Automatizovat, co lze automatizovat. Kód nemá strach ani chamtivost.</li>
+  </ul>
+
+  <div class="callout">
+    <p><strong>Shrnutí celého článku do jedné věty.</strong> Trh neplatí za to, že máte pravdu.
+      Platí za to, že přežijete dost dlouho na to, aby se váš malý statistický edge stihl
+      naakumulovat — a jediné, co vás o to může připravit, je nedodržení vlastních pravidel.</p>
+  </div>
+</section>
+
+<footer class="article-footer">
+  <p>Díl 1 z připravované série. Další kapitoly (money management, typy příkazů, backtesting,
+    daně a psaní vlastního systému) budou doplněny postupně.</p>
+  <p style="margin-top:0.6rem"><em>Text není investičním doporučením. Obchodování s pákovými
+    instrumenty nese riziko ztráty přesahující vklad.</em></p>
+</footer>
 
 </div>
 </body>

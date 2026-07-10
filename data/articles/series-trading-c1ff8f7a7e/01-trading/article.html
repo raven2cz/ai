@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Trading as a System — an unlisted, shareable essay.">
+<title>Trading as a System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #fdf6e3;
+  --bg1: #f4f0d9;
+  --bg2: #efebd4;
+  --bg3: #e6e2cc;
+  --fg: #5c6a72;
+  --fg-dim: #829181;
+  --red: #f85552;
+  --orange: #f57d26;
+  --yellow: #dfa000;
+  --green: #8da101;
+  --aqua: #35a77c;
+  --blue: #3a94c5;
+  --purple: #df69ba;
+  --grey0: #a6b0a0;
+  --grey1: #939f91;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--bg3);
+}
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; }
+h1 .accent { color: var(--green); }
+.subtitle { font-family: 'Inter', sans-serif; font-size: 1.05rem; color: var(--grey1); margin-top: 0.3rem; font-weight: 400; }
+
+.meta {
+  font-size: 0.85rem;
+  color: var(--fg-dim);
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+}
+.meta span {
+  white-space: nowrap;
+  background: var(--bg1);
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  border: 1px solid var(--bg3);
+}
+
+section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
+  letter-spacing: -0.01em;
+}
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h2[id], h3[id] { scroll-margin-top: 1.5rem; }
+p { margin-bottom: 1rem; }
+strong { font-weight: 600; }
+em { font-family: 'Source Serif 4', 'Georgia', serif; }
+a { color: var(--blue); }
+
+ul, ol { margin: 0 0 1rem 1.4rem; }
+li { margin-bottom: 0.3rem; }
+
+/* ── Table of contents ── */
+.toc {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 10px;
+  padding: 1.2rem 1.5rem 1rem;
+  margin-bottom: 2.5rem;
+}
+.toc h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--bg3);
+  color: var(--fg);
+}
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+  padding: 0;
+  margin: 0;
+}
+.toc > ol > li {
+  counter-increment: toc;
+  margin-bottom: 0.15rem;
+}
+.toc > ol > li > a::before {
+  content: counter(toc) ". ";
+  font-weight: 700;
+  color: var(--green);
+}
+.toc a {
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.88rem;
+  line-height: 1.85;
+  transition: color 0.2s;
+}
+.toc a:hover { color: var(--blue); }
+
+/* ── Callout / note box ── */
+.callout {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-left: 4px solid var(--green);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin: 1.5rem 0 2rem;
+  font-size: 0.95rem;
+}
+.callout strong { color: var(--fg); }
+
+/* ── Placeholder skeleton (removed once content lands) ── */
+.placeholder {
+  color: var(--fg-dim);
+  font-style: italic;
+}
+
+code, pre {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.9em;
+}
+code {
+  background: var(--bg2);
+  border: 1px solid var(--bg3);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem; }
+  h1 { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1><span class="accent">Trading</span> as a System</h1>
+  <p class="subtitle">A systematic approach to markets</p>
+  <div class="meta">
+    <span>Draft</span>
+    <span>Unlisted</span>
+    <span>Author: <strong>raven2cz</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>Article Contents</h3>
+  <ol>
+    <li><a href="#intro">Introduction</a></li>
+  </ol>
+</nav>
+
+<section>
+  <h2 id="intro">Introduction</h2>
+  <p class="placeholder">
+    This article is a placeholder — its content is being written and will be added
+    progressively. The page is already live at its unique, unlisted address and is
+    safe to share.
+  </p>
+  <div class="callout">
+    <strong>Note.</strong> This essay is intentionally kept off the main AI Playground
+    landing page. It is reachable only via its direct link.
+  </div>
+</section>
+
+</div>
+</body>
+</html>

@@ -623,23 +623,26 @@ SERIES_SWITCHER_CSS = """
 """
 
 
-def build_series_switcher(series, current_slug, articles_by_slug):
-    chips = []
-    for slug in series["order"]:
-        meta = articles_by_slug[slug]
-        is_active = slug == current_slug
-        label = f"Part {meta['part']}"
-        if is_active:
-            chips.append(f'<span class="chip active" aria-current="page">{label}</span>')
-        else:
-            chips.append(f'<a class="chip" href="../{slug}/index.html">{label}</a>')
+def build_series_switcher(series, current_slug, articles_by_slug, show_parts=True):
+    parts_html = ""
+    if show_parts:
+        chips = []
+        for slug in series["order"]:
+            meta = articles_by_slug[slug]
+            is_active = slug == current_slug
+            label = f"Part {meta['part']}"
+            if is_active:
+                chips.append(f'<span class="chip active" aria-current="page">{label}</span>')
+            else:
+                chips.append(f'<a class="chip" href="../{slug}/index.html">{label}</a>')
+        parts_html = f'  <div class="parts">{"".join(chips)}</div>'
 
     return (
         '<div class="series-switcher" role="navigation" aria-label="Series navigation">'
         '  <a href="../../../index.html">← AI Playground</a>'
         '  <span class="series-sep">·</span>'
         f'  <span class="series-title">{series["title"]}</span>'
-        f'  <div class="parts">{"".join(chips)}</div>'
+        f'{parts_html}'
         "</div>"
     )
 
@@ -685,6 +688,11 @@ def build_articles():
         series_out = os.path.join(SITE_ARTICLES, series["slug"])
         os.makedirs(series_out, exist_ok=True)
 
+        # Unlisted series are still built (reachable at their unique URL) but are
+        # deliberately kept off the landing page. Their series switcher also omits
+        # the single-part chip row so a shared standalone article stays clean.
+        unlisted = bool(series.get("unlisted"))
+
         for slug in series["order"]:
             meta = articles_by_slug.get(slug)
             if not meta:
@@ -694,12 +702,18 @@ def build_articles():
                 continue
 
             html = read_file(article_path)
-            switcher = build_series_switcher(series, slug, articles_by_slug)
+            switcher = build_series_switcher(
+                series, slug, articles_by_slug, show_parts=not unlisted
+            )
             html = inject_series_switcher(html, switcher)
 
             out_dir = os.path.join(series_out, slug)
             os.makedirs(out_dir, exist_ok=True)
             write_file(os.path.join(out_dir, "index.html"), html)
+
+        if unlisted:
+            print(f"    (unlisted — not shown on the landing page)")
+            continue
 
         articles_meta.append({
             "series": series,

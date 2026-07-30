@@ -675,8 +675,9 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
   <p>The first real retrospective used seven labels. Two of them — call them <em>Problem</em>
     ("a subtlety the code deals with") and <em>Caution</em> ("a latent risk, keep an eye on this") —
     were written the way they sound: speculatively, while reading the code, as notes for later. They
-    went straight into the document handed to reviewers. Later we audited every one of them against
-    the actual code. The result:</p>
+    went straight into the document handed to reviewers. Months afterwards we audited every one of them
+    against the actual code. This is a different tally from the three bugs above: those came out of
+    <em>writing</em> the document, while this is an audit of the annotations themselves. The result:</p>
 
   <table class="mapping">
     <thead><tr><th>Label</th><th class="num">In the document</th><th class="num">Deleted as noise</th><th class="num">Real findings</th></tr></thead>
@@ -834,6 +835,13 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     Re-labelling an annotation is a one-field edit and a rebuild, and every derived value — counts, the
     legend, the bug page, the open-items table — is computed at build time, so none of it can drift.</p>
 
+  <p>Which is the moment to be precise about which half does what. The rendered page is for the human: it
+    is what makes a hundred files navigable and shows a reviewer where to look. The <em>schema</em> is
+    what acts on the agent. Having to fill in why a question cannot be settled from the code, or what
+    concrete inputs produce the wrong output, is the thing that forces the altitude — and it would force
+    it even if the output were plain text. The visualization earns its place because a reviewer will
+    actually read it; the constraint behind it is what makes it worth reading.</p>
+
   <div class="snippet"><span class="c">## A verify annotation. It cannot be written without its two proof fields —</span>
 <span class="c">## the build rejects it, and that rejection is the point.</span>
 
@@ -988,6 +996,14 @@ build_retro.py retro.toml <span class="k">-o</span> out        <span class="c">#
     candidates, or while a confirmed bug sits at status <em>open</em>. The bundle is built from the output
     directory only, never by adding a whole folder to git, which is how internal notes reach a reviewer.</p>
 
+  <p>That folder listing makes the process look heavier than it is, so it is worth saying plainly what a
+    medium change looks like. Five files, one subsystem: one chapter, one reviewer, a manifest of maybe
+    thirty lines. The inbox is a scratch list you clear in a single sitting, not an adjudication panel.
+    The second-model pass is worth paying for on a confirmed bug and is overkill for anything else. The
+    <code>--release</code> gate still refuses to ship an unadjudicated candidate, which at that size takes
+    a minute to satisfy. <strong>What scales with the change is the tooling, not the discipline</strong> —
+    the same four layers and the same four gates, in an afternoon instead of a week.</p>
+
   <h3 id="adapt">Adapting It to Your Work</h3>
   <p><strong>Keep</strong> the load-bearing parts: annotations as data with HTML as an artifact, the
     anchor field, a taxonomy with no home for unverified worries, the quarantine inbox, derived values
@@ -995,11 +1011,11 @@ build_retro.py retro.toml <span class="k">-o</span> out        <span class="c">#
     format, the palette, the chapter split, how reviewers are assigned. <strong>Keep out</strong>
     project-specific verification commands: which cluster, which metrics backend, which storage belongs
     in the project's knowledge base from Part 3. The skill only requires that a verification playbook be
-    loaded, and carries two general rules, each of which cost us a day. <em>A deployed value is not a
-    default:</em> we once concluded a feature was off by reading a config default in the repo, while the
-    deployed override had it on. <em>A cumulative log is not current state:</em> a forensic store holding
-    two months of findings, most from a single catch-up on day one, got read as "we are losing data right
-    now" while the live gauge sat at zero.</p>
+    loaded, and carries two rules that each cost us a day: <em>a deployed value is not a default</em> (we
+    read a config default in the repo and concluded a feature was off, while the deployed override had it
+    on), and <em>a cumulative log is not current state</em> (two months of accumulated findings, mostly
+    from one catch-up on day one, read as "we are losing data right now" while the live gauge sat at
+    zero).</p>
 </section>
 
 <!-- ═══════════════ 9. CLOSING THE LOOP ═══════════════ -->

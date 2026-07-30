@@ -387,7 +387,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 
   <p>For a genuinely small change — a rename, a guard, a one-file fix — a diff is the perfect review
     artifact. It is precise, it is complete, and the reviewer holds the whole thing in their head. Above
-    that, it starts losing, and the threshold is lower than most teams assume. A medium feature touching
+    that, it starts losing ground, and the threshold is lower than most teams assume. A medium feature touching
     five files across two subsystems already carries trade-offs the lines cannot show. At the far end — a
     rewrite of ninety-six production files across twelve subsystems — the diff is something nobody reads
     at all. Not because reviewers are lazy, but because a diff answers exactly one question:
@@ -504,9 +504,9 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 
   <h3 id="human">The Reviewer Sees Intent, Not Just Lines</h3>
   <p>For the human, the gain is straightforward. The document puts the important implemented points in
-    front of them with the reasoning attached: why it was built this way, what was fixed and how it was
-    verified, and where it matters, an explicit marker saying <em>this is the spot to concentrate on, and
-    this is the question to settle.</em> That inverts the economics of review. Instead of spending
+    front of them with the reasoning attached: why it was built this way, what was fixed, how it was
+    verified, and, where it matters, an explicit marker saying <em>this is the spot to concentrate on,
+    and this is the question to settle.</em> That inverts the economics of review. Instead of spending
     attention <em>finding</em> the places that deserve it, they arrive with the map drawn and spend it on
     <strong>judgement</strong>: the one part a reviewer can do and an author cannot.</p>
 
@@ -522,7 +522,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     was a silent data-loss path: an error classified as retryable was completed exceptionally, but the
     committer configuration in use committed the offset anyway, so the record was never delivered and
     never reached the dead-letter queue. Every piece was correct; the composition was not. The other two were quieter: a configuration parameter that was read, documented, and
-    never actually used anywhere, and a category of image that ended up in the dead-letter queue where
+    never actually used anywhere, and a category of image that ended up in the dead-letter queue, whereas
     the previous implementation had silently discarded it.</p>
 
   <p>An obvious objection: any careful second pass might have found those, so the document is
@@ -577,7 +577,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     <div class="rd-head">
       <span class="rd-badge">MODIFIED</span>
       <span class="rd-path">pipeline/failure/FailureClassifier.java</span>
-      <span class="rd-count">4 annotations</span>
+      <span class="rd-count">3 annotations</span>
     </div>
     <div class="rd-sum">
       <b>What it does:</b> Maps an exception plus the processing phase onto a disposition — retry,
@@ -767,8 +767,8 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     </div>
     <div class="phase-step p-purple">
       <h4>The Human Gate: on Criticals and on Release</h4>
-      <p>Every "critical" is read personally against the code before it is recorded: in our audit five
-        findings came back marked critical and two survived that reading. And the scoping decision —
+      <p>Every "critical" is read personally against the code before it is recorded: in our audit,
+        five findings came back marked critical and two survived that reading. And the scoping decision —
         which files, which chapters, who owns what — is approved by a human early, while it is still
         cheap to change.</p>
     </div>
@@ -813,7 +813,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
   <p>An annotation pinned only to a line number is a time bomb. Fix a bug three files up and every line
     number below shifts; the bubble slides onto an unrelated statement and now says something false about
     code it was never about. Our first document "solved" this by freezing the source it displayed, which
-    meant reconciling document with reality by hand after every fix.</p>
+    meant reconciling the document with reality by hand after every fix.</p>
 
   <p>The fix is one required field. Every annotation carries an <code>anchor</code>: a substring of the
     line it belongs to. The build checks that the substring is actually on that line, and if it is not,
@@ -961,7 +961,7 @@ build_retro.py retro.toml <span class="k">-o</span> out        <span class="c">#
     anchor field, a taxonomy with no home for unverified worries, the quarantine inbox, derived values
     computed at build time, whole files rather than snippets. <strong>Change freely</strong> the manifest
     format, the palette, the chapter split, how reviewers are assigned. <strong>Keep out</strong>
-    project-specific verification commands: which cluster, which metrics backend, which storage belongs
+    project-specific verification commands: which cluster, which metrics backend, which storage belong
     in the project's knowledge base from Part 3. The skill only requires that a verification playbook be
     loaded, and carries two rules that each cost us a day: <em>a deployed value is not a default</em> (we
     read a config default in the repo and concluded a feature was off, while the deployed override had it

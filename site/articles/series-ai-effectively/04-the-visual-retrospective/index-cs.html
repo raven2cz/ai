@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI efektivně: Vizuální retrospektiva</title>
+<meta name="description" content="HTML retrospektiva ukáže reviewerovi, kam se dívat, a agenta, který kód napsal, přinutí ho vysvětlit — ve výšce pohledu, kde jsou dřív neviditelné vady zjevné.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg0: #fdf6e3;
+  --bg1: #f4f0d9;
+  --bg2: #efebd4;
+  --bg3: #e6e2cc;
+  --fg: #5c6a72;
+  --fg-dim: #829181;
+  --red: #f85552;
+  --orange: #f57d26;
+  --yellow: #dfa000;
+  --green: #8da101;
+  --aqua: #35a77c;
+  --blue: #3a94c5;
+  --purple: #df69ba;
+  --grey0: #a6b0a0;
+  --grey1: #939f91;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--bg3);
+}
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; }
+h1 .accent { color: var(--green); }
+.subtitle { font-family: 'Inter', sans-serif; font-size: 1.05rem; color: var(--grey1); margin-top: 0.3rem; font-weight: 400; }
+.prev-link { font-size: 0.88rem; color: var(--blue); margin-top: 0.6rem; }
+.prev-link a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--bg3); transition: border-color 0.2s; }
+.prev-link a:hover { border-bottom-color: var(--blue); }
+
+section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
+  letter-spacing: -0.01em;
+}
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h2[id], h3[id] { scroll-margin-top: 1.5rem; }
+p { margin-bottom: 1rem; }
+strong { font-weight: 600; }
+em { font-family: 'Source Serif 4', 'Georgia', serif; }
+
+/* -- Schema container -- */
+.schema-wrap {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 12px;
+  padding: 1.2rem 1rem;
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  position: relative;
+}
+.schema-wrap svg { width: 100%; height: auto; display: block; }
+.schema-wrap .hint {
+  position: absolute; bottom: 8px; right: 14px;
+  font-size: 0.75rem; color: var(--grey0);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.schema-wrap.active .hint { opacity: 0; }
+
+/* -- Component hover styles -- */
+.comp { cursor: pointer; transition: filter 0.35s ease, opacity 0.35s ease; }
+.schema-wrap.has-focus .comp { opacity: 0.4; }
+.schema-wrap.has-focus .comp.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--comp-glow, rgba(90,140,180,0.5)));
+}
+@keyframes compPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--comp-glow, rgba(90,140,180,0.35))); }
+  50% { filter: drop-shadow(0 0 14px var(--comp-glow, rgba(90,140,180,0.65))); }
+}
+.schema-wrap.has-focus .comp.active {
+  animation: compPulse 2.2s ease-in-out infinite;
+}
+.hover-zone { fill: transparent; cursor: pointer; }
+
+/* -- Floating tooltip -- */
+.schema-tip {
+  position: fixed;
+  z-index: 1000;
+  width: 280px;
+  background: rgba(253,246,227,0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--bg3);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem 0.6rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(7px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  will-change: opacity, transform;
+}
+.schema-tip.visible { opacity: 1; transform: translateY(0) scale(1); }
+.schema-tip .tip-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.2rem; letter-spacing: -0.01em; }
+.schema-tip .tip-desc { color: var(--fg); margin-bottom: 0.25rem; }
+.schema-tip .tip-detail {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 0.79rem; color: var(--fg-dim);
+  padding-top: 0.25rem; border-top: 1px solid var(--bg3);
+}
+.schema-tip .tip-detail em { font-style: italic; }
+
+/* -- Concept cards -- */
+.concepts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem; margin: 1.2rem 0;
+}
+.card {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-left: 4px solid var(--grey0);
+}
+.card h4 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+.card p { font-size: 0.84rem; line-height: 1.6; margin: 0; color: var(--fg-dim); }
+.card.c-blue   { border-left-color: var(--blue); }
+.card.c-green  { border-left-color: var(--green); }
+.card.c-purple { border-left-color: var(--purple); }
+.card.c-orange { border-left-color: var(--orange); }
+.card.c-red    { border-left-color: var(--red); }
+.card.c-yellow { border-left-color: var(--yellow); }
+.card.c-aqua   { border-left-color: var(--aqua); }
+
+/* -- Callout / formula box -- */
+.formula-box {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0;
+}
+.formula {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.08rem; font-style: italic; margin: 0.4rem 0;
+}
+.formula .m { font-weight: 700; font-style: normal; }
+
+/* -- Phase steps -- */
+.phase-steps { counter-reset: phase; margin: 1.2rem 0; }
+.phase-step {
+  counter-increment: phase;
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1rem 1.2rem 1rem 3.2rem;
+  margin-bottom: 0.8rem; position: relative;
+}
+.phase-step::before {
+  content: counter(phase);
+  position: absolute; left: 1rem; top: 1rem;
+  width: 1.6rem; height: 1.6rem;
+  background: var(--green); color: var(--bg0);
+  border-radius: 50%; font-size: 0.82rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.phase-step h4 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--fg);
+}
+.phase-step p { font-size: 0.86rem; line-height: 1.65; margin: 0; color: var(--fg-dim); }
+.phase-step.p-blue::before { background: var(--blue); }
+.phase-step.p-green::before { background: var(--green); }
+.phase-step.p-purple::before { background: var(--purple); }
+.phase-step.p-orange::before { background: var(--orange); }
+.phase-step.p-aqua::before { background: var(--aqua); }
+.phase-step.p-red::before { background: var(--red); }
+
+/* -- Code / file snippet -- */
+.snippet {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-left: 4px solid var(--grey0);
+  border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0;
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  font-size: 0.82rem; line-height: 1.7; color: var(--fg);
+  overflow-x: auto; white-space: pre;
+}
+.snippet .c { color: var(--grey1); }
+.snippet .k { color: var(--blue); font-weight: 600; }
+.snippet .s { color: var(--green); }
+.snippet .d { color: var(--purple); }
+.snippet .r { color: var(--red); font-weight: 600; }
+.snippet b { color: var(--fg); font-weight: 700; }
+
+/* -- Mapping table -- */
+.mapping { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.mapping th, .mapping td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--bg3); }
+.mapping th { background: var(--bg2); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.mapping td:first-child { font-weight: 600; }
+.mapping tr:last-child td { border-bottom: none; }
+.mapping tbody tr:hover { background: var(--bg1); }
+.mapping code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.82em; background: var(--bg2); padding: 1px 5px; border-radius: 4px; }
+.mapping .num { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+/* -- Retrospective artifact demo -- */
+.retro-demo {
+  background: var(--bg1); border: 1px solid var(--bg3);
+  border-radius: 10px; margin: 1.2rem 0 1.8rem; overflow: hidden;
+}
+.rd-head {
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 0.5rem 0.8rem; display: flex; align-items: center;
+  gap: 0.6rem; flex-wrap: wrap; font-size: 0.76rem;
+}
+.rd-badge {
+  background: var(--orange); color: var(--bg0); font-weight: 700;
+  font-size: 0.66rem; padding: 0.1rem 0.45rem; border-radius: 4px; letter-spacing: 0.03em;
+}
+.rd-path { font-family: 'JetBrains Mono', monospace; color: var(--fg); flex: 1; word-break: break-all; }
+.rd-count { color: var(--grey1); white-space: nowrap; }
+.rd-sum { padding: 0.6rem 0.85rem; font-size: 0.82rem; color: var(--fg-dim); border-bottom: 1px solid var(--bg3); }
+.rd-sum b { color: var(--fg); }
+.rd-body { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.78rem; line-height: 1.7; padding-bottom: 0.3rem; }
+.rd-line { display: flex; }
+.rd-ln {
+  width: 2.7rem; flex: none; text-align: right; padding: 0 0.6rem;
+  color: var(--grey0); background: var(--bg0); border-right: 1px solid var(--bg3); user-select: none;
+}
+.rd-code { padding: 0 0.8rem; white-space: pre; overflow-x: auto; }
+.rd-code .k { color: var(--blue); font-weight: 600; }
+.rd-code .t { color: var(--purple); }
+.rd-code .c { color: var(--grey1); }
+.rd-ann {
+  margin: 0.35rem 0.8rem 0.5rem 3.3rem; border-radius: 7px;
+  padding: 0.5rem 0.75rem; font-family: 'Inter', sans-serif;
+  font-size: 0.8rem; line-height: 1.6;
+  border-left: 4px solid var(--grey0); background: var(--bg2);
+}
+.rd-kind {
+  display: inline-block; font-weight: 700; font-size: 0.66rem;
+  letter-spacing: 0.05em; text-transform: uppercase; margin-right: 0.5rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.rd-proof {
+  display: block; margin-top: 0.35rem; padding-top: 0.3rem;
+  border-top: 1px dashed var(--bg3); color: var(--fg-dim); font-size: 0.77rem;
+}
+.rd-why { border-left-color: var(--blue); }   .rd-why .rd-kind { color: var(--blue); }
+.rd-sol { border-left-color: var(--green); }  .rd-sol .rd-kind { color: var(--green); }
+.rd-ver { border-left-color: var(--yellow); } .rd-ver .rd-kind { color: var(--yellow); }
+.rd-bug { border-left-color: var(--red); }    .rd-bug .rd-kind { color: var(--red); }
+
+/* -- Article metadata -- */
+.meta {
+  font-size: 0.85rem; color: var(--fg-dim); margin-top: 0.8rem;
+  display: flex; justify-content: center; gap: 1.4rem; flex-wrap: wrap;
+}
+.meta span {
+  white-space: nowrap; background: var(--bg1);
+  padding: 0.2rem 0.7rem; border-radius: 4px; border: 1px solid var(--bg3);
+}
+
+/* -- Table of contents -- */
+.toc {
+  background: var(--bg1); border: 1px solid var(--bg3);
+  border-radius: 10px; padding: 1.2rem 1.5rem 1rem; margin-bottom: 2.5rem;
+}
+.toc h3 {
+  font-size: 1rem; font-weight: 700; margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--bg3); color: var(--fg);
+}
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
+.toc > ol > li { counter-increment: toc; margin-bottom: 0.15rem; }
+.toc > ol > li > a::before { content: counter(toc) ". "; font-weight: 700; color: var(--green); }
+.toc a { color: var(--fg); text-decoration: none; font-size: 0.88rem; line-height: 1.85; transition: color 0.2s; }
+.toc a:hover { color: var(--blue); }
+.toc .toc-sub { list-style: none; padding-left: 1.4rem; margin: 0; }
+.toc .toc-sub li a { font-size: 0.82rem; color: var(--fg-dim); }
+.toc .toc-sub li a::before { content: "- "; color: var(--bg3); }
+
+/* -- Closing note -- */
+.endnote {
+  margin-top: 2.5rem; padding-top: 1.5rem;
+  border-top: 2px solid var(--bg3);
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.02rem; color: var(--fg-dim);
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem; }
+  h1 { font-size: 1.7rem; }
+  .concepts { grid-template-columns: 1fr; }
+  .rd-ann { margin-left: 0.8rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<header>
+  <h1><span class="accent">AI efektivně</span>: Vizuální retrospektiva</h1>
+  <p class="subtitle">Proč vysvětlování práce najde to, co její psaní skrylo</p>
+  <p class="prev-link">4. díl série · <a href="../03-the-knowledge-base/index.html">← 3. díl: Knowledge Base</a> · <a href="index.html">English version</a></p>
+  <div class="meta">
+    <span>Version 1.0</span>
+    <span>Aktualizováno: 30. 7. 2026</span>
+    <span>Autor: <strong>raven2cz</strong> ve spolupráci s <strong>Claude</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>Obsah článku</h3>
+  <ol>
+    <li><a href="#diff">Kde diff přestane stačit</a></li>
+    <li><a href="#readers">Dva čtenáři, jeden dokument</a>
+      <ul class="toc-sub">
+        <li><a href="#human">Reviewer vidí záměr, ne jen řádky</a></li>
+        <li><a href="#agent">Agent je druhý čtenář</a></li>
+        <li><a href="#altitude">Proč posun výšky pohledu funguje</a></li>
+      </ul>
+    </li>
+    <li><a href="#anatomy">Anatomie: čtyři vrstvy</a>
+      <ul class="toc-sub">
+        <li><a href="#artifact">Jak vypadá anotovaný soubor</a></li>
+      </ul>
+    </li>
+    <li><a href="#noise">Selhání: 97 % šumu</a>
+      <ul class="toc-sub">
+        <li><a href="#trust">Co to skutečně stálo</a></li>
+      </ul>
+    </li>
+    <li><a href="#taxonomy">Taxonomie, do které se domněnka nevejde</a>
+      <ul class="toc-sub">
+        <li><a href="#states">Štítek je co, stav je kde</a></li>
+      </ul>
+    </li>
+    <li><a href="#gates">Čtyři brány proti šumu</a></li>
+    <li><a href="#data">Anotace jako data, HTML jako artefakt</a>
+      <ul class="toc-sub">
+        <li><a href="#anchor">Kotva: jak přežít posun kódu</a></li>
+        <li><a href="#pipeline">Pipeline buildu</a></li>
+      </ul>
+    </li>
+    <li><a href="#build">Postav si ho sám</a>
+      <ul class="toc-sub">
+        <li><a href="#skill">Struktura skillu</a></li>
+        <li><a href="#adapt">Jak si ho upravit</a></li>
+      </ul>
+    </li>
+    <li><a href="#loop">Uzavření smyčky</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════ 1. WHERE THE DIFF RUNS OUT ═══════════════ -->
+<section>
+  <h2 id="diff">Kde diff přestane stačit</h2>
+  <p>Druhý díl popsal AI-first práci jako sochařství: ty a agent tvarujete velký blok materiálu
+    napříč mnoha sezeními. Třetí díl dal té práci trvalou paměť. Tenhle je o momentu, kdy socha musí
+    opustit ateliér — kdy se na ni má <em>podívat</em> někdo jiný a říct, jestli je správná.</p>
+
+  <p>U malé změny je diff perfektní. Je přesný, je úplný a reviewer ho udrží celý v hlavě. U velké
+    se zhroutí. Přepis streamovací pipeline — devadesát šest produkčních souborů ve dvanácti
+    podsystémech, měsíce rozhodnutí — vyrobí diff, který nikdo nečte. Ne protože jsou reviewers líní,
+    ale protože diff odpovídá na přesně jednu otázku: <strong>co se změnilo?</strong> Otázky, které
+    rozhodují o tom, jestli je práce správná, jsou ale jiné:</p>
+
+  <div class="concepts">
+    <div class="card c-blue">
+      <h4>Proč je to takhle?</h4>
+      <p>Každý neintuitivní řádek je zbytek po rozhodnutí. Diff ukáže zbytek a rozhodnutí zahodí.
+        Reviewerovi zbyde zpětně dovozovat záměr ze syntaxe.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Co bylo zavrženo?</h4>
+      <p>Varianta, která se zkusila a zahodila, je neviditelná. Reviewers ji navrhnou znovu a autor ji
+        znovu vysvětluje — v komentářích, o týdny později, z paměti.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Kde se mám soustředit?</h4>
+      <p>Diff je rovnoměrně plochý. Sto triviálních přejmenování a jedna subtilní chyba v souběhu mají
+        stejnou vizuální váhu a stejný nárok na pozornost.</p>
+    </div>
+    <div class="card c-green">
+      <h4>Jak víme, že to funguje?</h4>
+      <p>Nic v diffu nerozliší „tohle je ověřené proti produkčním datům" od „tohle se zkompiluje a
+        vypadá věrohodně".</p>
+    </div>
+  </div>
+
+  <p>Tak jsme ty odpovědi začali zapisovat — jako dokument, který vykreslí kód <em>i</em> úvahu
+    pohromadě: celé třídy s barevnou syntaxí a inline bubliny ve stylu code-review komentáře, přilepené
+    přesně k řádkům, o kterých mluví. Statické, samostatné HTML: otevřeš v prohlížeči, žádný nástroj,
+    žádný server, žádný účet.</p>
+
+  <p>První verze byla postavená z krátkých úryvků kódu s komentářem okolo. Byla odmítnuta a ta korekce
+    znamenala pro design víc než cokoli jiného: <strong>celé třídy, nebo to nefunguje.</strong> Bez
+    okolního kódu je anotace tvrzení, které musí čtenář přijmout na slovo. S ním si čtenář může tvrzení
+    ověřit proti těm samým řádkům, které popisuje. Tohle jedno omezení dělí dokument, kterému reviewers
+    věří, od dokumentu, který jen prolétnou.</p>
+</section>
+
+<!-- ═══════════════ 2. TWO READERS ═══════════════ -->
+<section>
+  <h2 id="readers">Dva čtenáři, jeden dokument</h2>
+  <p>Retrospektivu jsme postavili pro lidské reviewery. Ukázalo se, že má druhého čtenáře.</p>
+
+  <div class="schema-wrap" id="retro-readers-diagram">
+    <svg viewBox="0 0 940 470" xmlns="http://www.w3.org/2000/svg">
+      <!-- connectors -->
+      <line x1="470" y1="74" x2="470" y2="136" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="470,137 465,128 475,128" fill="#5c6a72"/>
+      <path d="M 405,216 Q 300,250 250,294" stroke="#5c6a72" stroke-width="1.8" fill="none"/>
+      <polygon points="249,295 254,285 259,293" fill="#5c6a72"/>
+      <path d="M 535,216 Q 640,250 690,294" stroke="#5c6a72" stroke-width="1.8" fill="none"/>
+      <polygon points="691,295 681,293 686,285" fill="#5c6a72"/>
+
+      <!-- feedback arc: agent → back into the work -->
+      <path d="M 880,318 Q 928,150 600,50" stroke="#f85552" stroke-width="1.6" fill="none" stroke-dasharray="5,4"/>
+      <polygon points="599,50 609,47 607,57" fill="#f85552"/>
+      <text x="838" y="205" font-size="10" fill="#f85552" font-style="italic" text-anchor="middle">vady</text>
+      <text x="838" y="219" font-size="10" fill="#f85552" font-style="italic" text-anchor="middle">vyplouvají</text>
+
+      <!-- THE WORK -->
+      <g class="comp" data-comp="work" style="--comp-glow:rgba(166,176,160,0.55)">
+        <rect x="350" y="28" width="240" height="46" rx="9" fill="rgba(166,176,160,0.10)" stroke="#939f91" stroke-width="2"/>
+        <text x="470" y="49" text-anchor="middle" font-size="12.5" font-weight="700" fill="#5c6a72">PRÁCE</text>
+        <text x="470" y="65" text-anchor="middle" font-size="10" fill="#829181">96 souborů · 12 podsystémů · měsíce</text>
+      </g>
+
+      <!-- RETROSPECTIVE -->
+      <g class="comp" data-comp="doc" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="340" y="138" width="260" height="78" rx="11" fill="rgba(53,167,124,0.09)" stroke="#35a77c" stroke-width="2.2"/>
+        <text x="470" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#35a77c">RETROSPEKTIVA</text>
+        <text x="470" y="181" text-anchor="middle" font-size="9.5" fill="#829181">přehled tasku · architektura</text>
+        <text x="470" y="195" text-anchor="middle" font-size="9.5" fill="#829181">anotovaný kód · nálezy</text>
+        <text x="470" y="209" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">celé třídy, inline bubliny</text>
+      </g>
+
+      <!-- HUMAN READER -->
+      <g class="comp" data-comp="human" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="60" y="296" width="250" height="96" rx="10" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="185" y="321" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3a94c5">LIDSKÝ REVIEWER</text>
+        <text x="185" y="342" text-anchor="middle" font-size="9.5" fill="#829181">čte záměr, ne jen řádky</text>
+        <text x="185" y="357" text-anchor="middle" font-size="9.5" fill="#829181">vidí, kam se soustředit</text>
+        <text x="185" y="375" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">úsudek tam, kde se počítá</text>
+      </g>
+
+      <!-- AGENT READER -->
+      <g class="comp" data-comp="agent" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="630" y="296" width="250" height="96" rx="10" fill="rgba(223,105,186,0.08)" stroke="#df69ba" stroke-width="2"/>
+        <text x="755" y="321" text-anchor="middle" font-size="12.5" font-weight="700" fill="#df69ba">AGENT</text>
+        <text x="755" y="342" text-anchor="middle" font-size="9.5" fill="#829181">musí vysvětlovat, ne produkovat</text>
+        <text x="755" y="357" text-anchor="middle" font-size="9.5" fill="#829181">vidí, co psaní kódu skrylo</text>
+        <text x="755" y="375" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">jiná výška pohledu</text>
+      </g>
+
+      <!-- hover zones -->
+      <rect class="hover-zone" data-comp="work"   x="350" y="28"  width="240" height="46"/>
+      <rect class="hover-zone" data-comp="doc"    x="340" y="138" width="260" height="78"/>
+      <rect class="hover-zone" data-comp="human"  x="60"  y="296" width="250" height="96"/>
+      <rect class="hover-zone" data-comp="agent"  x="630" y="296" width="250" height="96"/>
+    </svg>
+    <span class="hint">Najeď myší na části</span>
+  </div>
+
+  <h3 id="human">Reviewer vidí záměr, ne jen řádky</h3>
+  <p>Pro člověka je přínos přímočarý. Dokument mu předloží důležité implementované body s už připojenou
+    úvahou: proč se to dělalo takhle, co se opravilo a jak se to ověřilo, a kde na tom záleží, i explicitní
+    značku, která říká <em>tady je potřeba se soustředit a tuhle otázku je nutné vyřešit.</em> To obrací
+    ekonomiku review. Místo aby pozornost utrácel <em>hledáním</em> míst, která si ji zaslouží, přichází
+    s hotovou mapou a věnuje ji <strong>úsudku</strong>: jediné části, kterou umí reviewer a autor ne.</p>
+
+  <h3 id="agent">Agent je druhý čtenář</h3>
+  <p>A teď část, kterou jsme nenavrhli a nepředpověděli. Tvorba retrospektivy nutí agenta — nebo
+    workflow, které jich řídí několik — podívat se na vlastní práci z úplně jiného úhlu. A v tom úhlu
+    <strong>vidí vady, které při psaní kódu vidět nemohl.</strong> Nejen bugy: chyby v návrhu, invarianty,
+    které se nikdy reálně nevynucovaly, kontrakty popsané v javadocu, jež implementace tiše porušuje.</p>
+
+  <p>Není to hypotéza. Psaní retrospektivy k tomu přepisu pipeline vyplavilo tři potvrzené bugy v kódu,
+    který byl zrevidovaný, otestovaný a už běžel. Nejzávažnější byla cesta tiché ztráty dat: chyba
+    klasifikovaná jako opakovatelná se dokončila výjimkou, ale použitá konfigurace committeru offset
+    stejně commitla — záznam se tak nikdy nedoručil a neskončil ani v dead-letter queue. Každý dílek byl
+    správný; kompozice ne. Další dva byly tišší: konfigurační parametr, který se čte, je zdokumentovaný
+    a nikde se nepoužívá, a kategorie obrázků, která končila v dead-letter queue, přičemž předchozí
+    implementace ji tiše zahazovala.</p>
+
+  <p>Nabízí se námitka: našel by je i kterýkoli pečlivý druhý průchod, takže dokument je náhodný.
+    Poctivá odpověď je, že retrospektiva není jediné, co je najde; dělá ale jejich nalezení
+    <em>strukturálním</em> místo šťastným. Obyčejné znovu-review nemá vynucující funkci a má tendenci
+    zastavit tam, kde kód vypadá povědomě. Vysvětlení podsystému od začátku do konce má podmínku
+    dokončení — a všechny tři bugy žily tam, kde se stýkaly dva podsystémy, tedy na místě, kam průchod
+    soubor po souboru nemá důvod zajít.</p>
+
+  <h3 id="altitude">Proč posun výšky pohledu funguje</h3>
+  <p>Ten mechanismus lze, jednou pojmenovaný, používat záměrně.</p>
+
+  <p>Vysvětlení v prose selže nahlas, když je špatné. Metoda se může zkompilovat, projít testy a být
+    subtilně nesprávná. Mnohem těžší je napsat věto­u <em>„chyba se tady opakuje, takže se žádný záznam
+    neztratí"</em> a nevšimnout si, že ji nelze poctivě dokončit — protože sledování té cesty vede
+    k commitnutému offsetu a zmizelému záznamu.</p>
+
+  <div class="formula-box">
+    <p>Retrospektiva není dokumentace vzniklá <em>po</em> review. Je to nástroj, který
+      <strong>mění to, čeho si autor — člověk nebo agent — dokáže všimnout</strong>, a dělá to ještě
+      předtím, než ji kterýkoli reviewer otevře. Dokument je výstup; posun výšky pohledu je náklad.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ 3. ANATOMY ═══════════════ -->
+<section>
+  <h2 id="anatomy">Anatomie: čtyři vrstvy</h2>
+  <p>Retrospektiva, která je jen anotovaný kód, je retrospektiva <em>kódu</em>. Reviewer ale potřebuje
+    retrospektivu <strong>tasku</strong>, ve které je kód poslední vrstvou. To byla největší mezera naší
+    první funkční verze: kontext existoval, jenže rozsypaný v anotacích u jednotlivých řádků, kde ho
+    nikdo nemohl přečíst vcelku.</p>
+
+  <p>První vrstva je <strong>přehled tasku</strong>: motivace a tickety, co je v rozsahu a explicitně
+    <em>co v něm vědomě není</em>, kritéria hotovosti <em>a jak bylo každé ověřeno</em>, plus klíčová
+    rozhodnutí jako kompaktní tabulka — rozhodnutí, zavržená varianta, proč, jak reverzibilní. Druhá je
+    <strong>architektura</strong>: u každé kapitoly role podsystému, jeho vstupy a výstupy, invarianty,
+    které má reviewer hlídat. Třetí je samotný <strong>anotovaný kód</strong>, seskupený do tematických
+    kapitol místo jedné na soubor, každý se dvouřádkovým souhrnem a poznámkou o pokrytí testy. Čtvrtá
+    jsou <strong>nálezy</strong>: potvrzené bugy na vlastní stránce, otevřené runtime otázky v jedné
+    tabulce s tím <em>jak</em> je ověřit, a odložené opravy s explicitním triggerem.</p>
+
+  <p>Kapitoly se rozdělují podle <strong>rizika</strong>, ne podle počtu souborů: jeden reviewer má
+    datovou korektnost, druhý souběh, třetí okrajové případy.</p>
+
+  <h3 id="artifact">Jak vypadá anotovaný soubor</h3>
+  <p>Konkrétně: hlavička souboru se souhrnem, pak řádky kódu s anotačními bublinami.</p>
+
+  <div class="retro-demo">
+    <div class="rd-head">
+      <span class="rd-badge">ZMĚNĚNO</span>
+      <span class="rd-path">pipeline/failure/FailureClassifier.java</span>
+      <span class="rd-count">4 komentáře</span>
+    </div>
+    <div class="rd-sum">
+      <b>Co dělá:</b> Mapuje výjimku plus fázi zpracování na dispozici — opakovat, dead-letter, nebo
+      best-effort — a nejdřív rozbalí obalové výjimky.<br>
+      <b>Proč takhle:</b> Předchozí runtime založený na aktorech rozhodoval o osudu záznamu přes
+      supervizi; tenhle potřebuje explicitní kontrakt volatelný ze zpracovatelského vlákna.
+    </div>
+    <div class="rd-body">
+      <div class="rd-line"><span class="rd-ln">49</span><span class="rd-code"><span class="c">// Interrupt první: shutdown interrupt může přijít zabalený.</span></span></div>
+      <div class="rd-line"><span class="rd-ln">50</span><span class="rd-code"><span class="k">if</span> (cause <span class="k">instanceof</span> <span class="t">InterruptedException</span>) {</span></div>
+      <div class="rd-ann rd-why">
+        <span class="rd-kind">Proč</span>Test na interrupt je před všemi fázovými větvemi. Shutdown
+        interrupt může přijít zabalený v processing výjimce pro fázi embeddingů; kdyby byl test níž, ta
+        větev by ho překlasifikovala na opakování a flag interruptu by se nikdy neobnovil — takže by
+        retry backoff prospal celý drain.
+      </div>
+      <div class="rd-line"><span class="rd-ln">84</span><span class="rd-code"><span class="k">if</span> (phase == <span class="t">ProcessingPhase</span>.PUBLICATION_SINK) <span class="k">return</span> BEST_EFFORT;</span></div>
+      <div class="rd-ann rd-bug">
+        <span class="rd-kind">BUG · opraveno</span>Než tato větev existovala, selhání publikačního
+        sinku propadlo do obecné cesty pro přechodné chyby, opakovalo se a blokovalo commit offsetu.
+        <span class="rd-proof"><b>Scénář selhání:</b> publikační sink nedostupný → výjimka v publikační
+        fázi → klasifikováno jako opakování → offset se nikdy necommitne → partition se zasekne, přestože
+        dokument už je zapsaný.<br><b>Ověřeno:</b> (1) čtením klasifikátoru — pro tu fázi chybí větev;
+        (2) testem, který bez fixu padal; (3) nulou zaseknutých partition po nasazení.</span>
+      </div>
+      <div class="rd-line"><span class="rd-ln">101</span><span class="rd-code">  metrics.classifierUnknownDlq(phase.name());</span></div>
+      <div class="rd-ann rd-ver">
+        <span class="rd-kind">Ověřit</span>Tenhle counter má na produkci zůstat nulový; nenulová
+        hodnota znamená, že do dead-letter queue tiše padá typ výjimky, který nikdo nezmapoval.
+        <span class="rd-proof"><b>Nelze rozhodnout z kódu:</b> závisí na tom, jaké typy výjimek reálný
+        provoz skutečně vyrábí. <b>Jak ověřit:</b> counter unknown-DLQ z klasifikátoru, sečtený per
+        prostředí — cokoli nad nulou je mezera.</span>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════ 4. THE FAILURE ═══════════════ -->
+<section>
+  <h2 id="noise">Selhání: 97 % šumu</h2>
+  <p>Všechno, co v tomhle článku následuje — taxonomie, brány, celý datový model — existuje proto, že
+    první pokus se rozsypal. Stojí za to popsat to poctivě: čísla jsou neobvykle jasná v tom, co se
+    pokazilo, a instinkt, který to způsobil, je ten přirozený.</p>
+
+  <p>První reálná retrospektiva používala sedm štítků. Dva z nich — nazvěme je <em>Problém</em>
+    („záludnost, kterou kód řeší") a <em>Pozor</em> („latentní riziko, dávej pozor") — se psaly přesně
+    tak, jak znějí: spekulativně, při čtení kódu, jako poznámky na později. Šly rovnou do dokumentu
+    předaného reviewerům. Později jsme každý z nich prověřili proti skutečnému kódu. Výsledek:</p>
+
+  <table class="mapping">
+    <thead><tr><th>Štítek</th><th class="num">V dokumentu</th><th class="num">Smazáno jako šum</th><th class="num">Reálné nálezy</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#df69ba">Problém</td><td class="num">69</td><td class="num" style="color:#f85552">67</td><td class="num">2</td></tr>
+      <tr><td style="color:#f57d26">Pozor</td><td class="num">5</td><td class="num" style="color:#f85552">5</td><td class="num">0</td></tr>
+      <tr><td style="color:#dfa000">Ověřit</td><td class="num">52</td><td class="num">8</td><td class="num">12 opravitelných · 32 skutečně runtime</td></tr>
+    </tbody>
+  </table>
+
+  <p>Sedmdesát dva ze sedmdesáti čtyř anotací <em>Problém</em> a <em>Pozor</em> byl šum. Devadesát sedm
+    procent. Naproti tomu <em>Ověřit</em> — štítek, na jehož otázky nešlo odpovědět čtením — obstál:
+    32 z jeho 52 položek skutečně potřebovalo běh, dalších 12 ukazovalo na něco, co stálo za opravu, a
+    smazáno bylo jen 8.</p>
+
+  <p>Ten kontrast je celá diagnóza. Zdravý štítek byl ten, jehož předmět byl <strong>skutečně
+    nerozhodnutelný ze zdrojáku</strong>. Dva toxické pokrývaly věci, které rozhodnout čtením kódu
+    <em>šlo</em> — a nerozhodly se. Byla to místa, kde si autor něčeho všiml a odložil myšlení, zabalené
+    do štítku, díky kterému odklad vypadal jako důkladnost.</p>
+
+  <h3 id="trust">Co to skutečně stálo</h3>
+  <p>Přímý náklad byly hodiny úklidu napříč dvanácti kapitolami, většinou strávené mazáním věcí, které
+    nikdy neměly být napsané.</p>
+
+  <p>Skutečný náklad byla <strong>důvěra</strong>. Reviewer přečetl štítek, jehož legenda říkala
+    „záludnost, kterou kód řeší", a oprávněně se zeptal, jestli je to teda vyřešené. Jakmile je ta otázka
+    na stole, platí pro každou anotaci v dokumentu — včetně všech správných. Hodnota review artefaktu
+    stojí celá na tom, že čtenář věří jeho tvrzením; jediná kategorie nespolehlivých tvrzení zlevní
+    všechno ostatní.</p>
+
+  <div class="formula-box">
+    <p>Poučení není „být pečlivější". Pečliví jsme být chtěli už předtím. Poučení je, že
+      <strong>záměr není mechanismus</strong>. Dokud v dokumentu pro reviewery existovalo místo, kam
+      odložit neověřenou obavu, neověřené obavy tam chodily — desítky. Oprava musela být strukturální:
+      to místo odstranit a dát obavám bydlet jinam.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ 5. TAXONOMY ═══════════════ -->
+<section>
+  <h2 id="taxonomy">Taxonomie, do které se domněnka nevejde</h2>
+  <p>Anotace potřebují kategorie, aby čtenář na první pohled rozlišil „tady je kontext" od „tady je
+    vada". Taxonomie, která vyrobila ta čísla výše, měla sedm štítků. Ten přebytek nebyl dekorativní;
+    byl to ten mechanismus. Náhrada má čtyři:</p>
+
+  <table class="mapping">
+    <thead><tr><th>Štítek</th><th>Co to je</th><th>Brána — bez čeho nemůže vzniknout</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="color:#3a94c5">Proč</td>
+        <td>Proč je kód navržený takhle, včetně záludnosti, kterou řeší</td>
+        <td>Popisuje <em>ověřený současný stav</em>. Nesmí obsahovat tvrzení o vadě ani výzvu
+          k prověření.</td>
+      </tr>
+      <tr>
+        <td style="color:#8da101">Řešení</td>
+        <td>Jak tuhle záludnost řeší konkrétně tenhle kód</td>
+        <td>Musí ukazovat na konstrukci v zobrazeném souboru, ne na obecný princip.</td>
+      </tr>
+      <tr>
+        <td style="color:#dfa000">Verify</td>
+        <td>Otázka zodpověditelná jen za běhu nebo externě</td>
+        <td>Vyžaduje <em>proč to nejde rozhodnout z kódu</em> a <em>konkrétní způsob, jak to
+          rozhodnout</em>. Cokoli rozhodnutelného čtením je tu zakázané.</td>
+      </tr>
+      <tr>
+        <td style="color:#f85552">BUG</td>
+        <td>Potvrzená vada</td>
+        <td>Vyžaduje konkrétní scénář selhání a ověřovací řetězec. Plus adjudikaci druhým modelem a
+          člověka, který si to přečte proti kódu.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Nezáleží na počtu, ale na tomhle: <strong>neexistuje štítek, do kterého by se dala odložit
+    neověřená obava.</strong> Každý ze čtyř buď popisuje něco, o čem víme, že to platí, nebo nese důkaz
+    vlastního tvrzení. Tucha nemá kam přistát, takže musí jít někam úplně jinam — a to je téma další
+    sekce.</p>
+
+  <h3 id="states">Štítek je co, stav je kde</h3>
+  <p>Naše dřívější taxonomie měla štítek <em>Vyřešeno</em>. To byla kategoriální chyba, kterou je dobré
+    pojmenovat, protože se snadno zopakuje: <em>vyřešeno</em> není druh anotace, ale fáze jejího života.
+    Jako štítek tiše znamenal dvě věci — „obava byla neopodstatněná" a „bug byl opraven" — a duplikoval
+    to, co patří do pole se stavem. Takže: čtyři štítky a k nim ortogonální malý stavový stroj.</p>
+
+  <table class="mapping">
+    <thead><tr><th>Stav</th><th>Význam</th><th>Povinné pole</th></tr></thead>
+    <tbody>
+      <tr><td>open</td><td>Stále otevřené — pro reviewera, nebo k opravě</td><td>—</td></tr>
+      <tr><td style="color:#8da101">verified_ok</td><td>Prověřeno; obava byla neopodstatněná</td><td><code>evidence</code></td></tr>
+      <tr><td style="color:#35a77c">fixed</td><td>Opraveno</td><td><code>fix</code> — commit nebo MR</td></tr>
+      <tr><td style="color:#f57d26">deferred</td><td>Vědomě odloženo</td><td><code>trigger</code> — kdy to přijde na řadu</td></tr>
+      <tr><td style="color:#939f91">withdrawn</td><td>False positive, stažené</td><td><code>withdrawn_reason</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>Stažená anotace se <em>nerenderuje</em>, ale zůstává ve zdrojových datech. Ten rozdíl je záměrný:
+    odvolané nálezy nechávají auditní stopu, místo aby zmizely. Když se za tři měsíce někdo zeptá, proč
+    ta obava zmizela, odpověď je v souboru, ne v něčí paměti.</p>
+</section>
+
+<!-- ═══════════════ 6. GATES ═══════════════ -->
+<section>
+  <h2 id="gates">Čtyři brány proti šumu</h2>
+  <p>Odstranit toxické štítky bylo nutné, ale nestačilo. Instinkt, který je plnil, nezmizí tím, že
+    zmizel štítek: všimnout si něčeho, odložit myšlení, zapsat na později. Potřebuje legitimní místo, kam
+    jít, a dokument pro reviewery je to špatné místo. Takže spekulace dostane vlastní domov a mezi ní
+    a čtenářem stojí čtyři brány.</p>
+
+  <div class="phase-steps">
+    <div class="phase-step p-red">
+      <h4>Karanténa: inbox</h4>
+      <p>Kandidátní nálezy jdou do samostatného souboru, který se <em>nikdy nerenderuje</em>. Spekulace
+        je tam povolená a musí uvést, jak byla nalezena. Anotace vzniká teprve po adjudikaci. Počítej
+        s tím, že vypadne víc než devět z deseti; to je brána, která funguje, ne selhává.</p>
+    </div>
+    <div class="phase-step p-orange">
+      <h4>Schémové brány: důkaz, nebo nic</h4>
+      <p><em>Ověřit</em> bez obou důkazních polí nebo <em>BUG</em> bez scénáře selhání a ověřovacího
+        řetězce se nesestaví. Tatáž kontrola chytá kategoriální zmatek v kontextových anotacích: když
+        bublina <em>Proč</em> obsahuje „chybí", „mohlo by spadnout", „riziko" nebo „stojí za ověření",
+        build se zastaví a zeptá se, co z toho to je. Doplnili jsme to poté, co jsme na to narazili ve
+        vlastním dokumentu — v anotaci <em>Proč</em>, která vysvětlila invariant a pak se rozplynula do
+        <em>„stojí za ověření, že to platí i pro budoucí implementace."</em></p>
+    </div>
+    <div class="phase-step p-blue">
+      <h4>Oddělené průchody: jedna práce po druhé</h4>
+      <p>Kontextový průchod má výslovně zakázáno vydávat nálezy; cokoli si všimne, jde do inboxu.
+        Hledání vad je jiný průchod s jiným postojem. Míchání obojího je způsob, jak se z kontextu stanou
+        pseudonálezy.</p>
+    </div>
+    <div class="phase-step p-purple">
+      <h4>Lidská brána: u criticalů a u vydání</h4>
+      <p>Každý „critical" si člověk osobně přečte proti kódu, než se zapíše: v našem auditu se pět
+        nálezů vrátilo označených jako critical a to čtení přežily dva. A rozhodnutí o rozsahu — které
+        soubory, které kapitoly, kdo co vlastní — schvaluje člověk brzy, dokud je změna ještě levná.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 7. DATA, NOT HTML ═══════════════ -->
+<section>
+  <h2 id="data">Anotace jako data, HTML jako artefakt</h2>
+  <p>Brány fungují jen tehdy, když je co bránit. První retrospektiva měla tišší vadu návrhu, kvůli které
+    bylo každé pravidlo výše nevynutitelné: zdrojem pravdy <em>bylo</em> HTML. Vzniklo z ad-hoc skriptu,
+    který nikdo neuložil, takže kapitoly nešlo přegenerovat, každá změna byla chirurgie
+    v minifikovaném dokumentu a ručně psané hodnoty jako počet anotací u souboru se rozešly se
+    skutečností.</p>
+
+  <p>Obrať to. Anotace se stanou <strong>daty</strong>; HTML se stane <strong>build artefaktem</strong>.
+    Přeznačení anotace je změna jednoho pole a rebuild, a každá odvozená hodnota — počty, legenda,
+    stránka s bugy, tabulka otevřených položek — se počítá při buildu, takže se nemůže rozejít.</p>
+
+  <div class="snippet"><span class="c">## Anotace typu ověřit. Nelze ji napsat bez dvou důkazních polí —</span>
+<span class="c">## build ji odmítne, a přesně o to odmítnutí jde.</span>
+
+<span class="d">[[chapters.files.annotations]]</span>
+<span class="k">id</span>     = <span class="s">"ch01-unknown-dlq-003"</span>   <span class="c"># stabilní, unikátní, nikdy nerecyklovat</span>
+<span class="k">line</span>   = <span class="m">101</span>
+<span class="k">anchor</span> = <span class="s">"classifierUnknownDlq"</span>   <span class="c"># podstring toho řádku: pojistka proti driftu</span>
+<span class="k">kind</span>   = <span class="s">"ver"</span>
+<span class="k">text</span>   = <span class="s">"Tenhle counter má na produkci zůstat nulový."</span>
+
+<span class="c"># Povinné pro kind = "ver":</span>
+<span class="k">undecidable_reason</span> = <span class="s">"Závisí na tom, jaké typy výjimek vyrábí reálný provoz."</span>
+<span class="k">verify_how</span>         = <span class="s">"Sečti counter unknown-DLQ per prostředí; &gt; 0 je mezera."</span>
+</div>
+
+  <h3 id="anchor">Kotva: jak přežít posun kódu</h3>
+  <p>Anotace ukotvená jen číslem řádku je časovaná bomba. Oprav bug o tři soubory výš a všechna čísla
+    řádků pod ním se posunou; bublina sklouzne na nesouvisející příkaz a začne tvrdit nepravdu o kódu,
+    o kterém nikdy nebyla. Náš první dokument to „řešil" tím, že zmrazil zobrazovaný zdroják — což
+    znamenalo po každé opravě ručně srovnávat dokument se skutečností.</p>
+
+  <p>Oprava je jedno povinné pole. Každá anotace nese <code>anchor</code>: podstring řádku, ke kterému
+    patří. Build zkontroluje, že ten podstring na daném řádku skutečně je, a pokud ne,
+    <strong>build spadne</strong> — vypíše, co řádek reálně obsahuje, a když kotvu najde jinde, i kam se
+    přesunula:</p>
+
+  <div class="snippet"><span class="r">CHYBA v manifestu:</span>
+  • ch01 soubor #1 anotace #1: <span class="k">anchor</span> <span class="s">'PUBLICATION_SINK'</span> není na řádku 50.
+    Řádek obsahuje: <span class="s">'if (cause instanceof InterruptedException) {'</span>. Kotva nalezena na řádku 84.</div>
+
+  <p>Z driftu se stane spadlý build místo nepravdivého tvrzení v dokumentu, kterému reviewer věří.</p>
+
+  <h3 id="pipeline">Pipeline buildu</h3>
+  <p>Z toho vznikne malá, obyčejná pipeline — dva datové soubory na vstupu, validace uprostřed, statický
+    web na výstupu:</p>
+
+  <div class="schema-wrap" id="retro-pipeline-diagram">
+    <svg viewBox="0 0 940 430" xmlns="http://www.w3.org/2000/svg">
+      <!-- connectors -->
+      <line x1="145" y1="120" x2="145" y2="176" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="145,177 140,168 150,168" fill="#5c6a72"/>
+      <text x="158" y="152" font-size="9.5" fill="#829181" font-style="italic">adjudikace</text>
+      <text x="158" y="165" font-size="9.5" fill="#829181" font-style="italic">&gt; 90 % vypadne</text>
+
+      <line x1="255" y1="228" x2="325" y2="200" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="326,200 316,197 320,207" fill="#5c6a72"/>
+      <line x1="440" y1="308" x2="440" y2="256" stroke="#dfa000" stroke-width="1.8"/>
+      <polygon points="440,255 435,264 445,264" fill="#dfa000"/>
+
+      <line x1="555" y1="170" x2="625" y2="100" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,99 616,100 621,109" fill="#5c6a72"/>
+      <line x1="555" y1="188" x2="625" y2="188" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,188 617,183 617,193" fill="#5c6a72"/>
+      <line x1="555" y1="206" x2="625" y2="272" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,273 621,264 616,273" fill="#5c6a72"/>
+
+      <!-- INBOX -->
+      <g class="comp" data-comp="inbox" style="--comp-glow:rgba(248,85,82,0.45)">
+        <rect x="40" y="36" width="210" height="84" rx="10" fill="rgba(248,85,82,0.07)" stroke="#f85552" stroke-width="2" stroke-dasharray="7,4"/>
+        <text x="145" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#f85552">inbox.toml</text>
+        <text x="145" y="78" text-anchor="middle" font-size="9.5" fill="#829181">kandidátní nálezy</text>
+        <text x="145" y="92" text-anchor="middle" font-size="9.5" fill="#829181">spekulace je tu povolená</text>
+        <text x="145" y="108" text-anchor="middle" font-size="9" fill="#f85552" font-style="italic">nikdy se nerenderuje</text>
+      </g>
+
+      <!-- MANIFEST -->
+      <g class="comp" data-comp="manifest" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="40" y="178" width="210" height="104" rx="10" fill="rgba(141,161,1,0.08)" stroke="#8da101" stroke-width="2"/>
+        <text x="145" y="203" text-anchor="middle" font-size="12" font-weight="700" fill="#8da101">retro.toml</text>
+        <text x="145" y="221" text-anchor="middle" font-size="9.5" fill="#829181">přehled tasku · kapitoly</text>
+        <text x="145" y="235" text-anchor="middle" font-size="9.5" fill="#829181">soubory · anotace</text>
+        <text x="145" y="252" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">jediný zdroj pravdy</text>
+        <text x="145" y="270" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">anotace jako data</text>
+      </g>
+
+      <!-- BUILD -->
+      <g class="comp" data-comp="build" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="330" y="152" width="225" height="104" rx="11" fill="rgba(53,167,124,0.09)" stroke="#35a77c" stroke-width="2.2"/>
+        <text x="442" y="180" text-anchor="middle" font-size="12.5" font-weight="700" fill="#35a77c">build</text>
+        <text x="442" y="200" text-anchor="middle" font-size="9.5" fill="#829181">validace → highlight → render</text>
+        <text x="442" y="216" text-anchor="middle" font-size="9.5" fill="#829181">počty · legenda · stránka bugů</text>
+        <text x="442" y="236" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">vše odvozené, nic ručně</text>
+      </g>
+
+      <!-- GATES -->
+      <g class="comp" data-comp="gates" style="--comp-glow:rgba(223,160,0,0.5)">
+        <rect x="322" y="310" width="240" height="88" rx="10" fill="rgba(223,160,0,0.08)" stroke="#dfa000" stroke-width="2"/>
+        <text x="442" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#dfa000">KONTROLY BUILDU</text>
+        <text x="442" y="352" text-anchor="middle" font-size="9.5" fill="#829181">schéma · důkazní pole · kotva</text>
+        <text x="442" y="366" text-anchor="middle" font-size="9.5" fill="#829181">frázová heuristika · prázdný inbox</text>
+        <text x="442" y="384" text-anchor="middle" font-size="9" fill="#dfa000" font-style="italic">selhání zastaví build</text>
+      </g>
+
+      <!-- OUTPUTS -->
+      <g class="comp" data-comp="out" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="628" y="60" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="82" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">index.html</text>
+        <text x="764" y="99" text-anchor="middle" font-size="9.5" fill="#829181">přehled tasku · rozhodnutí · otevřené položky</text>
+
+        <rect x="628" y="158" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="180" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">kapitoly</text>
+        <text x="764" y="197" text-anchor="middle" font-size="9.5" fill="#829181">celé třídy · inline anotace</text>
+
+        <rect x="628" y="256" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="278" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">bugs.html + bugs.md</text>
+        <text x="764" y="295" text-anchor="middle" font-size="9.5" fill="#829181">scénář · ověřovací řetězec · fix</text>
+      </g>
+
+      <!-- hover zones -->
+      <rect class="hover-zone" data-comp="inbox"    x="40"  y="36"  width="210" height="84"/>
+      <rect class="hover-zone" data-comp="manifest" x="40"  y="178" width="210" height="104"/>
+      <rect class="hover-zone" data-comp="build"    x="330" y="152" width="225" height="104"/>
+      <rect class="hover-zone" data-comp="gates"    x="322" y="310" width="240" height="88"/>
+      <rect class="hover-zone" data-comp="out"      x="628" y="60"  width="272" height="254"/>
+    </svg>
+    <span class="hint">Najeď myší na části</span>
+  </div>
+</section>
+
+<!-- ═══════════════ 8. BUILD IT YOURSELF ═══════════════ -->
+<section>
+  <h2 id="build">Postav si ho sám</h2>
+  <p>Všechno tohle je zabalené jako skill: složka instrukcí a skriptů, kterou si agent na vyžádání
+    načte. Struktura je záměrně prostá, abys ho mohl postavit znovu nebo si ho upravit, ne přejmout
+    doslova.</p>
+
+  <h3 id="skill">Struktura skillu</h3>
+  <div class="snippet"><span class="d">retrospective/</span>
+├── <b>SKILL.md</b>              <span class="c"># krátký a normativní: fáze, tvrdá pravidla, odkazy</span>
+├── <span class="d">references/</span>              <span class="c"># čte se až ve fázi, která to potřebuje</span>
+│   ├── deliverable.md      <span class="c"># čtyři vrstvy; co dovnitř NEpatří</span>
+│   ├── taxonomy.md         <span class="c"># štítky, stavy, brány, dobré vs špatné příklady</span>
+│   ├── schema.md           <span class="c"># všechna pole manifestu</span>
+│   ├── adjudication.md     <span class="c"># multi-model protokol, kalibrace závažnosti</span>
+│   └── verification.md     <span class="c"># deployed hodnota ≠ default; gauge ≠ kumulativní log</span>
+├── <span class="d">scripts/</span>
+│   ├── build_retro.py      <span class="c"># manifest → HTML; --check validuje, --release brány</span>
+│   └── requirements.txt    <span class="c"># highlighter, pinnutá verze</span>
+├── <span class="d">templates/</span>
+│   ├── retro.toml          <span class="c"># startovací manifest s komentáři</span>
+│   └── inbox.toml          <span class="c"># karanténní soubor</span>
+└── <span class="d">assets/</span>
+    └── retro-layout.css    <span class="c"># jediný zdroj pravdy pro vzhled</span></div>
+
+  <p>V praxi je ta smyčka tři příkazy — validovat při psaní, brány před předáním, vyrenderovat:</p>
+
+  <div class="snippet">build_retro.py retro.toml <span class="k">--check</span>      <span class="c"># schéma, důkazní pole, kotvy, fráze</span>
+build_retro.py retro.toml <span class="k">--release</span>    <span class="c"># + inbox adjudikovaný, žádný otevřený bug</span>
+build_retro.py retro.toml <span class="k">-o</span> out        <span class="c"># index + kapitoly + stránka bugů</span></div>
+
+  <p>Brána <code>--release</code> odmítne cokoli předat, dokud inbox drží neadjudikované kandidáty nebo
+    dokud potvrzený bug sedí ve stavu <em>open</em>. Bundle se staví jen z výstupního adresáře, nikdy
+    přidáním celé složky do gitu — právě tak se k reviewerovi dostanou interní poznámky.</p>
+
+  <h3 id="adapt">Jak si ho upravit</h3>
+  <p><strong>Zachovej</strong> nosné části: anotace jako data s HTML jako artefaktem, pole s kotvou,
+    taxonomii bez domova pro neověřené obavy, karanténní inbox, odvozené hodnoty počítané při buildu,
+    celé soubory místo úryvků. <strong>Měň klidně</strong> formát manifestu, paletu, dělení na kapitoly,
+    způsob rozdělení reviewerům. <strong>Nedávej dovnitř</strong> projektově specifické ověřovací
+    příkazy: který cluster, který metrický backend, které úložiště — to patří do knowledge base projektu
+    ze třetího dílu. Skill jen vyžaduje, aby se ověřovací playbook načetl, a nese dvě obecná pravidla,
+    z nichž každé nás stálo den. <em>Deployed hodnota není default:</em> jednou jsme usoudili, že je
+    funkce vypnutá, z defaultu v konfiguraci v repu — zatímco nasazený override ji měl zapnutou.
+    <em>Kumulativní log není aktuální stav:</em> forenzní store se dvěma měsíci nálezů, většinou
+    z jednorázového dohánění v první den, se přečetl jako „právě teď ztrácíme data" — přitom živé gauge
+    stálo na nule.</p>
+</section>
+
+<!-- ═══════════════ 9. CLOSING THE LOOP ═══════════════ -->
+<section>
+  <h2 id="loop">Uzavření smyčky</h2>
+  <p>První díl představil agenta jako regulátor ve zpětnovazební smyčce. Tohle je ta smyčka, jak se
+    uzavírá nad samotnou prací: měření, které mění měřenou věc — a to v užitečném směru.</p>
+
+  <p>Mechanika je samostatně nezajímavá: soubor TOML, několik set řádků Pythonu, stylopis, čtyři štítky,
+    karanténní soubor. Páka je v omezeních. Taxonomie, kde se domněnka nemá kam schovat. Build, který
+    odmítne vyrenderovat tvrzení bez důkazu. Kotva, která z posunu kódu udělá spadlý build místo tiché
+    nepravdy. Omezení odeber a máš dokument, který vypadá stejně a znamená mnohem méně — víme to,
+    protože jsme přesně takovou verzi vydali jako první.</p>
+
+  <div class="endnote">Diff řekne reviewerovi, co se změnilo. Retrospektiva mu řekne, co bylo
+    rozhodnuto, proč, co je pořád nejisté a kam investovat úsudek — a totéž řekne agentovi, ve výšce
+    pohledu, kam psaní kódu nedosáhne. Vizualizace není dekorace nalepená na práci. Její tvorba je
+    poslední a nejodhalnější část <strong>té práce samotné</strong>.</div>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var TIP_DATA = {};
+
+TIP_DATA['retro-readers-diagram'] = {
+  work: { title: 'Práce', color: '#939f91',
+    desc: 'Změna příliš velká na diff: desítky souborů, několik podsystémů, měsíce rozhodnutí, jejichž zdůvodnění existuje jen v hlavách autorů.',
+    detail: '▸ Pod přibližně jedním dnem práce je diff pořád lepší artefakt' },
+  doc: { title: 'Retrospektiva', color: '#35a77c',
+    desc: 'Statické, samostatné HTML: task a jeho řešení na úvod, pak celé třídy s barevnou syntaxí a inline anotačními bublinami.',
+    detail: '<em>Žádný nástroj, žádný server — otevři soubor v prohlížeči.</em>' },
+  human: { title: 'Lidský reviewer', color: '#3a94c5',
+    desc: 'Přichází s hotovou mapou: proč se každé rozhodnutí udělalo, co se opravilo a jak se to ověřilo, a kde konkrétně se musí soustředit.',
+    detail: '▸ Pozornost jde na úsudek místo na hledání' },
+  agent: { title: 'Agent', color: '#df69ba',
+    desc: 'Druhý čtenář. Tvorba dokumentu vynutí posun od psaní kódu k jeho vysvětlování — a v té výšce pohledu jsou chyby kompozice, při implementaci neviditelné, zjevné.',
+    detail: '▸ Takhle vyplavaly tři potvrzené bugy v už otestovaném kódu' }
+};
+
+TIP_DATA['retro-pipeline-diagram'] = {
+  inbox: { title: 'inbox.toml — karanténa', color: '#f85552',
+    desc: 'Kandidátní nálezy přistávají tady a nikdy se nerenderují. Spekulace je povolená, ale musí uvést, jak byla nalezena. Bez adjudikace se do dokumentu nedostane nic.',
+    detail: '▸ Počítej s tím, že vypadne víc než devět z deseti — brána funguje' },
+  manifest: { title: 'retro.toml — manifest', color: '#8da101',
+    desc: 'Jediný zdroj pravdy: přehled tasku, rozhodnutí, kapitoly, soubory a každá anotace se svým stabilním id, kotvou, štítkem a stavem.',
+    detail: '<em>Přeznačení anotace je změna jednoho pole, ne chirurgie v HTML.</em>' },
+  build: { title: 'Build', color: '#35a77c',
+    desc: 'Validuje, obarví, vyrenderuje. Každá odvozená hodnota — počty anotací, legenda, stránka bugů, tabulka otevřených položek — se počítá tady, takže se nemůže rozejít.',
+    detail: '▸ Výstup není minifikovaný, takže HTML zůstane diffovatelné v gitu' },
+  gates: { title: 'Co build kontroluje', color: '#dfa000',
+    desc: 'Schéma a povinná důkazní pole podle štítku; kotva porovnaná se skutečným řádkem; frázová heuristika u kontextových anotací; a žádné vydání, dokud inbox drží neadjudikované kandidáty.',
+    detail: '▸ Selhaná kontrola zastaví build: záměr není mechanismus' },
+  out: { title: 'Artefakt', color: '#3a94c5',
+    desc: 'Index s taskem, rozhodnutími a otevřenými položkami; jedna stránka na kapitolu s celými anotovanými třídami; a potvrzené bugy na vlastní stránce v HTML i Markdownu.',
+    detail: '▸ Bundle se staví jen z tohoto adresáře — žádné interní poznámky' }
+};
+
+var tip = document.createElement('div');
+tip.className = 'schema-tip';
+tip.innerHTML = '<div class="tip-title"></div><div class="tip-desc"></div><div class="tip-detail"></div>';
+document.body.appendChild(tip);
+var tTitle = tip.querySelector('.tip-title');
+var tDesc = tip.querySelector('.tip-desc');
+var tDetail = tip.querySelector('.tip-detail');
+
+function moveTip(x, y) {
+  var w = tip.offsetWidth || 280, h = tip.offsetHeight || 90;
+  var nx = x + 18, ny = y + 18;
+  if (nx + w > window.innerWidth - 12) nx = x - w - 18;
+  if (ny + h > window.innerHeight - 12) ny = y - h - 18;
+  tip.style.left = Math.max(8, nx) + 'px';
+  tip.style.top = Math.max(8, ny) + 'px';
+}
+function showTip(TIPS, name, x, y) {
+  var d = TIPS[name];
+  if (!d) return;
+  tTitle.textContent = d.title;
+  tTitle.style.color = d.color;
+  tDesc.innerHTML = d.desc;
+  if (d.detail) { tDetail.style.display = ''; tDetail.innerHTML = d.detail; }
+  else { tDetail.style.display = 'none'; }
+  tip.style.borderLeftColor = d.color;
+  moveTip(x, y);
+  tip.classList.add('visible');
+}
+function hideTip() { tip.classList.remove('visible'); }
+
+Object.keys(TIP_DATA).forEach(function(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var svg = wrap.querySelector('svg');
+  if (!svg) return;
+  var comps = svg.querySelectorAll('.comp');
+  var TIPS = TIP_DATA[wrapId];
+  svg.querySelectorAll('.hover-zone').forEach(function(z) {
+    z.addEventListener('mouseenter', function(e) {
+      wrap.classList.add('active', 'has-focus');
+      comps.forEach(function(c) { c.classList.toggle('active', c.dataset.comp === z.dataset.comp); });
+      showTip(TIPS, z.dataset.comp, e.clientX, e.clientY);
+    });
+    z.addEventListener('mousemove', function(e) { moveTip(e.clientX, e.clientY); });
+    z.addEventListener('mouseleave', function() {
+      wrap.classList.remove('has-focus');
+      comps.forEach(function(c) { c.classList.remove('active'); });
+      hideTip();
+    });
+  });
+});
+})();
+</script>
+
+</body>
+</html>

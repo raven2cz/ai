@@ -427,17 +427,20 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 <!-- ═══════════════ 1. WHERE THE DIFF RUNS OUT ═══════════════ -->
 <section>
   <h2 id="diff">Where the Diff Runs Out</h2>
-  <p>Part 2 described AI-first work as sculpting: you and the agent shape a large block of material
-    over many sessions. Part 3 gave that work durable memory. This part is about the moment the
-    sculpture has to leave the studio — when someone else has to <em>look</em> at it and say whether
-    it is right.</p>
+  <p>Part 2 described AI-first work as sculpting: you and the agent shape a block of material over many
+    sessions. Part 3 gave that work a shared knowledge base, so neither of you starts from zero again
+    and what you learn accumulates as the base grows. This part is about what happens when the work has
+    to be judged — when the sculpture leaves the studio and someone else has to <em>look</em> at it and
+    say whether it is right.</p>
 
-  <p>For a small change, a diff is the perfect review artifact. It is precise, it is complete, and
-    the reviewer holds the whole thing in their head. For a large one it collapses. A rewrite of a
-    streaming pipeline — ninety-six production files across twelve subsystems, months of decisions —
-    produces a diff nobody reads. Not because reviewers are lazy, but because a diff answers exactly one
-    question: <strong>what changed?</strong> The questions that decide whether the work is correct
-    are different ones:</p>
+  <p>For a genuinely small change — a rename, a guard, a one-file fix — a diff is the perfect review
+    artifact. It is precise, it is complete, and the reviewer holds the whole thing in their head. Above
+    that, it starts losing, and the threshold is lower than most teams assume. A medium feature touching
+    five files across two subsystems already carries trade-offs the lines cannot show. At the far end — a
+    rewrite of ninety-six production files across twelve subsystems — the diff is something nobody reads
+    at all. Not because reviewers are lazy, but because a diff answers exactly one question:
+    <strong>what changed?</strong> The questions that decide whether the work is correct are different
+    ones:</p>
 
   <div class="concepts">
     <div class="card c-blue">
@@ -461,6 +464,14 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
         compiles and looks plausible."</p>
     </div>
   </div>
+
+  <p>Which makes the useful test not size but <em>whether decisions were made</em>. If a change carries
+    reasoning a reviewer cannot reconstruct from the lines — a trade-off, a rejected alternative, an
+    invariant that has to hold, a fix whose correctness depends on something two files away — it earns a
+    retrospective, whether that is four files or four hundred. Only genuinely small, self-evident changes
+    are better served by the diff alone. In practice that puts almost everything above a quick fix inside
+    the net, which is the opposite of how these documents are usually treated: as a ceremony reserved for
+    the one big rewrite a team does every few years.</p>
 
   <p>So we started writing the answers down, as a document that renders the code <em>and</em> the
     reasoning together: whole classes with syntax highlighting, and inline annotation bubbles in the
@@ -500,7 +511,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
       <g class="comp" data-comp="work" style="--comp-glow:rgba(166,176,160,0.55)">
         <rect x="350" y="28" width="240" height="46" rx="9" fill="rgba(166,176,160,0.10)" stroke="#939f91" stroke-width="2"/>
         <text x="470" y="49" text-anchor="middle" font-size="12.5" font-weight="700" fill="#5c6a72">THE WORK</text>
-        <text x="470" y="65" text-anchor="middle" font-size="10" fill="#829181">96 files · 12 subsystems · months</text>
+        <text x="470" y="65" text-anchor="middle" font-size="10" fill="#829181">any change carrying decisions</text>
       </g>
 
       <!-- RETROSPECTIVE -->
@@ -603,8 +614,9 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     own page, open runtime questions in one table with <em>how</em> to check each, and deferred fixes with
     an explicit trigger.</p>
 
-  <p>Chapters are assigned by <strong>risk</strong>, not file count: one reviewer owns data
-    correctness, another concurrency, a third the edge cases.</p>
+  <p>When a change is big enough to split, chapters are assigned by <strong>risk</strong>, not file
+    count: one reviewer owns data correctness, another concurrency, a third the edge cases. A medium task
+    is one chapter and one reviewer, and the four layers still apply.</p>
 
   <h3 id="artifact">What an Annotated File Looks Like</h3>
   <p>Concretely: a file header with its summary, then source lines with annotation bubbles.</p>
@@ -1019,8 +1031,8 @@ var TIP_DATA = {};
 
 TIP_DATA['retro-readers-diagram'] = {
   work: { title: 'The work', color: '#939f91',
-    desc: 'A change too large for a diff: dozens of files, several subsystems, months of decisions whose reasoning exists only in the authors’ heads.',
-    detail: '▸ Below roughly a day of work, a diff is still the better artifact' },
+    desc: 'Any change whose reasoning a reviewer cannot reconstruct from the lines — a medium feature across two subsystems as much as a hundred-file rewrite.',
+    detail: '▸ Only genuinely self-evident changes are better served by the diff alone' },
   doc: { title: 'The retrospective', color: '#35a77c',
     desc: 'Static, self-contained HTML: the task and its solution up front, then whole classes with syntax highlighting and inline annotation bubbles.',
     detail: '<em>No tooling, no server — open the file in a browser.</em>' },

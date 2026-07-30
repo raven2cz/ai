@@ -540,11 +540,9 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 
   <p>This is not a hypothetical. Writing the retrospective for that pipeline rewrite surfaced three
     confirmed bugs in code that had been reviewed, tested, and was already running. The most serious
-    was a silent data-loss path: an error classified as retryable was completed exceptionally, but
-    with the committer configuration in use the offset was committed anyway, so the record was never
-    delivered and never landed in the dead-letter queue either. Every individual piece was correct.
-    The composition was not, and it took a document about <em>why the composition is like that</em> to
-    expose it. The other two were quieter: a configuration parameter that was read, documented, and
+    was a silent data-loss path: an error classified as retryable was completed exceptionally, but the
+    committer configuration in use committed the offset anyway, so the record was never delivered and
+    never reached the dead-letter queue. Every piece was correct; the composition was not. The other two were quieter: a configuration parameter that was read, documented, and
     never actually used anywhere, and a category of image that ended up in the dead-letter queue where
     the previous implementation had silently discarded it.</p>
 
@@ -557,19 +555,6 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 
   <h3 id="altitude">Why the Altitude Shift Works</h3>
   <p>The mechanism, once named, can be used deliberately.</p>
-
-  <div class="concepts">
-    <div class="card c-purple">
-      <h4>Writing code is local</h4>
-      <p>The task is "make this function correct." Attention sits inside one file, one method, one
-        branch. Composition across subsystems is precisely what this posture cannot see.</p>
-    </div>
-    <div class="card c-aqua">
-      <h4>Explaining code is global</h4>
-      <p>The task becomes "state why this is correct, to a skeptic, in prose." That forces the whole
-        path into view at once — and a claim you cannot finish writing is a claim that is not true.</p>
-    </div>
-  </div>
 
   <p>A prose explanation fails loudly when it is wrong. A method can compile, pass its tests, and be
     subtly incorrect. It is much harder to write the sentence <em>"a failure here retries, so no record
@@ -592,39 +577,21 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     was the biggest gap in our first working version: the context existed, scattered across annotations on
     individual lines, where nobody could read it whole.</p>
 
-  <div class="phase-steps">
-    <div class="phase-step p-green">
-      <h4>Task Overview: the Part Everyone Skips</h4>
-      <p>Motivation and tickets. What is in scope and, explicitly, <em>what is deliberately not</em>,
-        otherwise reviewers audit things nobody promised. Completion criteria <em>and how each was
-        verified</em>. Plus key decisions as a compact table: decision, rejected alternative, why, and how
-        reversible it is.</p>
-    </div>
-    <div class="phase-step p-blue">
-      <h4>Architecture: Orientation Before Detail</h4>
-      <p>Per chapter: the role of the subsystem, its inputs and outputs, the <strong>invariants the
-        reviewer should police</strong>, and a suggested reading order.</p>
-    </div>
-    <div class="phase-step p-purple">
-      <h4>Annotated Code: Whole Classes</h4>
-      <p>Files grouped into thematic chapters, not one per file. Each carries a two-line summary — what
-        it does, why it is like this — then the full source with inline annotations and a note on test
-        coverage.</p>
-    </div>
-    <div class="phase-step p-orange">
-      <h4>Findings and Remaining Work: First Class</h4>
-      <p>Confirmed bugs on their own page with a verification chain and a failure scenario. Open
-        runtime questions in one table with <em>how</em> to check each. Deferred fixes with an explicit
-        trigger.</p>
-    </div>
-  </div>
+  <p>The first layer is the <strong>task overview</strong>: motivation and tickets, what is in scope
+    and explicitly <em>what is deliberately not</em>, completion criteria <em>and how each was
+    verified</em>, plus key decisions as a compact table — decision, rejected alternative, why, how
+    reversible. The second is <strong>architecture</strong>: per chapter, the role of the subsystem, its
+    inputs and outputs, the invariants the reviewer should police. The third is the <strong>annotated
+    code</strong> itself, grouped into thematic chapters rather than one per file, each with a two-line
+    summary and a note on test coverage. The fourth is <strong>findings</strong>: confirmed bugs on their
+    own page, open runtime questions in one table with <em>how</em> to check each, and deferred fixes with
+    an explicit trigger.</p>
 
   <p>Chapters are assigned by <strong>risk</strong>, not file count: one reviewer owns data
     correctness, another concurrency, a third the edge cases.</p>
 
   <h3 id="artifact">What an Annotated File Looks Like</h3>
-  <p>Concretely, this is the shape of it: a file header with its summary, then source lines with
-    annotation bubbles where they belong.</p>
+  <p>Concretely: a file header with its summary, then source lines with annotation bubbles.</p>
 
   <div class="retro-demo">
     <div class="rd-head">
@@ -704,8 +671,6 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     like diligence.</p>
 
   <h3 id="trust">What It Actually Cost</h3>
-  <p>Two costs, and the second is the expensive one.</p>
-
   <p>The direct cost was hours of cleanup across twelve chapters, most of it spent deleting things
     that should never have been written.</p>
 
@@ -722,10 +687,6 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
       them. The fix had to be structural: remove the place, and give the worries somewhere else to
       live.</p>
   </div>
-
-  <p>One calibration datum from the same audit: when subagents were asked to rank findings by
-    severity, five came back marked <em>critical</em>. Read against the code, two were. Agents
-    systematically overstate, which is why a human reads every one.</p>
 </section>
 
 <!-- ═══════════════ 5. TAXONOMY ═══════════════ -->
@@ -764,19 +725,17 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     </tbody>
   </table>
 
-  <p>The property that matters is not the count. It is this: <strong>there is no label into which an
-    unverified worry can be filed.</strong> Every one of the four either describes something known to
-    be true, or carries the proof of its own claim. A hunch has nowhere to land, which means it has to
-    go somewhere else entirely: the subject of the next section.</p>
+  <p>What matters is not the count but this: <strong>there is no label into which an unverified worry
+    can be filed.</strong> Each of the four either describes something known to be true or carries the
+    proof of its own claim. A hunch has nowhere to land, so it has to go somewhere else entirely — the
+    subject of the next section.</p>
 
   <h3 id="states">Kind Is What, Status Is Where</h3>
-  <p>Our earlier taxonomy had a label called <em>Resolved</em>. That was a category error, and worth
-    describing because it is easy to repeat: <em>resolved</em> is not a kind of annotation, it is a
-    <strong>stage in an annotation's life</strong>. Used as a label it silently meant two different
-    things — "the worry turned out to be unfounded" and "the bug was fixed" — and it duplicated
-    information that belongs in a status field.</p>
-
-  <p>So: four kinds, and a small state machine orthogonal to them.</p>
+  <p>Our earlier taxonomy had a label called <em>Resolved</em>. That was a category error worth naming,
+    because it is easy to repeat: <em>resolved</em> is not a kind of annotation but a stage in an
+    annotation's life. As a label it silently meant two things — "the worry was unfounded" and "the bug
+    was fixed" — and duplicated what belongs in a status field. So: four kinds, and a small state machine
+    orthogonal to them.</p>
 
   <table class="mapping">
     <thead><tr><th>Status</th><th>Meaning</th><th>Required field</th></tr></thead>
@@ -815,9 +774,9 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
       <p>A <em>Verify</em> without both proof fields, or a <em>Bug</em> without a failure scenario and a
         verification chain, does not build. The same check catches category confusion in context
         annotations: if a <em>Why</em> bubble contains "missing", "could fail", "risk", or "worth
-        verifying", the build stops and asks which it is. We added that rule after finding it happening
-        in our own document, in a <em>Why</em> annotation that explained an invariant beautifully and
-        then trailed off into <em>"worth verifying that this holds for future implementations too."</em></p>
+        verifying", the build stops and asks which it is. We added that after catching it in our own
+        document, in a <em>Why</em> annotation that explained an invariant and then trailed off into
+        <em>"worth verifying that this holds for future implementations too."</em></p>
     </div>
     <div class="phase-step p-blue">
       <h4>Separated Passes: One Job at a Time</h4>
@@ -827,9 +786,10 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
     </div>
     <div class="phase-step p-purple">
       <h4>The Human Gate: on Criticals and on Release</h4>
-      <p>Every "critical" is read personally against the code before it is recorded. And the scoping
-        decision — which files, which chapters, who owns what — is approved by a human early, while it
-        is still cheap to change.</p>
+      <p>Every "critical" is read personally against the code before it is recorded: in our audit five
+        findings came back marked critical and two survived that reading. And the scoping decision —
+        which files, which chapters, who owns what — is approved by a human early, while it is still
+        cheap to change.</p>
     </div>
   </div>
 </section>
@@ -837,19 +797,14 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 <!-- ═══════════════ 7. DATA, NOT HTML ═══════════════ -->
 <section>
   <h2 id="data">Annotations as Data, HTML as Artifact</h2>
-  <p>Gates only work if there is something to gate. The first retrospective had a second, quieter
-    design flaw that made every rule above unenforceable: the HTML <em>was</em> the source of
-    truth. It was generated once by an ad-hoc script that was never saved, and after that every change
-    was surgery on a minified document — regex-matching a comment bubble by a fragment of its own text
-    and splicing the DOM by hand. Chapters could not be regenerated at all. Derived numbers, like the
-    per-file annotation count, were written in by hand and drifted out of sync across the document.</p>
+  <p>Gates only work if there is something to gate. The first retrospective had a quieter design flaw
+    that made every rule above unenforceable: the HTML <em>was</em> the source of truth. It came from an
+    ad-hoc script nobody saved, so chapters could not be regenerated, every change was surgery on a
+    minified document, and hand-written values like the per-file annotation count drifted out of sync.</p>
 
   <p>Invert it. Annotations become <strong>data</strong>; HTML becomes a <strong>build artifact</strong>.
     Re-labelling an annotation is a one-field edit and a rebuild, and every derived value — counts, the
     legend, the bug page, the open-items table — is computed at build time, so none of it can drift.</p>
-
-  <p>We chose TOML for the manifest for a boring reason: it parses with the Python standard library, so
-    the generator needs no dependency beyond the syntax highlighter.</p>
 
   <div class="snippet"><span class="c">## A verify annotation. It cannot be written without its two proof fields —</span>
 <span class="c">## the build rejects it, and that rejection is the point.</span>
@@ -978,15 +933,13 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 
   <h3 id="skill">The Skill Layout</h3>
   <div class="snippet"><span class="d">retrospective/</span>
-├── <b>SKILL.md</b>              <span class="c"># short and normative: when to use, the phases,</span>
-│                            <span class="c"># the hard rules, pointers to references</span>
+├── <b>SKILL.md</b>              <span class="c"># short and normative: phases, hard rules, pointers</span>
 ├── <span class="d">references/</span>              <span class="c"># read only in the phase that needs them</span>
 │   ├── deliverable.md      <span class="c"># the four layers; what does NOT belong inside</span>
 │   ├── taxonomy.md         <span class="c"># kinds, statuses, gates, good vs bad examples</span>
 │   ├── schema.md           <span class="c"># every manifest field</span>
 │   ├── adjudication.md     <span class="c"># multi-model protocol, severity calibration</span>
-│   ├── verification.md     <span class="c"># deployed value ≠ default; gauge ≠ cumulative log</span>
-│   └── handoff.md          <span class="c"># the sign-off checklist</span>
+│   └── verification.md     <span class="c"># deployed value ≠ default; gauge ≠ cumulative log</span>
 ├── <span class="d">scripts/</span>
 │   ├── build_retro.py      <span class="c"># manifest → HTML; --check validates, --release gates</span>
 │   └── requirements.txt    <span class="c"># the highlighter, version-pinned</span>
@@ -995,13 +948,6 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
 │   └── inbox.toml          <span class="c"># the quarantine file</span>
 └── <span class="d">assets/</span>
     └── retro-layout.css    <span class="c"># one source of truth for the look</span></div>
-
-  <p>Three properties of that layout carry most of the value. The generator is committed on day one,
-    with the highlighter version pinned beside it, because a different release emits different markup and
-    a later re-render silently diverges from chapters built earlier. <code>SKILL.md</code> holds only
-    invariants and the phase order, so references load on demand instead of up front. And validation
-    lives in the generator rather than in prose an agent must internalize: one source of truth about the
-    schema, and feedback that arrives as a build error with a copy-pasteable fix.</p>
 
   <p>In practice the loop is three commands — validate while writing, gate before handing over,
     render:</p>
@@ -1015,22 +961,17 @@ build_retro.py retro.toml <span class="k">-o</span> out        <span class="c">#
     directory only, never by adding a whole folder to git, which is how internal notes reach a reviewer.</p>
 
   <h3 id="adapt">Adapting It to Your Work</h3>
-  <p><strong>Keep:</strong> annotations as data with HTML as an artifact; the anchor field; a taxonomy
-    with no home for unverified worries; the quarantine inbox; derived values computed at build time;
-    whole files rather than snippets.</p>
-
-  <p><strong>Change freely:</strong> the manifest format, the palette and typography, the chapter
-    split, how reviewers are assigned. Ours renders any language the highlighter knows, which is most
-    of them.</p>
-
-  <p><strong>Keep out of the skill:</strong> project-specific verification commands. Which cluster,
-    which metrics backend, which storage — that belongs in the project's knowledge base from Part 3.
-    The skill only requires that a verification playbook be loaded, and carries two general rules,
-    each of which cost us a day. <em>A deployed value is not a default:</em> we once concluded a feature
-    was switched off by reading a config default in the repo, while the deployed override had it on.
-    <em>A cumulative log is not current state:</em> a forensic store holding two months of findings, most
-    of them from a single catch-up on day one, got read as "we are losing data right now" while the live
-    gauge sat at zero.</p>
+  <p><strong>Keep</strong> the load-bearing parts: annotations as data with HTML as an artifact, the
+    anchor field, a taxonomy with no home for unverified worries, the quarantine inbox, derived values
+    computed at build time, whole files rather than snippets. <strong>Change freely</strong> the manifest
+    format, the palette, the chapter split, how reviewers are assigned. <strong>Keep out</strong>
+    project-specific verification commands: which cluster, which metrics backend, which storage belongs
+    in the project's knowledge base from Part 3. The skill only requires that a verification playbook be
+    loaded, and carries two general rules, each of which cost us a day. <em>A deployed value is not a
+    default:</em> we once concluded a feature was off by reading a config default in the repo, while the
+    deployed override had it on. <em>A cumulative log is not current state:</em> a forensic store holding
+    two months of findings, most from a single catch-up on day one, got read as "we are losing data right
+    now" while the live gauge sat at zero.</p>
 </section>
 
 <!-- ═══════════════ 9. CLOSING THE LOOP ═══════════════ -->

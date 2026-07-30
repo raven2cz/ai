@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Effectively: The Visual Retrospective</title>
+<meta name="description" content="An HTML retrospective shows a reviewer where to look and forces the agent that wrote the code to explain it — an altitude at which defects invisible during implementation become obvious.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --bg0: #fdf6e3;
+  --bg1: #f4f0d9;
+  --bg2: #efebd4;
+  --bg3: #e6e2cc;
+  --fg: #5c6a72;
+  --fg-dim: #829181;
+  --red: #f85552;
+  --orange: #f57d26;
+  --yellow: #dfa000;
+  --green: #8da101;
+  --aqua: #35a77c;
+  --blue: #3a94c5;
+  --purple: #df69ba;
+  --grey0: #a6b0a0;
+  --grey1: #939f91;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--fg);
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.8;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--bg3);
+}
+h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+h1 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; }
+h1 .accent { color: var(--green); }
+.subtitle { font-family: 'Inter', sans-serif; font-size: 1.05rem; color: var(--grey1); margin-top: 0.3rem; font-weight: 400; }
+.prev-link { font-size: 0.88rem; color: var(--blue); margin-top: 0.6rem; }
+.prev-link a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--bg3); transition: border-color 0.2s; }
+.prev-link a:hover { border-bottom-color: var(--blue); }
+
+section { margin-bottom: 2.5rem; scroll-margin-top: 1rem; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem;
+  padding-bottom: 0.4rem; border-bottom: 1px solid var(--bg3);
+  letter-spacing: -0.01em;
+}
+h3 { font-size: 1.15rem; font-weight: 700; color: var(--fg-dim); margin-bottom: 0.6rem; letter-spacing: -0.005em; }
+h2[id], h3[id] { scroll-margin-top: 1.5rem; }
+p { margin-bottom: 1rem; }
+strong { font-weight: 600; }
+em { font-family: 'Source Serif 4', 'Georgia', serif; }
+
+/* -- Schema container -- */
+.schema-wrap {
+  background: var(--bg1);
+  border: 1px solid var(--bg3);
+  border-radius: 12px;
+  padding: 1.2rem 1rem;
+  margin: 1.5rem 0 2rem;
+  overflow: hidden;
+  position: relative;
+}
+.schema-wrap svg { width: 100%; height: auto; display: block; }
+.schema-wrap .hint {
+  position: absolute; bottom: 8px; right: 14px;
+  font-size: 0.75rem; color: var(--grey0);
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.schema-wrap.active .hint { opacity: 0; }
+
+/* -- Component hover styles -- */
+.comp { cursor: pointer; transition: filter 0.35s ease, opacity 0.35s ease; }
+.schema-wrap.has-focus .comp { opacity: 0.4; }
+.schema-wrap.has-focus .comp.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--comp-glow, rgba(90,140,180,0.5)));
+}
+@keyframes compPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--comp-glow, rgba(90,140,180,0.35))); }
+  50% { filter: drop-shadow(0 0 14px var(--comp-glow, rgba(90,140,180,0.65))); }
+}
+.schema-wrap.has-focus .comp.active {
+  animation: compPulse 2.2s ease-in-out infinite;
+}
+.hover-zone { fill: transparent; cursor: pointer; }
+
+/* -- Floating tooltip -- */
+.schema-tip {
+  position: fixed;
+  z-index: 1000;
+  width: 280px;
+  background: rgba(253,246,227,0.97);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--bg3);
+  border-left: 4px solid var(--blue);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem 0.6rem;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(7px) scale(0.97);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.04);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  will-change: opacity, transform;
+}
+.schema-tip.visible { opacity: 1; transform: translateY(0) scale(1); }
+.schema-tip .tip-title { font-weight: 700; font-size: 0.88rem; margin-bottom: 0.2rem; letter-spacing: -0.01em; }
+.schema-tip .tip-desc { color: var(--fg); margin-bottom: 0.25rem; }
+.schema-tip .tip-detail {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 0.79rem; color: var(--fg-dim);
+  padding-top: 0.25rem; border-top: 1px solid var(--bg3);
+}
+.schema-tip .tip-detail em { font-style: italic; }
+
+/* -- Concept cards -- */
+.concepts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.8rem; margin: 1.2rem 0;
+}
+.card {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 0.9rem 1rem 0.9rem 1.1rem;
+  border-left: 4px solid var(--grey0);
+}
+.card h4 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+.card p { font-size: 0.84rem; line-height: 1.6; margin: 0; color: var(--fg-dim); }
+.card.c-blue   { border-left-color: var(--blue); }
+.card.c-green  { border-left-color: var(--green); }
+.card.c-purple { border-left-color: var(--purple); }
+.card.c-orange { border-left-color: var(--orange); }
+.card.c-red    { border-left-color: var(--red); }
+.card.c-yellow { border-left-color: var(--yellow); }
+.card.c-aqua   { border-left-color: var(--aqua); }
+
+/* -- Callout / formula box -- */
+.formula-box {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1.2rem 1.5rem; margin: 1rem 0;
+}
+.formula {
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.08rem; font-style: italic; margin: 0.4rem 0;
+}
+.formula .m { font-weight: 700; font-style: normal; }
+
+/* -- Phase steps -- */
+.phase-steps { counter-reset: phase; margin: 1.2rem 0; }
+.phase-step {
+  counter-increment: phase;
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-radius: 8px; padding: 1rem 1.2rem 1rem 3.2rem;
+  margin-bottom: 0.8rem; position: relative;
+}
+.phase-step::before {
+  content: counter(phase);
+  position: absolute; left: 1rem; top: 1rem;
+  width: 1.6rem; height: 1.6rem;
+  background: var(--green); color: var(--bg0);
+  border-radius: 50%; font-size: 0.82rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.phase-step h4 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; color: var(--fg);
+}
+.phase-step p { font-size: 0.86rem; line-height: 1.65; margin: 0; color: var(--fg-dim); }
+.phase-step.p-blue::before { background: var(--blue); }
+.phase-step.p-green::before { background: var(--green); }
+.phase-step.p-purple::before { background: var(--purple); }
+.phase-step.p-orange::before { background: var(--orange); }
+.phase-step.p-aqua::before { background: var(--aqua); }
+.phase-step.p-red::before { background: var(--red); }
+
+/* -- Code / file snippet -- */
+.snippet {
+  background: var(--bg1); border: 1px solid var(--bg2);
+  border-left: 4px solid var(--grey0);
+  border-radius: 8px; padding: 1rem 1.2rem; margin: 1rem 0;
+  font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  font-size: 0.82rem; line-height: 1.7; color: var(--fg);
+  overflow-x: auto; white-space: pre;
+}
+.snippet .c { color: var(--grey1); }
+.snippet .k { color: var(--blue); font-weight: 600; }
+.snippet .s { color: var(--green); }
+.snippet .d { color: var(--purple); }
+.snippet .r { color: var(--red); font-weight: 600; }
+.snippet b { color: var(--fg); font-weight: 700; }
+
+/* -- Mapping table -- */
+.mapping { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+.mapping th, .mapping td { padding: 0.6rem 0.8rem; text-align: left; border-bottom: 1px solid var(--bg3); }
+.mapping th { background: var(--bg2); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.mapping td:first-child { font-weight: 600; }
+.mapping tr:last-child td { border-bottom: none; }
+.mapping tbody tr:hover { background: var(--bg1); }
+.mapping code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.82em; background: var(--bg2); padding: 1px 5px; border-radius: 4px; }
+.mapping .num { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+/* -- Retrospective artifact demo -- */
+.retro-demo {
+  background: var(--bg1); border: 1px solid var(--bg3);
+  border-radius: 10px; margin: 1.2rem 0 1.8rem; overflow: hidden;
+}
+.rd-head {
+  background: var(--bg2); border-bottom: 1px solid var(--bg3);
+  padding: 0.5rem 0.8rem; display: flex; align-items: center;
+  gap: 0.6rem; flex-wrap: wrap; font-size: 0.76rem;
+}
+.rd-badge {
+  background: var(--orange); color: var(--bg0); font-weight: 700;
+  font-size: 0.66rem; padding: 0.1rem 0.45rem; border-radius: 4px; letter-spacing: 0.03em;
+}
+.rd-path { font-family: 'JetBrains Mono', monospace; color: var(--fg); flex: 1; word-break: break-all; }
+.rd-count { color: var(--grey1); white-space: nowrap; }
+.rd-sum { padding: 0.6rem 0.85rem; font-size: 0.82rem; color: var(--fg-dim); border-bottom: 1px solid var(--bg3); }
+.rd-sum b { color: var(--fg); }
+.rd-body { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.78rem; line-height: 1.7; padding-bottom: 0.3rem; }
+.rd-line { display: flex; }
+.rd-ln {
+  width: 2.7rem; flex: none; text-align: right; padding: 0 0.6rem;
+  color: var(--grey0); background: var(--bg0); border-right: 1px solid var(--bg3); user-select: none;
+}
+.rd-code { padding: 0 0.8rem; white-space: pre; overflow-x: auto; }
+.rd-code .k { color: var(--blue); font-weight: 600; }
+.rd-code .t { color: var(--purple); }
+.rd-code .c { color: var(--grey1); }
+.rd-ann {
+  margin: 0.35rem 0.8rem 0.5rem 3.3rem; border-radius: 7px;
+  padding: 0.5rem 0.75rem; font-family: 'Inter', sans-serif;
+  font-size: 0.8rem; line-height: 1.6;
+  border-left: 4px solid var(--grey0); background: var(--bg2);
+}
+.rd-kind {
+  display: inline-block; font-weight: 700; font-size: 0.66rem;
+  letter-spacing: 0.05em; text-transform: uppercase; margin-right: 0.5rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.rd-proof {
+  display: block; margin-top: 0.35rem; padding-top: 0.3rem;
+  border-top: 1px dashed var(--bg3); color: var(--fg-dim); font-size: 0.77rem;
+}
+.rd-why { border-left-color: var(--blue); }   .rd-why .rd-kind { color: var(--blue); }
+.rd-sol { border-left-color: var(--green); }  .rd-sol .rd-kind { color: var(--green); }
+.rd-ver { border-left-color: var(--yellow); } .rd-ver .rd-kind { color: var(--yellow); }
+.rd-bug { border-left-color: var(--red); }    .rd-bug .rd-kind { color: var(--red); }
+
+/* -- Article metadata -- */
+.meta {
+  font-size: 0.85rem; color: var(--fg-dim); margin-top: 0.8rem;
+  display: flex; justify-content: center; gap: 1.4rem; flex-wrap: wrap;
+}
+.meta span {
+  white-space: nowrap; background: var(--bg1);
+  padding: 0.2rem 0.7rem; border-radius: 4px; border: 1px solid var(--bg3);
+}
+
+/* -- Table of contents -- */
+.toc {
+  background: var(--bg1); border: 1px solid var(--bg3);
+  border-radius: 10px; padding: 1.2rem 1.5rem 1rem; margin-bottom: 2.5rem;
+}
+.toc h3 {
+  font-size: 1rem; font-weight: 700; margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem; border-bottom: 1px solid var(--bg3); color: var(--fg);
+}
+.toc ol { list-style: none; counter-reset: toc; padding: 0; margin: 0; }
+.toc > ol > li { counter-increment: toc; margin-bottom: 0.15rem; }
+.toc > ol > li > a::before { content: counter(toc) ". "; font-weight: 700; color: var(--green); }
+.toc a { color: var(--fg); text-decoration: none; font-size: 0.88rem; line-height: 1.85; transition: color 0.2s; }
+.toc a:hover { color: var(--blue); }
+.toc .toc-sub { list-style: none; padding-left: 1.4rem; margin: 0; }
+.toc .toc-sub li a { font-size: 0.82rem; color: var(--fg-dim); }
+.toc .toc-sub li a::before { content: "- "; color: var(--bg3); }
+
+/* -- Closing note -- */
+.endnote {
+  margin-top: 2.5rem; padding-top: 1.5rem;
+  border-top: 2px solid var(--bg3);
+  font-family: 'Source Serif 4', 'Georgia', serif;
+  font-size: 1.02rem; color: var(--fg-dim);
+}
+
+@media (max-width: 600px) {
+  .page { padding: 1.5rem 1rem; }
+  h1 { font-size: 1.7rem; }
+  .concepts { grid-template-columns: 1fr; }
+  .rd-ann { margin-left: 0.8rem; }
+}
+</style>
+
+<style id="series-switcher-style">
+.series-switcher {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.7rem 1.25rem;
+  background: var(--bg1, #f4f0d9);
+  border-bottom: 1px solid var(--bg3, #e6e2cc);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  color: var(--fg, #5c6a72);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  background-color: color-mix(in srgb, var(--bg1, #f4f0d9) 88%, transparent);
+}
+.series-switcher a { color: inherit; text-decoration: none; opacity: 0.75; transition: opacity 0.2s; }
+.series-switcher a:hover { opacity: 1; }
+.series-switcher .series-title { font-weight: 600; opacity: 0.9; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.series-switcher .series-sep { opacity: 0.4; }
+.series-switcher .parts { display: flex; gap: 0.4rem; }
+.series-switcher .chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--bg3, #e6e2cc);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.series-switcher .chip:hover { background: var(--bg2, #efebd4); }
+.series-switcher .chip.active {
+  background: var(--green, #8da101);
+  color: var(--bg0, #fdf6e3);
+  border-color: transparent;
+}
+@media (max-width: 640px) {
+  .series-switcher { font-size: 0.78rem; padding: 0.55rem 0.9rem; gap: 0.75rem; }
+  .series-switcher .series-title { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="series-switcher" role="navigation" aria-label="Series navigation">  <a href="../../../index.html">← AI Playground</a>  <span class="series-sep">·</span>  <span class="series-title">AI Effectively: A Systems Approach</span>  <div class="parts"><a class="chip" href="../01-systemic-approach/index.html">Part 1</a><a class="chip" href="../02-from-stone-to-sculpture/index.html">Part 2</a><a class="chip" href="../03-the-knowledge-base/index.html">Part 3</a><span class="chip active" aria-current="page">Part 4</span></div></div>
+
+
+<div class="page">
+
+<header>
+  <h1><span class="accent">AI Effectively</span>: The Visual Retrospective</h1>
+  <p class="subtitle">Why explaining the work finds what writing it hid</p>
+  <p class="prev-link">Part 4 of the series · <a href="../03-the-knowledge-base/index.html">← Part 3: The Knowledge Base</a></p>
+  <div class="meta">
+    <span>Version 1.0</span>
+    <span>Updated: 30 Jul 2026</span>
+    <span>Author: <strong>raven2cz</strong> in collaboration with <strong>Claude</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h3>Article Contents</h3>
+  <ol>
+    <li><a href="#diff">Where the Diff Runs Out</a></li>
+    <li><a href="#readers">Two Readers, One Document</a>
+      <ul class="toc-sub">
+        <li><a href="#human">The reviewer sees intent, not just lines</a></li>
+    <li><a href="#anatomy">Anatomy: Four Layers</a>
+      <ul class="toc-sub">
+        <li><a href="#artifact">What an annotated file looks like</a></li>
+    <li><a href="#noise">The Failure: 97% Noise</a>
+      <ul class="toc-sub">
+        <li><a href="#trust">What it actually cost</a></li>
+    <li><a href="#taxonomy">A Taxonomy That Cannot Hide a Guess</a>
+      <ul class="toc-sub">
+        <li><a href="#states">Kind is what, status is where</a></li>
+    <li><a href="#gates">Four Gates Against Noise</a></li>
+    <li><a href="#data">Annotations as Data, HTML as Artifact</a>
+      <ul class="toc-sub">
+        <li><a href="#anchor">The anchor: surviving code drift</a></li>
+    <li><a href="#build">Build It Yourself</a>
+      <ul class="toc-sub">
+        <li><a href="#skill">The skill layout</a></li>
+    <li><a href="#loop">Closing the Loop</a></li>
+  </ol>
+</nav>
+
+<!-- ═══════════════ 1. WHERE THE DIFF RUNS OUT ═══════════════ -->
+<section>
+  <h2 id="diff">Where the Diff Runs Out</h2>
+  <p>Part 2 described AI-first work as sculpting: you and the agent shape a large block of material
+    over many sessions. Part 3 gave that work durable memory. This part is about the moment the
+    sculpture has to leave the studio — when someone else has to <em>look</em> at it and say whether
+    it is right.</p>
+
+  <p>For a small change, a diff is the perfect review artifact. It is precise, it is complete, and
+    the reviewer holds the whole thing in their head. For a large one it collapses. A rewrite of a
+    streaming pipeline — ninety-six production files across twelve subsystems, months of decisions —
+    produces a diff nobody reads. Not because reviewers are lazy, but because a diff answers exactly one
+    question: <strong>what changed?</strong> The questions that decide whether the work is correct
+    are different ones:</p>
+
+  <div class="concepts">
+    <div class="card c-blue">
+      <h4>Why is it like this?</h4>
+      <p>Every non-obvious line is the residue of a decision. The diff shows the residue and throws
+        away the decision. The reviewer is left to reverse-engineer intent from syntax.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>What was rejected?</h4>
+      <p>The alternative that was tried and abandoned is invisible. Reviewers re-propose it, and the
+        author re-explains it — in a comment thread, weeks later, from memory.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Where should I look hard?</h4>
+      <p>A diff is uniformly flat. A hundred trivial renames and one subtle concurrency bug have the
+        same visual weight and the same claim on attention.</p>
+    </div>
+    <div class="card c-green">
+      <h4>How do we know it works?</h4>
+      <p>Nothing in a diff distinguishes "this is verified against production data" from "this
+        compiles and looks plausible."</p>
+    </div>
+  </div>
+
+  <p>So we started writing the answers down, as a document that renders the code <em>and</em> the
+    reasoning together: whole classes with syntax highlighting, and inline annotation bubbles in the
+    style of a code-review comment, attached to the exact lines they talk about. Static, self-contained
+    HTML — open it in a browser, no tooling, no server, no account.</p>
+
+  <p>The first version was built from small snippets of code with commentary around them. It was
+    rejected outright, and the correction mattered more than anything else in the design:
+    <strong>whole classes, or it does not work.</strong> Without the surrounding code, an annotation is
+    an assertion the reader has to take on faith. With it, the reader can check the claim against
+    the very lines it describes. That single constraint is what separates a document reviewers trust
+    from a document they skim.</p>
+</section>
+
+<!-- ═══════════════ 2. TWO READERS ═══════════════ -->
+<section>
+  <h2 id="readers">Two Readers, One Document</h2>
+  <p>We built the retrospective for human reviewers. It turned out to have a second reader.</p>
+
+  <div class="schema-wrap" id="retro-readers-diagram">
+    <svg viewBox="0 0 940 470" xmlns="http://www.w3.org/2000/svg">
+      <!-- connectors -->
+      <line x1="470" y1="74" x2="470" y2="136" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="470,137 465,128 475,128" fill="#5c6a72"/>
+      <path d="M 405,216 Q 300,250 250,294" stroke="#5c6a72" stroke-width="1.8" fill="none"/>
+      <polygon points="249,295 254,285 259,293" fill="#5c6a72"/>
+      <path d="M 535,216 Q 640,250 690,294" stroke="#5c6a72" stroke-width="1.8" fill="none"/>
+      <polygon points="691,295 681,293 686,285" fill="#5c6a72"/>
+
+      <!-- feedback arc: agent → back into the work -->
+      <path d="M 880,318 Q 928,150 600,50" stroke="#f85552" stroke-width="1.6" fill="none" stroke-dasharray="5,4"/>
+      <polygon points="599,50 609,47 607,57" fill="#f85552"/>
+      <text x="838" y="205" font-size="10" fill="#f85552" font-style="italic" text-anchor="middle">defects</text>
+      <text x="838" y="219" font-size="10" fill="#f85552" font-style="italic" text-anchor="middle">surface</text>
+
+      <!-- THE WORK -->
+      <g class="comp" data-comp="work" style="--comp-glow:rgba(166,176,160,0.55)">
+        <rect x="350" y="28" width="240" height="46" rx="9" fill="rgba(166,176,160,0.10)" stroke="#939f91" stroke-width="2"/>
+        <text x="470" y="49" text-anchor="middle" font-size="12.5" font-weight="700" fill="#5c6a72">THE WORK</text>
+        <text x="470" y="65" text-anchor="middle" font-size="10" fill="#829181">96 files · 12 subsystems · months</text>
+      </g>
+
+      <!-- RETROSPECTIVE -->
+      <g class="comp" data-comp="doc" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="340" y="138" width="260" height="78" rx="11" fill="rgba(53,167,124,0.09)" stroke="#35a77c" stroke-width="2.2"/>
+        <text x="470" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#35a77c">THE RETROSPECTIVE</text>
+        <text x="470" y="181" text-anchor="middle" font-size="9.5" fill="#829181">task overview · architecture</text>
+        <text x="470" y="195" text-anchor="middle" font-size="9.5" fill="#829181">annotated code · findings</text>
+        <text x="470" y="209" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">whole classes, inline bubbles</text>
+      </g>
+
+      <!-- HUMAN READER -->
+      <g class="comp" data-comp="human" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="60" y="296" width="250" height="96" rx="10" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="185" y="321" text-anchor="middle" font-size="12.5" font-weight="700" fill="#3a94c5">HUMAN REVIEWER</text>
+        <text x="185" y="342" text-anchor="middle" font-size="9.5" fill="#829181">reads intent, not only lines</text>
+        <text x="185" y="357" text-anchor="middle" font-size="9.5" fill="#829181">sees where to concentrate</text>
+        <text x="185" y="375" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">judgement where it counts</text>
+      </g>
+
+      <!-- AGENT READER -->
+      <g class="comp" data-comp="agent" style="--comp-glow:rgba(223,105,186,0.5)">
+        <rect x="630" y="296" width="250" height="96" rx="10" fill="rgba(223,105,186,0.08)" stroke="#df69ba" stroke-width="2"/>
+        <text x="755" y="321" text-anchor="middle" font-size="12.5" font-weight="700" fill="#df69ba">THE AGENT</text>
+        <text x="755" y="342" text-anchor="middle" font-size="9.5" fill="#829181">forced to explain, not produce</text>
+        <text x="755" y="357" text-anchor="middle" font-size="9.5" fill="#829181">sees what writing code hid</text>
+        <text x="755" y="375" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">a different altitude</text>
+      </g>
+
+      <!-- hover zones -->
+      <rect class="hover-zone" data-comp="work"   x="350" y="28"  width="240" height="46"/>
+      <rect class="hover-zone" data-comp="doc"    x="340" y="138" width="260" height="78"/>
+      <rect class="hover-zone" data-comp="human"  x="60"  y="296" width="250" height="96"/>
+      <rect class="hover-zone" data-comp="agent"  x="630" y="296" width="250" height="96"/>
+    </svg>
+    <span class="hint">Hover over the parts</span>
+  </div>
+
+  <h3 id="human">The Reviewer Sees Intent, Not Just Lines</h3>
+  <p>For the human, the gain is straightforward. The document puts the important implemented points in
+    front of them with the reasoning attached: why it was built this way, what was fixed and how it was
+    verified, and where it matters, an explicit marker saying <em>this is the spot to concentrate on, and
+    this is the question to settle.</em> That inverts the economics of review. Instead of spending
+    attention <em>finding</em> the places that deserve it, they arrive with the map drawn and spend it on
+    <strong>judgement</strong>: the one part a reviewer can do and an author cannot.</p>
+
+  <h3 id="agent">The Agent Is the Second Reader</h3>
+  <p>Here is the part we did not design and would not have predicted. Producing a retrospective forces
+    the agent, or the workflow driving several of them, to look at its own work from a completely
+    different angle. And at that angle, <strong>it sees defects it could not see while writing the
+    code.</strong> Not only bugs: design mistakes, invariants that were never actually enforced,
+    contracts documented in a javadoc that the implementation quietly violates.</p>
+
+  <p>This is not a hypothetical. Writing the retrospective for that pipeline rewrite surfaced three
+    confirmed bugs in code that had been reviewed, tested, and was already running. The most serious
+    was a silent data-loss path: an error classified as retryable was completed exceptionally, but
+    with the committer configuration in use the offset was committed anyway, so the record was never
+    delivered and never landed in the dead-letter queue either. Every individual piece was correct.
+    The composition was not, and it took a document about <em>why the composition is like that</em> to
+    expose it. The other two were quieter: a configuration parameter that was read, documented, and
+    never actually used anywhere, and a category of image that ended up in the dead-letter queue where
+    the previous implementation had silently discarded it.</p>
+
+  <p>An obvious objection: any careful second pass might have found those, so the document is
+    incidental. The honest answer is that a retrospective is not the only thing that can find them; what
+    it does is make finding them <em>structural</em> rather than fortunate. A plain re-review has no
+    forcing function and tends to stop where the code looks familiar. Explaining a subsystem end to end
+    has a completion condition, and all three bugs lived where two subsystems met, which is the place a
+    file-by-file pass has no reason to visit.</p>
+
+  <h3 id="altitude">Why the Altitude Shift Works</h3>
+  <p>The mechanism, once named, can be used deliberately.</p>
+
+  <div class="concepts">
+    <div class="card c-purple">
+      <h4>Writing code is local</h4>
+      <p>The task is "make this function correct." Attention sits inside one file, one method, one
+        branch. Composition across subsystems is precisely what this posture cannot see.</p>
+    </div>
+    <div class="card c-aqua">
+      <h4>Explaining code is global</h4>
+      <p>The task becomes "state why this is correct, to a skeptic, in prose." That forces the whole
+        path into view at once — and a claim you cannot finish writing is a claim that is not true.</p>
+    </div>
+  </div>
+
+  <p>A prose explanation fails loudly when it is wrong. A method can compile, pass its tests, and be
+    subtly incorrect. It is much harder to write the sentence <em>"a failure here retries, so no record
+    is lost"</em> without noticing that you cannot finish it honestly, because tracing it leads to a
+    committed offset and a vanished record.</p>
+
+  <div class="formula-box">
+    <p>The retrospective is not documentation produced <em>after</em> the review. It is an instrument
+      that <strong>changes what the author — human or agent — is able to notice</strong>, and it does
+      so before any reviewer opens it. The document is the deliverable; the altitude shift is the
+      payload.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ 3. ANATOMY ═══════════════ -->
+<section>
+  <h2 id="anatomy">Anatomy: Four Layers</h2>
+  <p>A retrospective that is only annotated code is a retrospective of the <em>code</em>. What a
+    reviewer needs is a retrospective of the <strong>task</strong>, with the code as the last layer. That
+    was the biggest gap in our first working version: the context existed, scattered across annotations on
+    individual lines, where nobody could read it whole.</p>
+
+  <div class="phase-steps">
+    <div class="phase-step p-green">
+      <h4>Task Overview: the Part Everyone Skips</h4>
+      <p>Motivation and tickets. What is in scope and, explicitly, <em>what is deliberately not</em>,
+        otherwise reviewers audit things nobody promised. Completion criteria <em>and how each was
+        verified</em>. Plus key decisions as a compact table: decision, rejected alternative, why, and how
+        reversible it is.</p>
+    </div>
+    <div class="phase-step p-blue">
+      <h4>Architecture: Orientation Before Detail</h4>
+      <p>Per chapter: the role of the subsystem, its inputs and outputs, the <strong>invariants the
+        reviewer should police</strong>, and a suggested reading order.</p>
+    </div>
+    <div class="phase-step p-purple">
+      <h4>Annotated Code: Whole Classes</h4>
+      <p>Files grouped into thematic chapters, not one per file. Each carries a two-line summary — what
+        it does, why it is like this — then the full source with inline annotations and a note on test
+        coverage.</p>
+    </div>
+    <div class="phase-step p-orange">
+      <h4>Findings and Remaining Work: First Class</h4>
+      <p>Confirmed bugs on their own page with a verification chain and a failure scenario. Open
+        runtime questions in one table with <em>how</em> to check each. Deferred fixes with an explicit
+        trigger.</p>
+    </div>
+  </div>
+
+  <p>Chapters are assigned by <strong>risk</strong>, not file count: one reviewer owns data
+    correctness, another concurrency, a third the edge cases.</p>
+
+  <h3 id="artifact">What an Annotated File Looks Like</h3>
+  <p>Concretely, this is the shape of it: a file header with its summary, then source lines with
+    annotation bubbles where they belong.</p>
+
+  <div class="retro-demo">
+    <div class="rd-head">
+      <span class="rd-badge">MODIFIED</span>
+      <span class="rd-path">pipeline/failure/FailureClassifier.java</span>
+      <span class="rd-count">4 annotations</span>
+    </div>
+    <div class="rd-sum">
+      <b>What it does:</b> Maps an exception plus the processing phase onto a disposition — retry,
+      dead-letter, or best-effort — unwrapping wrapper exceptions first.<br>
+      <b>Why it is like this:</b> The previous actor-based runtime decided a record's fate through
+      supervision; this one needs an explicit contract callable from the processing thread.
+    </div>
+    <div class="rd-body">
+      <div class="rd-line"><span class="rd-ln">49</span><span class="rd-code"><span class="c">// Interrupt first: a shutdown interrupt can arrive wrapped.</span></span></div>
+      <div class="rd-line"><span class="rd-ln">50</span><span class="rd-code"><span class="k">if</span> (cause <span class="k">instanceof</span> <span class="t">InterruptedException</span>) {</span></div>
+      <div class="rd-ann rd-why">
+        <span class="rd-kind">Why</span>The interrupt test comes before every phase branch. A shutdown
+        interrupt may arrive wrapped in a processing exception for the embeddings phase; if the check
+        sat lower, that branch would reclassify it as a retry and the interrupt flag would never be
+        restored — so the retry backoff would sleep straight through the drain.
+      </div>
+      <div class="rd-line"><span class="rd-ln">84</span><span class="rd-code"><span class="k">if</span> (phase == <span class="t">ProcessingPhase</span>.PUBLICATION_SINK) <span class="k">return</span> BEST_EFFORT;</span></div>
+      <div class="rd-ann rd-bug">
+        <span class="rd-kind">Bug · fixed</span>Before this branch existed, a publication-sink failure
+        fell through to the generic transient path and was retried, blocking the offset commit.
+        <span class="rd-proof"><b>Failure scenario:</b> publication sink unavailable → exception in the
+        publication phase → classified as retry → offset never commits → the partition stalls even
+        though the document was already written.<br><b>Verified:</b> (1) by reading the classifier —
+        no branch for that phase; (2) by a test that failed without the fix; (3) zero stalled
+        partitions after deploying it.</span>
+      <div class="rd-line"><span class="rd-ln">101</span><span class="rd-code">  metrics.classifierUnknownDlq(phase.name());</span></div>
+      <div class="rd-ann rd-ver">
+        <span class="rd-kind">Verify</span>This counter should stay at zero in production; a non-zero
+        value means an exception type nobody mapped is quietly reaching the dead-letter queue.
+        <span class="rd-proof"><b>Cannot be settled from the code:</b> depends on which exception types
+        real traffic actually produces. <b>How to check:</b> the classifier's unknown-DLQ counter,
+        summed per environment — anything above zero is a gap.</span>
+      </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════ 4. THE FAILURE ═══════════════ -->
+<section>
+  <h2 id="noise">The Failure: 97% Noise</h2>
+  <p>Everything that follows in this article — the taxonomy, the gates, the whole data model — exists
+    because the first attempt broke. The break is worth describing honestly: the numbers are unusually
+    clear about what went wrong, and the instinct that caused it is the natural one.</p>
+
+  <p>The first real retrospective used seven labels. Two of them — call them <em>Problem</em>
+    ("a subtlety the code deals with") and <em>Caution</em> ("a latent risk, keep an eye on this") —
+    were written the way they sound: speculatively, while reading the code, as notes for later. They
+    went straight into the document handed to reviewers. Later we audited every one of them against
+    the actual code. The result:</p>
+
+  <table class="mapping">
+    <thead><tr><th>Label</th><th class="num">In the document</th><th class="num">Deleted as noise</th><th class="num">Real findings</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#df69ba">Problem</td><td class="num">69</td><td class="num" style="color:#f85552">67</td><td class="num">2</td></tr>
+      <tr><td style="color:#f57d26">Caution</td><td class="num">5</td><td class="num" style="color:#f85552">5</td><td class="num">0</td></tr>
+      <tr><td style="color:#dfa000">Verify</td><td class="num">52</td><td class="num">8</td><td class="num">12 fixable · 32 genuinely runtime</td></tr>
+    </tbody>
+  </table>
+
+  <p>Seventy-two of seventy-four <em>Problem</em> and <em>Caution</em> annotations were noise. Ninety-seven
+    percent. Meanwhile <em>Verify</em>, the label whose questions could not be answered by reading, held
+    up: 32 of its 52 entries genuinely needed runtime, another 12 pointed at something worth fixing,
+    and only 8 were deleted.</p>
+
+  <p>That contrast is the whole diagnosis. The healthy label was the one whose subject matter was
+    <strong>genuinely undecidable from the source</strong>. The two toxic ones covered things that
+    <em>could</em> have been decided by reading the code — and were not. They were places where the
+    author noticed something and deferred the thinking, wrapped in a label that made deferral look
+    like diligence.</p>
+
+  <h3 id="trust">What It Actually Cost</h3>
+  <p>Two costs, and the second is the expensive one.</p>
+
+  <p>The direct cost was hours of cleanup across twelve chapters, most of it spent deleting things
+    that should never have been written.</p>
+
+  <p>The real cost was <strong>trust</strong>. The reviewer read a label whose legend said "a subtlety
+    the code handles" and reasonably asked whether it was, in fact, handled. Once that question is
+    live, it applies to every annotation in the document — including all the correct ones. A review
+    artifact's value rests entirely on the reader believing its claims; a single category of unreliable
+    claims discounts the whole thing.</p>
+
+  <div class="formula-box">
+    <p>The lesson is not "be more careful." We already intended to be careful. The lesson is that
+      <strong>an intention is not a mechanism</strong>. As long as there existed a place to put an
+      unverified worry inside the reviewer-facing document, unverified worries went there, dozens of
+      them. The fix had to be structural: remove the place, and give the worries somewhere else to
+      live.</p>
+  </div>
+
+  <p>One calibration datum from the same audit: when subagents were asked to rank findings by
+    severity, five came back marked <em>critical</em>. Read against the code, two were. Agents
+    systematically overstate, which is why a human reads every one.</p>
+</section>
+
+<!-- ═══════════════ 5. TAXONOMY ═══════════════ -->
+<section>
+  <h2 id="taxonomy">A Taxonomy That Cannot Hide a Guess</h2>
+  <p>Annotations need categories, so the reader can tell "here is context" from "here is a defect" at
+    a glance. The taxonomy that produced those numbers had seven labels. The excess was not decorative;
+    it was the mechanism. The replacement has four:</p>
+
+  <table class="mapping">
+    <thead><tr><th>Kind</th><th>What it is</th><th>Gate — what it cannot exist without</th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="color:#3a94c5">Why</td>
+        <td>Why the code is designed this way, including the subtlety it handles</td>
+        <td>Describes a <em>verified current state</em>. May not contain a claim of a defect or an
+          invitation to check something.</td>
+      </tr>
+      <tr>
+        <td style="color:#8da101">Solution</td>
+        <td>How this specific code handles that subtlety</td>
+        <td>Must point at a construct in the file shown, not a general principle.</td>
+      </tr>
+      <tr>
+        <td style="color:#dfa000">Verify</td>
+        <td>A question answerable only at runtime or externally</td>
+        <td>Requires <em>why it cannot be settled from the code</em> and <em>a concrete way to settle
+          it</em>. Anything decidable by reading is forbidden here.</td>
+      </tr>
+      <tr>
+        <td style="color:#f85552">Bug</td>
+        <td>A confirmed defect</td>
+        <td>Requires a concrete failure scenario and a verification chain. Plus adjudication by a
+          second model and a human reading it against the code.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>The property that matters is not the count. It is this: <strong>there is no label into which an
+    unverified worry can be filed.</strong> Every one of the four either describes something known to
+    be true, or carries the proof of its own claim. A hunch has nowhere to land, which means it has to
+    go somewhere else entirely: the subject of the next section.</p>
+
+  <h3 id="states">Kind Is What, Status Is Where</h3>
+  <p>Our earlier taxonomy had a label called <em>Resolved</em>. That was a category error, and worth
+    describing because it is easy to repeat: <em>resolved</em> is not a kind of annotation, it is a
+    <strong>stage in an annotation's life</strong>. Used as a label it silently meant two different
+    things — "the worry turned out to be unfounded" and "the bug was fixed" — and it duplicated
+    information that belongs in a status field.</p>
+
+  <p>So: four kinds, and a small state machine orthogonal to them.</p>
+
+  <table class="mapping">
+    <thead><tr><th>Status</th><th>Meaning</th><th>Required field</th></tr></thead>
+    <tbody>
+      <tr><td>open</td><td>Still outstanding — for the reviewer, or for a fix</td><td>—</td></tr>
+      <tr><td style="color:#8da101">verified_ok</td><td>Checked; the concern was unfounded</td><td><code>evidence</code></td></tr>
+      <tr><td style="color:#35a77c">fixed</td><td>Repaired</td><td><code>fix</code> — commit or MR</td></tr>
+      <tr><td style="color:#f57d26">deferred</td><td>Consciously postponed</td><td><code>trigger</code> — when it comes due</td></tr>
+      <tr><td style="color:#939f91">withdrawn</td><td>A false positive, retracted</td><td><code>withdrawn_reason</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>A withdrawn annotation is <em>not rendered</em>, but it stays in the source data. That distinction
+    is deliberate: retracted findings leave an audit trail instead of vanishing. When someone asks in
+    three months why a concern disappeared, the answer is in the file rather than in somebody's
+    memory.</p>
+</section>
+
+<!-- ═══════════════ 6. GATES ═══════════════ -->
+<section>
+  <h2 id="gates">Four Gates Against Noise</h2>
+  <p>Removing the toxic labels was necessary but not sufficient. The instinct that filled them does not
+    disappear because a label did: notice something, defer the thinking, write it down for later. It
+    needs somewhere legitimate to go, and the reviewer-facing document is the wrong place. So the
+    speculation gets a home of its own, and four gates stand between it and the reader.</p>
+
+  <div class="phase-steps">
+    <div class="phase-step p-red">
+      <h4>Quarantine: the Inbox</h4>
+      <p>Candidate findings go into a separate file that is <em>never rendered</em>. Speculation is
+        allowed there, and required to state how it was found. An annotation is written only after
+        adjudication. Expect to drop more than nine in ten; that is the gate working, not failing.</p>
+    </div>
+    <div class="phase-step p-orange">
+      <h4>Schema Gates: Proof or Nothing</h4>
+      <p>A <em>Verify</em> without both proof fields, or a <em>Bug</em> without a failure scenario and a
+        verification chain, does not build. The same check catches category confusion in context
+        annotations: if a <em>Why</em> bubble contains "missing", "could fail", "risk", or "worth
+        verifying", the build stops and asks which it is. We added that rule after finding it happening
+        in our own document, in a <em>Why</em> annotation that explained an invariant beautifully and
+        then trailed off into <em>"worth verifying that this holds for future implementations too."</em></p>
+    </div>
+    <div class="phase-step p-blue">
+      <h4>Separated Passes: One Job at a Time</h4>
+      <p>The context pass is explicitly forbidden from emitting findings; anything noticed goes to the
+        inbox. Hunting defects is a different pass with a different posture. Mixing them is how context
+        turns into pseudo-findings.</p>
+    </div>
+    <div class="phase-step p-purple">
+      <h4>The Human Gate: on Criticals and on Release</h4>
+      <p>Every "critical" is read personally against the code before it is recorded. And the scoping
+        decision — which files, which chapters, who owns what — is approved by a human early, while it
+        is still cheap to change.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 7. DATA, NOT HTML ═══════════════ -->
+<section>
+  <h2 id="data">Annotations as Data, HTML as Artifact</h2>
+  <p>Gates only work if there is something to gate. The first retrospective had a second, quieter
+    design flaw that made every rule above unenforceable: the HTML <em>was</em> the source of
+    truth. It was generated once by an ad-hoc script that was never saved, and after that every change
+    was surgery on a minified document — regex-matching a comment bubble by a fragment of its own text
+    and splicing the DOM by hand. Chapters could not be regenerated at all. Derived numbers, like the
+    per-file annotation count, were written in by hand and drifted out of sync across the document.</p>
+
+  <p>Invert it. Annotations become <strong>data</strong>; HTML becomes a <strong>build artifact</strong>.
+    Re-labelling an annotation is a one-field edit and a rebuild, and every derived value — counts, the
+    legend, the bug page, the open-items table — is computed at build time, so none of it can drift.</p>
+
+  <p>We chose TOML for the manifest for a boring reason: it parses with the Python standard library, so
+    the generator needs no dependency beyond the syntax highlighter.</p>
+
+  <div class="snippet"><span class="c">## A verify annotation. It cannot be written without its two proof fields —</span>
+<span class="c">## the build rejects it, and that rejection is the point.</span>
+
+<span class="d">[[chapters.files.annotations]]</span>
+<span class="k">id</span>     = <span class="s">"ch01-unknown-dlq-003"</span>   <span class="c"># stable, unique, never recycled</span>
+<span class="k">line</span>   = <span class="m">101</span>
+<span class="k">anchor</span> = <span class="s">"classifierUnknownDlq"</span>   <span class="c"># substring of that line: the drift guard</span>
+<span class="k">kind</span>   = <span class="s">"ver"</span>
+<span class="k">text</span>   = <span class="s">"This counter should stay at zero in production."</span>
+
+<span class="c"># Required for kind = "ver":</span>
+<span class="k">undecidable_reason</span> = <span class="s">"Depends on which exception types real traffic produces."</span>
+<span class="k">verify_how</span>         = <span class="s">"Sum the unknown-DLQ counter per environment; &gt; 0 is a gap."</span>
+</div>
+
+  <h3 id="anchor">The Anchor: Surviving Code Drift</h3>
+  <p>An annotation pinned only to a line number is a time bomb. Fix a bug three files up and every line
+    number below shifts; the bubble slides onto an unrelated statement and now says something false about
+    code it was never about. Our first document "solved" this by freezing the source it displayed, which
+    meant reconciling document with reality by hand after every fix.</p>
+
+  <p>The fix is one required field. Every annotation carries an <code>anchor</code>: a substring of the
+    line it belongs to. The build checks that the substring is actually on that line, and if it is not,
+    <strong>the build fails</strong> — printing what the line really contains and, when it can find the
+    anchor elsewhere, where it moved to:</p>
+
+  <div class="snippet"><span class="r">ERROR in manifest:</span>
+  • ch01 file #1 annotation #1: <span class="k">anchor</span> <span class="s">'PUBLICATION_SINK'</span> is not on line 50.
+    Line contains: <span class="s">'if (cause instanceof InterruptedException) {'</span>. Anchor found on line 84.</div>
+
+  <p>Drift becomes a build failure instead of a false statement in a document a reviewer trusts.</p>
+
+  <h3 id="pipeline">The Build Pipeline</h3>
+  <p>Which yields a small, ordinary pipeline — two data files in, validation in the middle, a static
+    site out:</p>
+
+  <div class="schema-wrap" id="retro-pipeline-diagram">
+    <svg viewBox="0 0 940 430" xmlns="http://www.w3.org/2000/svg">
+      <!-- connectors -->
+      <line x1="145" y1="120" x2="145" y2="176" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="145,177 140,168 150,168" fill="#5c6a72"/>
+      <text x="158" y="152" font-size="9.5" fill="#829181" font-style="italic">adjudication</text>
+      <text x="158" y="165" font-size="9.5" fill="#829181" font-style="italic">&gt; 90 % dropped</text>
+
+      <line x1="255" y1="228" x2="325" y2="200" stroke="#5c6a72" stroke-width="1.8"/>
+      <polygon points="326,200 316,197 320,207" fill="#5c6a72"/>
+      <line x1="440" y1="308" x2="440" y2="256" stroke="#dfa000" stroke-width="1.8"/>
+      <polygon points="440,255 435,264 445,264" fill="#dfa000"/>
+
+      <line x1="555" y1="170" x2="625" y2="100" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,99 616,100 621,109" fill="#5c6a72"/>
+      <line x1="555" y1="188" x2="625" y2="188" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,188 617,183 617,193" fill="#5c6a72"/>
+      <line x1="555" y1="206" x2="625" y2="272" stroke="#5c6a72" stroke-width="1.6"/>
+      <polygon points="626,273 621,264 616,273" fill="#5c6a72"/>
+
+      <!-- INBOX -->
+      <g class="comp" data-comp="inbox" style="--comp-glow:rgba(248,85,82,0.45)">
+        <rect x="40" y="36" width="210" height="84" rx="10" fill="rgba(248,85,82,0.07)" stroke="#f85552" stroke-width="2" stroke-dasharray="7,4"/>
+        <text x="145" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#f85552">inbox.toml</text>
+        <text x="145" y="78" text-anchor="middle" font-size="9.5" fill="#829181">candidate findings</text>
+        <text x="145" y="92" text-anchor="middle" font-size="9.5" fill="#829181">speculation allowed here</text>
+        <text x="145" y="108" text-anchor="middle" font-size="9" fill="#f85552" font-style="italic">never rendered</text>
+      </g>
+
+      <!-- MANIFEST -->
+      <g class="comp" data-comp="manifest" style="--comp-glow:rgba(141,161,1,0.5)">
+        <rect x="40" y="178" width="210" height="104" rx="10" fill="rgba(141,161,1,0.08)" stroke="#8da101" stroke-width="2"/>
+        <text x="145" y="203" text-anchor="middle" font-size="12" font-weight="700" fill="#8da101">retro.toml</text>
+        <text x="145" y="221" text-anchor="middle" font-size="9.5" fill="#829181">task overview · chapters</text>
+        <text x="145" y="235" text-anchor="middle" font-size="9.5" fill="#829181">files · annotations</text>
+        <text x="145" y="252" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">the single source of truth</text>
+        <text x="145" y="270" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">annotations as data</text>
+      </g>
+
+      <!-- BUILD -->
+      <g class="comp" data-comp="build" style="--comp-glow:rgba(53,167,124,0.5)">
+        <rect x="330" y="152" width="225" height="104" rx="11" fill="rgba(53,167,124,0.09)" stroke="#35a77c" stroke-width="2.2"/>
+        <text x="442" y="180" text-anchor="middle" font-size="12.5" font-weight="700" fill="#35a77c">build</text>
+        <text x="442" y="200" text-anchor="middle" font-size="9.5" fill="#829181">validate → highlight → render</text>
+        <text x="442" y="216" text-anchor="middle" font-size="9.5" fill="#829181">counts · legend · bug page</text>
+        <text x="442" y="236" text-anchor="middle" font-size="9" fill="#a6b0a0" font-style="italic">everything derived, nothing typed</text>
+      </g>
+
+      <!-- GATES -->
+      <g class="comp" data-comp="gates" style="--comp-glow:rgba(223,160,0,0.5)">
+        <rect x="322" y="310" width="240" height="88" rx="10" fill="rgba(223,160,0,0.08)" stroke="#dfa000" stroke-width="2"/>
+        <text x="442" y="334" text-anchor="middle" font-size="12" font-weight="700" fill="#dfa000">BUILD CHECKS</text>
+        <text x="442" y="352" text-anchor="middle" font-size="9.5" fill="#829181">schema · proof fields · anchor</text>
+        <text x="442" y="366" text-anchor="middle" font-size="9.5" fill="#829181">phrase heuristic · inbox empty</text>
+        <text x="442" y="384" text-anchor="middle" font-size="9" fill="#dfa000" font-style="italic">failure blocks the build</text>
+      </g>
+
+      <!-- OUTPUTS -->
+      <g class="comp" data-comp="out" style="--comp-glow:rgba(58,148,197,0.5)">
+        <rect x="628" y="60" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="82" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">index.html</text>
+        <text x="764" y="99" text-anchor="middle" font-size="9.5" fill="#829181">task overview · decisions · open items</text>
+
+        <rect x="628" y="158" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="180" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">chapters</text>
+        <text x="764" y="197" text-anchor="middle" font-size="9.5" fill="#829181">whole classes · inline annotations</text>
+
+        <rect x="628" y="256" width="272" height="58" rx="9" fill="rgba(58,148,197,0.08)" stroke="#3a94c5" stroke-width="2"/>
+        <text x="764" y="278" text-anchor="middle" font-size="11.5" font-weight="700" fill="#3a94c5">bugs.html + bugs.md</text>
+        <text x="764" y="295" text-anchor="middle" font-size="9.5" fill="#829181">scenario · verification chain · fix</text>
+      </g>
+
+      <!-- hover zones -->
+      <rect class="hover-zone" data-comp="inbox"    x="40"  y="36"  width="210" height="84"/>
+      <rect class="hover-zone" data-comp="manifest" x="40"  y="178" width="210" height="104"/>
+      <rect class="hover-zone" data-comp="build"    x="330" y="152" width="225" height="104"/>
+      <rect class="hover-zone" data-comp="gates"    x="322" y="310" width="240" height="88"/>
+      <rect class="hover-zone" data-comp="out"      x="628" y="60"  width="272" height="254"/>
+    </svg>
+    <span class="hint">Hover over the parts</span>
+  </div>
+</section>
+
+<!-- ═══════════════ 8. BUILD IT YOURSELF ═══════════════ -->
+<section>
+  <h2 id="build">Build It Yourself</h2>
+  <p>All of this is packaged as a skill: a folder of instructions and scripts an agent loads on request.
+    The shape is deliberately plain, so you can rebuild or adapt it rather than adopt it verbatim.</p>
+
+  <h3 id="skill">The Skill Layout</h3>
+  <div class="snippet"><span class="d">retrospective/</span>
+├── <b>SKILL.md</b>              <span class="c"># short and normative: when to use, the phases,</span>
+│                            <span class="c"># the hard rules, pointers to references</span>
+├── <span class="d">references/</span>              <span class="c"># read only in the phase that needs them</span>
+│   ├── deliverable.md      <span class="c"># the four layers; what does NOT belong inside</span>
+│   ├── taxonomy.md         <span class="c"># kinds, statuses, gates, good vs bad examples</span>
+│   ├── schema.md           <span class="c"># every manifest field</span>
+│   ├── adjudication.md     <span class="c"># multi-model protocol, severity calibration</span>
+│   ├── verification.md     <span class="c"># deployed value ≠ default; gauge ≠ cumulative log</span>
+│   └── handoff.md          <span class="c"># the sign-off checklist</span>
+├── <span class="d">scripts/</span>
+│   ├── build_retro.py      <span class="c"># manifest → HTML; --check validates, --release gates</span>
+│   └── requirements.txt    <span class="c"># the highlighter, version-pinned</span>
+├── <span class="d">templates/</span>
+│   ├── retro.toml          <span class="c"># starter manifest, commented</span>
+│   └── inbox.toml          <span class="c"># the quarantine file</span>
+└── <span class="d">assets/</span>
+    └── retro-layout.css    <span class="c"># one source of truth for the look</span></div>
+
+  <p>Three properties of that layout carry most of the value. The generator is committed on day one,
+    with the highlighter version pinned beside it, because a different release emits different markup and
+    a later re-render silently diverges from chapters built earlier. <code>SKILL.md</code> holds only
+    invariants and the phase order, so references load on demand instead of up front. And validation
+    lives in the generator rather than in prose an agent must internalize: one source of truth about the
+    schema, and feedback that arrives as a build error with a copy-pasteable fix.</p>
+
+  <p>In practice the loop is three commands — validate while writing, gate before handing over,
+    render:</p>
+
+  <div class="snippet">build_retro.py retro.toml <span class="k">--check</span>      <span class="c"># schema, proof fields, anchors, phrases</span>
+build_retro.py retro.toml <span class="k">--release</span>    <span class="c"># + inbox adjudicated, no open bug</span>
+build_retro.py retro.toml <span class="k">-o</span> out        <span class="c"># index + chapters + bug page</span></div>
+
+  <p>The <code>--release</code> gate refuses to hand anything over while the inbox holds unadjudicated
+    candidates, or while a confirmed bug sits at status <em>open</em>. The bundle is built from the output
+    directory only, never by adding a whole folder to git, which is how internal notes reach a reviewer.</p>
+
+  <h3 id="adapt">Adapting It to Your Work</h3>
+  <p><strong>Keep:</strong> annotations as data with HTML as an artifact; the anchor field; a taxonomy
+    with no home for unverified worries; the quarantine inbox; derived values computed at build time;
+    whole files rather than snippets.</p>
+
+  <p><strong>Change freely:</strong> the manifest format, the palette and typography, the chapter
+    split, how reviewers are assigned. Ours renders any language the highlighter knows, which is most
+    of them.</p>
+
+  <p><strong>Keep out of the skill:</strong> project-specific verification commands. Which cluster,
+    which metrics backend, which storage — that belongs in the project's knowledge base from Part 3.
+    The skill only requires that a verification playbook be loaded, and carries two general rules,
+    each of which cost us a day. <em>A deployed value is not a default:</em> we once concluded a feature
+    was switched off by reading a config default in the repo, while the deployed override had it on.
+    <em>A cumulative log is not current state:</em> a forensic store holding two months of findings, most
+    of them from a single catch-up on day one, got read as "we are losing data right now" while the live
+    gauge sat at zero.</p>
+</section>
+
+<!-- ═══════════════ 9. CLOSING THE LOOP ═══════════════ -->
+<section>
+  <h2 id="loop">Closing the Loop</h2>
+  <p>Part 1 framed the agent as a regulator inside a feedback loop. This is that loop closing on the
+    work itself: a measurement that changes the thing measured, in the useful direction.</p>
+
+  <p>The mechanics are unremarkable in isolation: a TOML file, a few hundred lines of Python, a
+    stylesheet, four labels, a quarantine file. The leverage is in the constraints. A taxonomy with no
+    hiding place for a guess. A build that refuses to render a claim without its proof. An anchor that
+    turns code drift into a failed build instead of a quiet falsehood. Take the constraints away and
+    you have a document that looks the same and means much less — we know, because we shipped that
+    version first.</p>
+
+  <div class="endnote">A diff tells a reviewer what changed. A retrospective tells them what was
+    decided, why, what is still uncertain, and where to spend their judgement — and it tells the agent
+    the same things, at an altitude where writing code cannot reach. The visualization is not
+    decoration on top of the work. Building it is the last and most revealing part <strong>of doing the
+    work</strong>.</div>
+</section>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+var TIP_DATA = {};
+
+TIP_DATA['retro-readers-diagram'] = {
+  work: { title: 'The work', color: '#939f91',
+    desc: 'A change too large for a diff: dozens of files, several subsystems, months of decisions whose reasoning exists only in the authors’ heads.',
+    detail: '▸ Below roughly a day of work, a diff is still the better artifact' },
+  doc: { title: 'The retrospective', color: '#35a77c',
+    desc: 'Static, self-contained HTML: the task and its solution up front, then whole classes with syntax highlighting and inline annotation bubbles.',
+    detail: '<em>No tooling, no server — open the file in a browser.</em>' },
+  human: { title: 'The human reviewer', color: '#3a94c5',
+    desc: 'Arrives with the map already drawn: why each decision was made, what was fixed and how it was verified, and where they specifically need to concentrate.',
+    detail: '▸ Attention goes to judgement instead of to searching' },
+  agent: { title: 'The agent', color: '#df69ba',
+    desc: 'The second reader. Producing the document forces a shift from writing code to explaining it — and at that altitude, composition errors invisible during implementation become obvious.',
+    detail: '▸ Three confirmed bugs surfaced this way in already-tested code' }
+};
+
+TIP_DATA['retro-pipeline-diagram'] = {
+  inbox: { title: 'inbox.toml — quarantine', color: '#f85552',
+    desc: 'Candidate findings land here and are never rendered. Speculation is allowed, but must state how it was found. Nothing reaches the document without adjudication.',
+    detail: '▸ Expect to drop more than nine in ten — the gate is working' },
+  manifest: { title: 'retro.toml — the manifest', color: '#8da101',
+    desc: 'The single source of truth: task overview, decisions, chapters, files, and every annotation with its stable id, anchor, kind, and status.',
+    detail: '<em>Re-labelling an annotation is a one-field edit, not HTML surgery.</em>' },
+  build: { title: 'The build', color: '#35a77c',
+    desc: 'Validates, highlights, renders. Every derived value — annotation counts, the legend, the bug page, the open-items table — is computed here, so none of it can drift.',
+    detail: '▸ Output is unminified, so the HTML stays diffable in git' },
+  gates: { title: 'What the build checks', color: '#dfa000',
+    desc: 'Schema and required proof fields per kind; the anchor matched against the real line; a phrase heuristic on context annotations; and no release while the inbox still holds unadjudicated candidates.',
+    detail: '▸ A failed check stops the build: intentions are not mechanisms' },
+  out: { title: 'The artifact', color: '#3a94c5',
+    desc: 'An index carrying the task, the decisions and the open items; one page per chapter with whole annotated classes; and confirmed bugs on their own page in both HTML and Markdown.',
+    detail: '▸ The bundle is built from this directory only — no internal notes' }
+};
+
+var tip = document.createElement('div');
+tip.className = 'schema-tip';
+tip.innerHTML = '<div class="tip-title"></div><div class="tip-desc"></div><div class="tip-detail"></div>';
+document.body.appendChild(tip);
+var tTitle = tip.querySelector('.tip-title');
+var tDesc = tip.querySelector('.tip-desc');
+var tDetail = tip.querySelector('.tip-detail');
+
+function moveTip(x, y) {
+  var w = tip.offsetWidth || 280, h = tip.offsetHeight || 90;
+  var nx = x + 18, ny = y + 18;
+  if (nx + w > window.innerWidth - 12) nx = x - w - 18;
+  if (ny + h > window.innerHeight - 12) ny = y - h - 18;
+  tip.style.left = Math.max(8, nx) + 'px';
+  tip.style.top = Math.max(8, ny) + 'px';
+}
+function showTip(TIPS, name, x, y) {
+  var d = TIPS[name];
+  if (!d) return;
+  tTitle.textContent = d.title;
+  tTitle.style.color = d.color;
+  tDesc.innerHTML = d.desc;
+  if (d.detail) { tDetail.style.display = ''; tDetail.innerHTML = d.detail; }
+  else { tDetail.style.display = 'none'; }
+  tip.style.borderLeftColor = d.color;
+  moveTip(x, y);
+  tip.classList.add('visible');
+}
+function hideTip() { tip.classList.remove('visible'); }
+
+Object.keys(TIP_DATA).forEach(function(wrapId) {
+  var wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  var svg = wrap.querySelector('svg');
+  if (!svg) return;
+  var comps = svg.querySelectorAll('.comp');
+  var TIPS = TIP_DATA[wrapId];
+  svg.querySelectorAll('.hover-zone').forEach(function(z) {
+    z.addEventListener('mouseenter', function(e) {
+      wrap.classList.add('active', 'has-focus');
+      comps.forEach(function(c) { c.classList.toggle('active', c.dataset.comp === z.dataset.comp); });
+      showTip(TIPS, z.dataset.comp, e.clientX, e.clientY);
+    });
+    z.addEventListener('mousemove', function(e) { moveTip(e.clientX, e.clientY); });
+    z.addEventListener('mouseleave', function() {
+      wrap.classList.remove('has-focus');
+      comps.forEach(function(c) { c.classList.remove('active'); });
+      hideTip();
+    });
+  });
+});
+})();
+</script>
+
+</body>
+</html>

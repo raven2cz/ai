@@ -591,6 +591,7 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
         though the document was already written.<br><b>Verified:</b> (1) by reading the classifier —
         no branch for that phase; (2) by a test that failed without the fix; (3) zero stalled
         partitions after deploying it.</span>
+      </div>
       <div class="rd-line"><span class="rd-ln">101</span><span class="rd-code">  metrics.classifierUnknownDlq(phase.name());</span></div>
       <div class="rd-ann rd-ver">
         <span class="rd-kind">Verify</span>This counter should stay at zero in production; a non-zero
@@ -598,7 +599,6 @@ em { font-family: 'Source Serif 4', 'Georgia', serif; }
         <span class="rd-proof"><b>Cannot be settled from the code:</b> depends on which exception types
         real traffic actually produces. <b>How to check:</b> the classifier's unknown-DLQ counter,
         summed per environment — anything above zero is a gap.</span>
-      </div>
       </div>
     </div>
   </div>

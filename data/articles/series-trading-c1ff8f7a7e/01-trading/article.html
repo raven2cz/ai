@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Základy burzy a tradingu — od nabídky a poptávky přes long a short pozice až k systematickému obchodování, diverzifikaci a psychice obchodníka.">
+<meta name="description" content="Základy burzy a tradingu — od nabídky a poptávky přes long a short pozice až k systematickému obchodování, diverzifikaci, volatilitě a černé labuti i psychice obchodníka.">
 <title>Základy burzy a tradingu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -282,6 +282,7 @@ footer.article-footer {
     <li><a href="#rr">Risk-Reward, equity křivka a Sharpe ratio</a></li>
     <li><a href="#strategie">Strategie a edge: zisk v náhodném prostředí</a></li>
     <li><a href="#portfolio">Portfolio a diverzifikační pravidlo</a></li>
+    <li><a href="#volatilita">Volatilita trhu a černá labuť</a></li>
     <li><a href="#psychika">Psychika: největší nepřítel obchodníka</a></li>
   </ol>
 </nav>
@@ -1296,7 +1297,259 @@ footer.article-footer {
 
 <!-- ═══════════════════ 11 ═══════════════════ -->
 <section>
-  <h2 id="psychika">11. Psychika: největší nepřítel obchodníka</h2>
+  <h2 id="volatilita">11. Volatilita trhu a černá labuť</h2>
+
+  <p>V kapitole o Sharpe ratio i u diverzifikace se nám opakovaně vracelo jedno slovo:
+    <strong>volatilita</strong>. Je čas ho definovat pořádně, protože právě ona je tichým
+    důvodem, proč většina strategií, které krásně fungují na papíře, dřív nebo později
+    přestane fungovat naživo.</p>
+
+  <p><strong>Volatilita</strong> <span class="en">(volatility)</span> je míra <em>kolísavosti</em>
+    ceny — jak velké jsou její výkyvy za jednotku času. Pozor, není to směr. Volatilita neříká,
+    jestli cena půjde nahoru, nebo dolů; říká, <em>jak divoká</em> ta cesta bude. Statisticky je to
+    <strong>směrodatná odchylka výnosů</strong> <span class="en">(standard deviation of returns)</span>.
+    Nízká volatilita znamená klidný, plazivý trh; vysoká volatilita znamená prudké skoky na obě strany.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cena rozdělená na klidný režim vlevo s malými výkyvy a turbulentní režim vpravo s velkými výkyvy; oba mají stejný čistý trend. Modré pásmo očekávaného rozpětí se vpravo rozšiřuje a spodní indikátor volatility vpravo vyskočí.">
+      <text class="t-s dim" x="260" y="24" text-anchor="middle" font-weight="700">Volatilita = velikost výkyvů, ne jejich směr</text>
+
+      <!-- regime backgrounds -->
+      <rect x="55" y="40" width="210" height="165" fill="#8da101" opacity="0.06"/>
+      <rect x="265" y="40" width="205" height="165" fill="#f85552" opacity="0.06"/>
+
+      <!-- expected-range cone (±σ) -->
+      <polygon points="55,118 265,104 470,46 470,196 265,140 55,158" fill="#3a94c5" opacity="0.10"/>
+      <polyline points="55,118 265,104 470,46" fill="none" stroke="#3a94c5" stroke-width="1.3" stroke-dasharray="4 4" opacity="0.6"/>
+      <polyline points="55,158 265,140 470,196" fill="none" stroke="#3a94c5" stroke-width="1.3" stroke-dasharray="4 4" opacity="0.6"/>
+
+      <!-- price path: calm left, turbulent right -->
+      <polyline points="55,140 85,132 110,138 135,128 160,133 185,125 210,130 240,120 265,122 290,96 315,150 340,84 365,158 395,94 420,164 445,102 470,122"
+                fill="none" stroke="#5c6a72" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+
+      <!-- regime divider -->
+      <line x1="265" y1="40" x2="265" y2="310" stroke="#a6b0a0" stroke-width="1.2" stroke-dasharray="5 4"/>
+
+      <!-- regime labels -->
+      <text class="t-s up" x="160" y="56" text-anchor="middle" font-weight="700">Klidný režim — nízká volatilita</text>
+      <text class="t-s dn" x="368" y="56" text-anchor="middle" font-weight="700">Turbulentní režim — vysoká volatilita</text>
+      <text class="t-s blu" x="58" y="200">modré pásmo = ±σ (očekávané rozpětí)</text>
+
+      <!-- volatility sub-panel -->
+      <line class="ax" x1="55" y1="300" x2="470" y2="300"/>
+      <path d="M 55 300 L 55 289 L 110 290 L 160 287 L 210 289 L 265 287 L 288 270 L 315 248 L 342 238 L 372 248 L 402 233 L 432 243 L 470 236 L 470 300 Z"
+            fill="#dfa000" opacity="0.20"/>
+      <polyline points="55,289 110,290 160,287 210,289 265,287 288,270 315,248 342,238 372,248 402,233 432,243 470,236"
+                fill="none" stroke="#dfa000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text class="t-s dim" x="160" y="284" text-anchor="middle">nízká, plochá</text>
+      <text class="t-s" x="372" y="228" text-anchor="middle" fill="#a06000" font-weight="700">vysoká, ve shlucích</text>
+      <text class="t-s dim" x="58" y="322" font-weight="700">Indikátor volatility (ATR / VIX)</text>
+
+      <text class="t-s dim" x="260" y="337" text-anchor="middle">Stejný čistý trend, jiná amplituda — strategie z levé půlky se vpravo rozbije.</text>
+    </svg>
+    <p class="figcap"><b>Obr. 13</b> — Obě poloviny mají stejný čistý trend, ale úplně jinou
+      <b>amplitudu</b>. Vpravo se rozšiřuje „kužel" očekávaného rozpětí a spodní indikátor
+      volatility vyskočí. Volatilita měří <i>šířku</i> pohybu, ne jeho směr.</p>
+  </div>
+
+  <h3 id="mereni-vol">Jak volatilitu měříme</h3>
+
+  <p>Volatilita není vidět přímo, odvozuje se. Dělí se na dvě rodiny: <strong>historickou</strong>
+    (spočítanou z toho, co se už stalo) a <strong>implikovanou</strong> (očekávanou, vyčtenou
+    z cen opcí).</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>Historická volatilita</h4>
+      <div class="sub">realized / historical vol</div>
+      <p>Směrodatná odchylka minulých výnosů, obvykle anualizovaná (× √252 obchodních dní).
+        Říká, jak divoký byl trh <em>doteď</em>.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>ATR</h4>
+      <div class="sub">Average True Range</div>
+      <p>Průměrné denní rozpětí ceny. Technický indikátor, ze kterého se běžně odvozuje
+        <em>šířka stop-lossu</em> i velikost pozice.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Bollinger Bands</h4>
+      <div class="sub">± 2σ kolem klouzavého průměru</div>
+      <p>Pásma vzdálená dvě směrodatné odchylky od průměru. Roztáhnou-li se, volatilita roste;
+        stáhnou-li se, trh usnul.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>VIX</h4>
+      <div class="sub">index strachu</div>
+      <p>Implikovaná volatilita indexu S&amp;P 500 na 30 dní dopředu, dopočtená z cen opcí.
+        Neměří minulost — měří <em>strach z budoucnosti</em>.</p>
+    </div>
+  </div>
+
+  <p><strong>VIX</strong> <span class="en">(CBOE Volatility Index)</span> si zaslouží vlastní
+    odstavec, protože je to nejsledovanější barometr nervozity na světě. Neptá se, co se stalo,
+    ale kolik jsou obchodníci ochotni <em>zaplatit za pojištění</em> proti pohybu. Čím dražší
+    pojistky, tím vyšší VIX. Orientačně:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>VIX</th><th>Stav trhu</th><th>Co to znamená</th></tr></thead>
+      <tbody>
+        <tr><td class="num">pod 15</td><td>klid</td><td>samolibost, plazivý růst, úzké spready</td></tr>
+        <tr><td class="num">15–20</td><td>normál</td><td>běžný provozní režim</td></tr>
+        <tr><td class="num">20–30</td><td>zvýšená nervozita</td><td>trh se ošívá, roste opatrnost</td></tr>
+        <tr><td class="num">30–40</td><td>stres</td><td>výprodeje, prudké svíčky</td></tr>
+        <tr><td class="num"><span class="neg">nad 40</span></td><td><span class="neg">panika</span></td><td>krize, korelace míří k jedničce</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 id="vol-problem">Proč je volatilita problém pro strategie</h3>
+
+  <p>Každá strategie je potají <strong>zkalibrovaná na určitou úroveň volatility</strong>. Vzdálenost
+    stop-lossu, šířka profit targetu, velikost pozice i samotný edge — to všechno tiše předpokládá,
+    že se trh hýbe „nějak takhle". Jenže volatilita není konstanta. Mění se — a to je jádro problému.</p>
+
+  <ul>
+    <li><strong>Pevná velikost pozice = pohyblivý risk.</strong> Když se volatilita zdvojnásobí a vy
+      obchodujete stejný počet kontraktů, váš skutečný risk se také zdvojnásobil — aniž byste cokoli
+      změnili.</li>
+    <li><strong>Stopy vypsané na klid vystřelí v bouři.</strong> Stop-loss nastavený podle klidného
+      trhu trefuje v turbulenci pouhý šum a vyhazuje vás z pozic, které by jinak vyšly.</li>
+    <li><strong>Mean-reversion umře v trendu.</strong> Strategie „návratu k průměru" vydělává v pásmu
+      se stabilní volatilitou. Když volatilita exploduje do jednosměrného trendu, sází proti rozjetému
+      vlaku.</li>
+    <li><strong>Backtest je fotka jednoho režimu.</strong> Systém vyladěný na klidná data 2013–2019 se
+      potká s roky 2020 a 2022 jako s cizí planetou. Neselhal edge — <em>změnil se svět, na který byl
+      ušitý</em>.</li>
+  </ul>
+
+  <p>A teď to nejdůležitější: nebezpečná není ani tak <em>vysoká</em> volatilita, jako její
+    <strong>náhlá změna</strong> <span class="en">(volatility shock)</span>. Na pozvolný posun se dá
+    adaptovat, skokovou změnu nikdo nestihne. Volatilita navíc přichází ve <strong>shlucích</strong>
+    <span class="en">(volatility clustering)</span> — po dlouhém klidu, který uspí ostražitost, udeří
+    několik obrovských dní za sebou. Právě proto strategie typu „výpis opcí" ukazují roky hladkou
+    equity křivku a pak během jediného dne odevzdají všechno — je to <em>sbírání drobných před parním
+    válcem</em>.</p>
+
+  <div class="callout info">
+    <p>Vzpomeňte na dvě dřívější kapitoly. Volatilita je <strong>jmenovatel Sharpe ratio</strong> —
+      když skočí, Sharpe se propadne, i kdyby výnos zůstal stejný. A v okamžiku volatility shocku
+      <strong>korelace míří k jedničce</strong> — přesně ta „zrada korelace", která vám sebere
+      diverzifikaci v den, kdy ji nejvíc potřebujete.</p>
+  </div>
+
+  <h3 id="cerna-labut">Černá labuť</h3>
+
+  <p><strong>Černá labuť</strong> <span class="en">(black swan)</span> je pojem, který zpopularizoval
+    Nassim Taleb. Není to „jakákoli špatná zpráva". Má tři přesné znaky:</p>
+
+  <ol>
+    <li><strong>Je to odlehlá událost</strong> <span class="en">(outlier)</span> — leží mimo běžná
+      očekávání a nic v minulosti na ni spolehlivě neukazovalo.</li>
+    <li><strong>Má extrémní dopad</strong> — nezmění procenta, ale celý účet, firmu, trh.</li>
+    <li><strong>Zpětně se tváří předvídatelně</strong> — po události si lidé vždy vymyslí příběh, proč
+      byla „přece jasná". To je klam. Předvídatelná nebyla.</li>
+  </ol>
+
+  <p>Kde je problém? Modely i intuice počítají s <strong>normálním rozdělením</strong>
+    <span class="en">(Gaussova křivka)</span>, kde jsou extrémy prakticky nemožné. Jenže výnosy trhů
+    mají <strong>tlusté chvosty</strong> <span class="en">(fat tails)</span> — extrémní pohyby se dějí
+    <em>mnohonásobně častěji</em>, než zvonovitá křivka připouští. Den, který by podle normálního
+    rozdělení měl nastat jednou za desítky tisíc let, přijde na trzích jednou za pár let.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 292" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Srovnání dvou rozdělení pravděpodobnosti. Modrá úzká zvonovitá křivka (normální rozdělení) je v krajích přilepená k ose. Červená křivka má nižší vršek, ale kraje zůstávají zvednuté nad osou — tlusté chvosty. Krajní zóny za ±3 sigma jsou zvýrazněné jako oblast černé labutě.">
+      <text class="t-s dim" x="260" y="22" text-anchor="middle" font-weight="700">Normální rozdělení vs. realita trhu</text>
+
+      <!-- tail zones beyond ±3σ -->
+      <rect x="45" y="42" width="51" height="193" fill="#f85552" opacity="0.07"/>
+      <rect x="444" y="42" width="51" height="193" fill="#f85552" opacity="0.07"/>
+      <line x1="96" y1="42" x2="96" y2="235" stroke="#f85552" stroke-width="1.1" stroke-dasharray="4 4" opacity="0.7"/>
+      <line x1="444" y1="42" x2="444" y2="235" stroke="#f85552" stroke-width="1.1" stroke-dasharray="4 4" opacity="0.7"/>
+
+      <!-- axis -->
+      <line class="ax" x1="45" y1="235" x2="495" y2="235"/>
+
+      <!-- fat-tailed (reality) -->
+      <path d="M 45 232 C 150 226, 235 120, 270 120 C 305 120, 390 226, 495 232"
+            fill="none" stroke="#f85552" stroke-width="2.6" stroke-linecap="round"/>
+      <!-- normal (model) -->
+      <path d="M 96 235 C 190 233, 235 78, 270 78 C 305 78, 350 233, 444 235"
+            fill="none" stroke="#3a94c5" stroke-width="2.6" stroke-linecap="round"/>
+
+      <!-- labels + leaders -->
+      <text class="t-s blu" x="205" y="120" text-anchor="end" font-weight="700">model: normální rozdělení</text>
+      <line x1="208" y1="116" x2="246" y2="100" stroke="#a6b0a0" stroke-width="1"/>
+      <text class="t-s dn" x="330" y="150" font-weight="700">realita: tlusté chvosty</text>
+      <line x1="328" y1="146" x2="300" y2="132" stroke="#a6b0a0" stroke-width="1"/>
+
+      <!-- tail annotations -->
+      <text class="t-s dn" x="70" y="186" text-anchor="middle" font-weight="700">chvost</text>
+      <text class="t-s dim" x="70" y="200" text-anchor="middle">(tail)</text>
+      <text class="t-s dn" x="470" y="186" text-anchor="middle" font-weight="700">chvost</text>
+      <text class="t-s dim" x="470" y="200" text-anchor="middle">(tail)</text>
+
+      <!-- sigma ticks -->
+      <g class="t-s dim" text-anchor="middle">
+        <text x="96" y="250">−3σ</text><text x="154" y="250">−2σ</text><text x="212" y="250">−1σ</text>
+        <text x="270" y="250">0</text><text x="328" y="250">+1σ</text><text x="386" y="250">+2σ</text>
+        <text x="444" y="250">+3σ</text>
+      </g>
+      <text class="t-s dim" x="270" y="266" text-anchor="middle">velikost pohybu (ve směrodatných odchylkách σ)</text>
+      <text class="t-s dn" x="260" y="285" text-anchor="middle" font-weight="700">V těchto chvostech „nic nemá být" — a přesto tam žije černá labuť.</text>
+    </svg>
+    <p class="figcap"><b>Obr. 14</b> — Modrá je svět, se kterým počítá model. Červená je realita:
+      nižší vršek, ale <b>tlusté chvosty</b>. V těch chvostech — kde „nic nemá být" — žije černá labuť.</p>
+  </div>
+
+  <p>Historie je jich plná: <strong>Černé pondělí 1987</strong> (−22 % za jediný den), krach
+    <strong>LTCM 1998</strong>, <strong>Flash Crash 2010</strong>, odpojení švýcarského franku
+    <strong>2015</strong>, covidový propad v <strong>březnu 2020</strong>. Pokaždé „to nešlo" —
+    a přesto se to stalo.</p>
+
+  <div class="callout warn">
+    <p><strong>Proč to bolí víc, než by mělo.</strong> Stop-loss vás neochrání, když trh
+      <em>přeskočí</em> vaši úroveň gapem (otevře o 20 % jinde) — vyplní se až za ní. Páka, která
+      v klidu jen zrychluje, v černé labuti účet <strong>vynuluje</strong>. A věta „tohle se stát
+      nemůže" bývá poslední větou předtím, než se to stane.</p>
+  </div>
+
+  <h3 id="kalendar">Ekonomický kalendář a klíčové reporty</h3>
+
+  <p>Ne každý výbuch volatility je náhoda. Velká část je <strong>naplánovaná</strong> — v předem daný
+    den a minutu vyjde makroekonomický report a trhem to trhne. Tyhle události najdete
+    v <strong>ekonomickém kalendáři</strong> <span class="en">(economic calendar — Forex Factory,
+    Investing.com)</span>, kde jsou označené podle očekávaného dopadu: ty nejsilnější svítí červeně.
+    Znát je není volitelné, je to základní hygiena. Ty nejhorší:</p>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Report</th><th>Co to je</th><th>Kdy</th></tr></thead>
+      <tbody>
+        <tr><td><strong>FOMC</strong></td><td>rozhodnutí Fedu o úrokových sazbách + tisková konference</td><td>8× ročně</td></tr>
+        <tr><td><strong>NFP</strong></td><td>Non-Farm Payrolls — data z trhu práce USA</td><td>první pátek v měsíci</td></tr>
+        <tr><td><strong>CPI</strong></td><td>inflace — dnes nejsledovanější číslo vůbec</td><td>měsíčně</td></tr>
+        <tr><td><strong>Projevy centrálních bankéřů</strong></td><td>Powell, Lagarde — pohne i jedna věta</td><td>průběžně</td></tr>
+        <tr><td><strong>HDP, PMI</strong></td><td>kondice ekonomiky</td><td>čtvrtletně / měsíčně</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Háček je v tom, že <strong>víte kdy, ale ne kam</strong>. Před vyhlášením zmizí likvidita, spready
+    se roztáhnou, po vyhlášení cena skočí na obě strany a stop-lossy padají v prázdnu (slippage, gap).
+    Proto většina systematiků kolem reportů buď pozici <strong>zavírá do plochy</strong>
+    <span class="en">(flat)</span>, nebo pro ně má výslovné pravidlo. Naplánovaná událost je jakási
+    <em>„šedá labuť"</em> — víte, že přiletí, jen netušíte, jak velká bude. Ale i to je náskok:
+    riziko, které máte v kalendáři, vás nemá právo překvapit.</p>
+
+  <p>Tím se kruh uzavírá. Volatilita je místo, kde se matematika z předchozích kapitol potkává
+    s realitou — a realita se nenechá obelstít. Zbývá poslední, největší proměnná: člověk, který
+    u toho všeho sedí.</p>
+</section>
+
+<!-- ═══════════════════ 12 ═══════════════════ -->
+<section>
+  <h2 id="psychika">12. Psychika: největší nepřítel obchodníka</h2>
 
   <p>Vše výše uvedené je snadné pochopit. Pravidla zaberou dvě stránky. A přesto drtivá většina
     drobných obchodníků <span class="en">(retail traders)</span> dlouhodobě prodělává.
@@ -1364,7 +1617,7 @@ footer.article-footer {
       <text class="t-s dim" x="40" y="308">čas →</text>
       <text class="t-s dim" x="30" y="150" transform="rotate(-90 30 150)" text-anchor="middle">cena / emoce</text>
     </svg>
-    <p class="figcap"><b>Obr. 13</b> — Emoční cyklus. Největší riziko cítíme jako největší jistotu,
+    <p class="figcap"><b>Obr. 15</b> — Emoční cyklus. Největší riziko cítíme jako největší jistotu,
       největší příležitost jako největší hrůzu. <b>Systém existuje proto, aby tuhle inverzi obešel.</b></p>
   </div>
 

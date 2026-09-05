@@ -331,6 +331,7 @@ footer.article-footer {
     <li><a href="#strategie">Strategie a edge: zisk v náhodném prostředí</a></li>
     <li><a href="#portfolio">Portfolio a diverzifikační pravidlo</a></li>
     <li><a href="#volatilita">Volatilita trhu a černá labuť</a></li>
+    <li><a href="#ta">Technická analýza (TA)</a></li>
     <li><a href="#psychika">Psychika: největší nepřítel obchodníka</a></li>
   </ol>
 </nav>
@@ -1170,6 +1171,18 @@ footer.article-footer {
     <span class="en">(backtest)</span> a lze ho vykonávat opakovaně a bez emocí. Tomu se říká
     <strong>systematické obchodování</strong>.</p>
 
+  <p>Všimněte si, co v definici <em>není</em>: ani slovo o předpovědi. Strategie není názor na to,
+    kam trh půjde, ani „tip". Je to <strong>rozhodovací pravidlo</strong> — sada podmínek, která na
+    stejný vstup dá vždy stejnou odpověď. Kromě čtyř otázek výše proto úplný předpis fixuje ještě dvě
+    věci: <strong>na kterých trzích</strong> se hraje a <strong>na jakém časovém rámci</strong>
+    <span class="en">(timeframe)</span>. Teprve tím přestává být nápadem a stává se systémem.</p>
+
+  <p>Podle toho, kdo pravidla vykonává, se obchodování dělí na dva světy. <strong>Diskreční</strong>
+    <span class="en">(discretionary)</span> obchodník bere pravidla jako vodítko, ale poslední slovo
+    má člověk. <strong>Systematický</strong> (mechanický) obchodník je zapíše tak přesně, že je zvládne
+    vykonat i stroj — a právě proto je lze <em>otestovat na historii</em> a odstínit od emocí. Zbytek
+    tohoto článku míří k tomu druhému.</p>
+
   <h3 id="edge">Co je edge</h3>
 
   <p><strong>Edge</strong> (výhoda, převaha) je malá, ale <em>statisticky doložitelná</em> odchylka
@@ -1238,6 +1251,57 @@ footer.article-footer {
       loterii. (3) Musíte přežít drawdown — proto position sizing. Vypadnete-li z hry,
       edge už pro vás neexistuje.</p>
   </div>
+
+  <h3 id="pristupy">Jaké přístupy se dnes obchodují</h3>
+
+  <p>Edge se dá hledat mnoha způsoby, ale drtivá většina strategií spadá do několika velkých rodin.
+    Stojí za to je znát — v různých režimech volatility se chovají různě a v portfoliu se navzájem
+    krásně doplňují:</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>Trend following</h4>
+      <div class="sub">trend / momentum</div>
+      <p>Jede <em>s</em> trendem: „drž, co roste". Hodně malých ztrát vykoupí pár velkých výher.
+        Páteř CTA a managed-futures fondů.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Mean reversion</h4>
+      <div class="sub">návrat k průměru</div>
+      <p>Sází, že extrém se vrátí k průměru. Vydělává v pásmu, umírá v silném trendu
+        (viz volatilita).</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Breakout</h4>
+      <div class="sub">průraz z konsolidace</div>
+      <p>Vstupuje ve chvíli, kdy cena prorazí pásmo a rodí se nový pohyb. Živí se
+        <em>expanzí</em> volatility.</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Statistická arbitráž</h4>
+      <div class="sub">pairs trading, quant</div>
+      <p>Market-neutral: obchoduje <em>vztah</em> dvou souvisejících aktiv, ne směr trhu.
+        Doména kvantů.</p>
+    </div>
+    <div class="card">
+      <h4>Carry</h4>
+      <div class="sub">inkaso diferenciálu</div>
+      <p>Nevydělává na pohybu, ale na držení — úrokový či rolovací diferenciál. Klidný výnos,
+        občas prudká ztráta.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Event-driven</h4>
+      <div class="sub">zprávy, earnings, makro</div>
+      <p>Obchoduje reakci na reporty (viz ekonomický kalendář). Rychlé, ale plné gapů
+        a skluzu.</p>
+    </div>
+  </div>
+
+  <p>Dnes objem trhu ovládají <strong>algoritmy</strong>. Kvantitativní fondy hledají edge ve
+    strojovém učení, alternativních datech a mikrostruktuře trhu; na opačném pólu stojí
+    <strong>diskreční global-macro</strong>, kde o všem rozhoduje úsudek člověka. Ať je ale nástroj
+    jakkoli moderní, princip této kapitoly platí beze změny: bez kladné, ověřené a přežitelné
+    expectancy je i ta nejchytřejší strategie jen drahá loterie.</p>
 </section>
 
 <!-- ═══════════════════ 10 ═══════════════════ -->
@@ -1597,7 +1661,152 @@ footer.article-footer {
 
 <!-- ═══════════════════ 12 ═══════════════════ -->
 <section>
-  <h2 id="psychika">12. Psychika: největší nepřítel obchodníka</h2>
+  <h2 id="ta">12. Technická analýza (TA)</h2>
+
+  <p><strong>Technická analýza</strong> <span class="en">(technical analysis, TA)</span> je studium
+    <em>historie ceny</em> — a často i objemu — přímo v grafu, s cílem odhadnout pravděpodobný další
+    pohyb. Stojí na jednoduchém předpokladu: <strong>všechno podstatné už je v ceně</strong>. Zprávy,
+    názory, strach i chamtivost se nakonec projeví jediným způsobem — pohybem ceny. Technik proto
+    nezkoumá firmu ani ekonomiku (to dělá <em>fundamentální analýza</em>), ale samotný obrazec, který
+    cena kreslí.</p>
+
+  <p>Druhý předpoklad je, že se chování trhu <strong>opakuje ve vzorcích</strong>. Ne proto, že by
+    historie byla proroctví, ale proto, že na druhé straně grafu jsou pořád titíž lidé se stejnou
+    psychikou (viz další kapitola). Kde se cena už jednou otočila, se často otočí znovu.</p>
+
+  <h3 id="indikator">Indikátor a studie</h3>
+
+  <p><strong>Indikátor</strong> <span class="en">(indicator)</span> je matematická funkce spočítaná
+    z ceny nebo objemu a vykreslená do grafu. Klasický příklad je <strong>klouzavý průměr</strong>
+    <span class="en">(moving average)</span> — průměr ceny za posledních N úseček, který uhladí šum
+    a ukáže směr. Když se takový nástroj v obchodní platformě zobrazí na grafu (nebo do panelu pod
+    ním), mluví se o <strong>studii</strong> <span class="en">(study)</span> — je to prostě aplikovaný,
+    vykreslený indikátor.</p>
+
+  <p>K čemu to je dobré? Indikátor převádí subjektivní dojem („trh vypadá silně") na
+    <strong>objektivní, opakovatelné číslo</strong>. Tím se dá napsat jednoznačné pravidlo, dá se
+    <em>backtestovat</em> a dá se vykonávat bez emocí — přesně to, co jsme chtěli od strategie
+    v kapitole 9. Indikátor sám o sobě ale není příkaz k obchodu; je to <em>měřicí přístroj</em>,
+    ne věštba.</p>
+
+  <h3 id="skupiny-ind">Skupiny indikátorů</h3>
+
+  <p>Indikátorů jsou stovky, ale drtivá většina spadá do několika skupin podle toho, <em>co</em> vlastně
+    měří. Dvě z nich už znáte z kapitoly o volatilitě:</p>
+
+  <div class="cards">
+    <div class="card">
+      <h4>Trendové</h4>
+      <div class="sub">MA, EMA, MACD, ADX</div>
+      <p>Ukazují <em>směr</em> a sílu trendu. Vyhlazují cenu, aby bylo vidět, kam se opírá.</p>
+    </div>
+    <div class="card c-orange">
+      <h4>Oscilátory / momentum</h4>
+      <div class="sub">RSI, Stochastic, CCI</div>
+      <p>Měří <em>rychlost</em> a přehřátí — napovídají, kdy je trh „přeprodaný", nebo „překoupený".</p>
+    </div>
+    <div class="card c-purple">
+      <h4>Volatilitní</h4>
+      <div class="sub">Bollinger Bands, ATR</div>
+      <p>Měří <em>rozkmit</em> ceny. Potkali jsme je u volatility — určují i šířku stopů.</p>
+    </div>
+    <div class="card c-blue">
+      <h4>Objemové</h4>
+      <div class="sub">Volume, OBV, VWAP</div>
+      <p>Sledují <em>účast</em> — kolik síly za pohybem stojí. Pohyb bez objemu bývá slabý.</p>
+    </div>
+  </div>
+
+  <h3 id="lag">Zpoždění indikátorů</h3>
+
+  <p>Tady je zádrhel, který mění všechno. Skoro každý indikátor je počítán z <strong>minulých</strong>
+    cen — klouzavý průměr je průměr toho, co už proběhlo. Proto nutně <strong>následuje cenu se
+    zpožděním</strong> <span class="en">(lag)</span>. Čím víc indikátor uhlazuje, tím je klidnější
+    a spolehlivější — ale tím později se otočí. Signál z něj proto přichází, až když je část pohybu
+    dávno pryč.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cena vyroste do vrcholu a klesá; klouzavý průměr ji sleduje se zpožděním. Vrchol průměru i prodejní signál z křížení přicházejí až kus za vrcholem ceny — vyznačené pásmo zpoždění.">
+      <text class="t-s dim" x="260" y="24" text-anchor="middle" font-weight="700">Indikátor sleduje cenu se zpožděním</text>
+
+      <!-- axis -->
+      <line class="ax" x1="50" y1="255" x2="475" y2="255"/>
+
+      <!-- lag guides -->
+      <line x1="225" y1="66" x2="225" y2="255" stroke="#a6b0a0" stroke-width="1" stroke-dasharray="4 4"/>
+      <line x1="290" y1="66" x2="290" y2="255" stroke="#a6b0a0" stroke-width="1" stroke-dasharray="4 4"/>
+      <!-- lag bracket -->
+      <line x1="225" y1="74" x2="290" y2="74" stroke="#f57d26" stroke-width="1.6"/>
+      <line x1="225" y1="70" x2="225" y2="78" stroke="#f57d26" stroke-width="1.6"/>
+      <line x1="290" y1="70" x2="290" y2="78" stroke="#f57d26" stroke-width="1.6"/>
+      <text class="t-s" x="257" y="63" text-anchor="middle" fill="#a05a10" font-weight="700">zpoždění (lag)</text>
+
+      <!-- price -->
+      <polyline points="50,224 80,208 110,184 140,156 170,128 200,106 225,94 250,104 280,128 310,156 340,184 370,206 400,220 435,228 470,232"
+                fill="none" stroke="#5c6a72" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- moving average -->
+      <polyline points="50,232 85,224 120,210 155,192 190,170 225,150 260,136 285,132 310,136 340,150 370,170 400,190 435,208 470,220"
+                fill="none" stroke="#3a94c5" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+
+      <!-- price turn -->
+      <circle cx="225" cy="94" r="5.5" fill="#f57d26" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s" x="203" y="118" text-anchor="middle" fill="#a05a10" font-weight="700">cena se otočila</text>
+
+      <!-- signal -->
+      <circle cx="290" cy="134" r="5.5" fill="#f85552" stroke="#fdf6e3" stroke-width="2"/>
+      <text class="t-s dn" x="300" y="126" font-weight="700">signál (křížení) až tady</text>
+
+      <!-- legend -->
+      <rect x="60" y="279" width="16" height="3" rx="1.5" fill="#5c6a72"/>
+      <text class="t-s dim" x="82" y="283">cena</text>
+      <rect x="150" y="279" width="16" height="3" rx="1.5" fill="#3a94c5"/>
+      <text class="t-s dim" x="172" y="283">klouzavý průměr (indikátor)</text>
+      <text class="t-s dim" x="470" y="283" text-anchor="end">čas →</text>
+    </svg>
+    <p class="figcap"><b>Obr. 15</b> — Klouzavý průměr (modrý) se otočí až <i>za</i> vrcholem ceny.
+      Prodejní signál z křížení přijde ještě později — v pásmu <b>zpoždění</b> je část pohybu už pryč.</p>
+  </div>
+
+  <p>Rozlišujeme proto <strong>zpožděné</strong> <span class="en">(lagging)</span> indikátory —
+    trendové, které pohyb <em>potvrzují</em>, ale pozdě — a <strong>předstihové</strong>
+    <span class="en">(leading)</span>, tedy oscilátory, které se pohyb snaží <em>předjímat</em>, ale
+    platí za to falešnými signály. Dokonalý indikátor, který je včasný <em>i</em> spolehlivý, neexistuje.
+    Je to volba mezi rychlostí a jistotou, ne chyba.</p>
+
+  <h3 id="price-action">Proč někdo obchoduje jen cenu</h3>
+
+  <p>Z toho plyne postoj části obchodníků: když je každý indikátor jen <em>přepočítaná cena</em>, která
+    navíc zaostává, proč se nedívat rovnou na <strong>cenu samotnou</strong>? Tento přístup se jmenuje
+    <strong>price action</strong> a používá <em>holý graf</em> — jen cenové úsečky nebo svíčky
+    <span class="en">(candlesticks)</span>. Čte úrovně supportu a resistance, vrcholy a dna, strukturu
+    trhu a formace svíček. Argument je prostý: <strong>cena je jediná informace, která nezaostává</strong>,
+    protože je to originál — všechno ostatní je jen jeho opožděná kopie.</p>
+
+  <div class="callout info">
+    <p><strong>Není to spor o pravdu.</strong> Indikátor a price action nejsou dva nepřátelské tábory,
+      ale dva konce téže osy. Indikátor přidává objektivitu a snadný backtest za cenu zpoždění; holá
+      cena je včasná, ale nechává víc na úsudku. Většina obchodníků skončí někde uprostřed.</p>
+  </div>
+
+  <h3 id="ta-dnes">Jak se k TA staví novodobý trading</h3>
+
+  <p>Kolem technické analýzy je hodně mýtů — od „magických" čísel po formace, které fungují jen na
+    obrázku v učebnici. Střízlivý, dnešní pohled je tento: <strong>indikátor není křišťálová koule.</strong>
+    Nemá cenu jako osamocený signál „kup / prodej", ale jako <em>součást otestovaného systému</em>
+    s kladnou expectancy. Sám o sobě žádný indikátor edge nemá — edge je až v pravidlech, řízení risku
+    a opakování.</p>
+
+  <p>Proto moderní, kvantitativní trading bere indikátory jako <strong>vstupy</strong>
+    <span class="en">(features)</span> do statistických modelů a strojového učení a ke klasickým
+    „grafovým formacím" přistupuje skepticky — dokud neobstojí v <em>backtestu</em>. Subjektivně
+    nakreslená formace, kterou nelze zpětně ověřit na datech, je spíš vyprávění než edge. Technická
+    analýza tak dnes není věštění z grafu; je to <strong>jazyk, kterým zapisujeme pravidla</strong> tak,
+    aby se dala změřit — a teprve to z ní dělá nástroj, a ne pověru.</p>
+</section>
+
+<!-- ═══════════════════ 13 ═══════════════════ -->
+<section>
+  <h2 id="psychika">13. Psychika: největší nepřítel obchodníka</h2>
 
   <p>Vše výše uvedené je snadné pochopit. Pravidla zaberou dvě stránky. A přesto drtivá většina
     drobných obchodníků <span class="en">(retail traders)</span> dlouhodobě prodělává.
@@ -1665,7 +1874,7 @@ footer.article-footer {
       <text class="t-s dim" x="40" y="308">čas →</text>
       <text class="t-s dim" x="30" y="150" transform="rotate(-90 30 150)" text-anchor="middle">cena / emoce</text>
     </svg>
-    <p class="figcap"><b>Obr. 15</b> — Emoční cyklus. Největší riziko cítíme jako největší jistotu,
+    <p class="figcap"><b>Obr. 16</b> — Emoční cyklus. Největší riziko cítíme jako největší jistotu,
       největší příležitost jako největší hrůzu. <b>Systém existuje proto, aby tuhle inverzi obešel.</b></p>
   </div>
 
